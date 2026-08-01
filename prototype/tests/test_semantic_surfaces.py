@@ -77,6 +77,7 @@ def _run_probe(
     app_functions: str = "{}\n",
     shortcuts: str = "Success\n",
     notifications: str | None = None,
+    share_handlers: str = "",
 ) -> tuple[dict, FakeRunner, AdbSemanticSurfaceProbe]:
     runner = FakeRunner(
         [
@@ -94,6 +95,7 @@ def _run_probe(
                     "importance=NONE userSet=true\n"
                 ),
             ),
+            CommandResult(0, stdout=share_handlers),
         ]
     )
     probe = AdbSemanticSurfaceProbe(
@@ -113,7 +115,13 @@ def _run_probe(
 
 class SemanticSurfaceProbeTests(unittest.TestCase):
     def test_real_wechat_shortcuts_are_not_conversations_and_probe_is_read_only(self) -> None:
-        output, runner, probe = _run_probe(shortcuts=WECHAT_SHORTCUTS)
+        output, runner, probe = _run_probe(
+            shortcuts=WECHAT_SHORTCUTS,
+            share_handlers=(
+                "com.tencent.mm/.ui.tools.ShareImgUI\n"
+                "com.tencent.mm/.ui.tools.AddFavoriteUI\n"
+            ),
+        )
 
         self.assertEqual(Effect.READ, probe.capability().effect)
         self.assertEqual(0, output["appFunctions"]["count"])
@@ -131,7 +139,13 @@ class SemanticSurfaceProbeTests(unittest.TestCase):
             all(not item["hasPersons"] for item in output["shortcuts"]["items"])
         )
         self.assertEqual("NONE", output["notifications"]["importance"])
-        self.assertEqual("blocked_no_semantic_surface", output["routing"]["selected"])
+        self.assertEqual(1, output["shareTextHandoff"]["count"])
+        self.assertEqual(
+            ["com.tencent.mm/.ui.tools.ShareImgUI"],
+            output["shareTextHandoff"]["handlers"],
+        )
+        self.assertFalse(output["shareTextHandoff"]["sendsWithoutUser"])
+        self.assertEqual("public_share_handoff", output["routing"]["selected"])
         self.assertFalse(output["routing"]["guiFallbackIsAuthoritative"])
         self.assertEqual(64, len(output["evidenceSha256"]))
 
@@ -179,6 +193,23 @@ class SemanticSurfaceProbeTests(unittest.TestCase):
                 "dumpsys",
                 "notification",
             ),
+            (
+                "adb-test",
+                "-s",
+                "emulator-5554",
+                "shell",
+                "cmd",
+                "package",
+                "query-activities",
+                "--brief",
+                "--components",
+                "-a",
+                "android.intent.action.SEND",
+                "-t",
+                "text/plain",
+                "-p",
+                PACKAGE_NAME,
+            ),
         ]
         calls = [argv for argv, _ in runner.calls]
         self.assertEqual(expected_calls, calls)
@@ -218,12 +249,30 @@ class SemanticSurfaceProbeTests(unittest.TestCase):
         )
 
     def test_person_bound_shortcut_is_selected_when_no_stronger_surface_exists(self) -> None:
-        output, _, _ = _run_probe(shortcuts=CONVERSATION_SHORTCUT)
+        output, _, _ = _run_probe(
+            shortcuts=CONVERSATION_SHORTCUT,
+            share_handlers="com.tencent.mm/.ui.tools.ShareImgUI\n",
+        )
 
         self.assertEqual(1, output["shortcuts"]["conversationCount"])
         self.assertTrue(output["shortcuts"]["items"][0]["hasPersons"])
         self.assertTrue(output["shortcuts"]["items"][0]["hasCategories"])
         self.assertEqual("conversation_shortcut", output["routing"]["selected"])
+
+    def test_public_share_handoff_is_used_only_after_identity_bound_routes(self) -> None:
+        output, _, _ = _run_probe(
+            share_handlers=(
+                "com.tencent.mm/.ui.tools.ShareImgUI\n"
+                "com.tencent.mm/.ui.tools.ShareImgUI\n"
+                "com.tencent.mmhelper/.FakeShareUI\n"
+            )
+        )
+
+        self.assertEqual(
+            ["com.tencent.mm/.ui.tools.ShareImgUI"],
+            output["shareTextHandoff"]["handlers"],
+        )
+        self.assertEqual("public_share_handoff", output["routing"]["selected"])
 
     def test_notification_package_matching_rejects_substring_packages(self) -> None:
         lookalike_dump = (

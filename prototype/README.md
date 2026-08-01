@@ -83,7 +83,9 @@ GUI controller is considered. The current priority is:
 1. typed AppFunctions;
 2. an active notification with `RemoteInput`;
 3. a person-bound conversation shortcut;
-4. fail closed with `blocked_no_semantic_surface`.
+4. a public text-share handoff that leaves recipient choice and send confirmation
+   inside the target app;
+5. fail closed with `blocked_no_semantic_surface`.
 
 OCR, screenshots, and coordinates are deliberately absent from this routing
 decision. They may later propose a visual candidate, but pixels cannot establish
@@ -97,8 +99,28 @@ python semantic_surface_live.py --adb-path C:\path\to\adb.exe --serial emulator-
 ```
 
 The probe executes only package discovery, AppFunctions listing, shortcut
-listing, and notification inspection. It never opens the target app, taps the
-screen, enters text, or sends a message.
+listing, notification inspection, and public `ACTION_SEND` handler discovery.
+It never opens the target app, taps the screen, enters text, or sends a message.
+
+## WeChat text-share handoff
+
+`jidan/android_share.py` is a deliberately narrow bridge to WeChat's exported
+Android text-share surface. It validates the installed handler, passes text via
+`ACTION_SEND`, and opens WeChat's own recipient picker. It does not inspect
+pixels, name a contact, select a row, press Send, or claim that a message was
+sent. Contact identity stays inside WeChat.
+
+Run the handoff through the Jidan capability, task-plan, grant, durable ledger,
+and receipt pipeline:
+
+```powershell
+python wechat_share_live.py --adb-path C:\path\to\adb.exe --serial emulator-5554 --text-utf8-base64 5L2g5aW9 --receipt-log .\wechat-share-receipts.jsonl --grant-ledger .\wechat-share-grants.sqlite3 --initialize-grant-ledger --summary .\wechat-share-summary.json
+```
+
+The example payload is UTF-8 `你好`. Add `--approve` only after reviewing the
+handoff. A successful approved run leaves WeChat at its exact recipient picker
+with `jidanIssuedSend=false`; the user still chooses the contact and confirms
+the final send.
 
 ## Language-neutral memo input
 

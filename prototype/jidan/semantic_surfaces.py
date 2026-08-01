@@ -25,6 +25,9 @@ _NOTIFICATION_BLOCK = re.compile(
     r"NotificationRecord\((.*?)(?=\n\s*NotificationRecord\(|\n\s*Ranking Config|\Z)",
     re.DOTALL,
 )
+_KNOWN_TEXT_SHARE_HANDOFFS = {
+    "com.tencent.mm": frozenset({"com.tencent.mm/.ui.tools.ShareImgUI"}),
+}
 
 
 class SemanticSurfaceProbeError(RuntimeError):
@@ -63,7 +66,8 @@ class AdbSemanticSurfaceProbe:
             app=self.package_name,
             description=(
                 "Inspect AppFunctions, conversation shortcuts, and notification "
-                "RemoteInput surfaces without opening or controlling the target app."
+                "RemoteInput surfaces plus public text-share handoffs without "
+                "opening or controlling the target app."
             ),
             effect=Effect.READ,
             scopes=frozenset(
@@ -138,6 +142,19 @@ class AdbSemanticSurfaceProbe:
                         ],
                         "additionalProperties": False,
                     },
+                    "shareTextHandoff": {
+                        "type": "object",
+                        "properties": {
+                            "count": {"type": "integer"},
+                            "handlers": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                            },
+                            "sendsWithoutUser": {"const": False},
+                        },
+                        "required": ["count", "handlers", "sendsWithoutUser"],
+                        "additionalProperties": False,
+                    },
                     "routing": {
                         "type": "object",
                         "properties": {
@@ -146,6 +163,7 @@ class AdbSemanticSurfaceProbe:
                                     "appfunctions",
                                     "notification_remote_input",
                                     "conversation_shortcut",
+                                    "public_share_handoff",
                                     "blocked_no_semantic_surface",
                                 ]
                             },
@@ -171,6 +189,7 @@ class AdbSemanticSurfaceProbe:
                     "appFunctions",
                     "shortcuts",
                     "notifications",
+                    "shareTextHandoff",
                     "routing",
                     "evidenceSha256",
                 ],
@@ -225,15 +244,34 @@ class AdbSemanticSurfaceProbe:
             self._adb_argv("shell", "dumpsys", "notification"),
             "inspect notification surfaces",
         ).stdout
+        share_handlers_raw = self._run(
+            self._adb_argv(
+                "shell",
+                "cmd",
+                "package",
+                "query-activities",
+                "--brief",
+                "--components",
+                "-a",
+                "android.intent.action.SEND",
+                "-t",
+                "text/plain",
+                "-p",
+                self.package_name,
+            ),
+            "inspect public text-share handoffs",
+        ).stdout
 
         app_function_ids = _parse_app_function_ids(functions_raw)
         shortcuts = _parse_shortcuts(shortcuts_raw)
         notifications = _parse_notifications(notifications_raw, self.package_name)
+        share_handlers = _parse_share_handlers(share_handlers_raw, self.package_name)
         conversation_count = sum(item["hasPersons"] for item in shortcuts)
         route = _select_route(
             app_function_count=len(app_function_ids),
             remote_input_count=notifications["remoteInputCount"],
             conversation_shortcut_count=conversation_count,
+            share_handoff_count=len(share_handlers),
         )
         evidence_digest = hashlib.sha256(
             json.dumps(
@@ -241,6 +279,7 @@ class AdbSemanticSurfaceProbe:
                     "appFunctions": functions_raw,
                     "shortcuts": shortcuts_raw,
                     "notifications": notifications_raw,
+                    "shareTextHandoff": share_handlers_raw,
                 },
                 ensure_ascii=False,
                 sort_keys=True,
@@ -260,6 +299,11 @@ class AdbSemanticSurfaceProbe:
                 "items": shortcuts,
             },
             "notifications": notifications,
+            "shareTextHandoff": {
+                "count": len(share_handlers),
+                "handlers": share_handlers,
+                "sendsWithoutUser": False,
+            },
             "routing": route,
             "evidenceSha256": evidence_digest,
         }
@@ -362,11 +406,23 @@ def _parse_notifications(raw: str, package_name: str) -> dict[str, Any]:
     }
 
 
+def _parse_share_handlers(raw: str, package_name: str) -> list[str]:
+    allowed = _KNOWN_TEXT_SHARE_HANDOFFS.get(package_name, frozenset())
+    return sorted(
+        {
+            line.strip()
+            for line in raw.splitlines()
+            if line.strip() in allowed
+        }
+    )
+
+
 def _select_route(
     *,
     app_function_count: int,
     remote_input_count: int,
     conversation_shortcut_count: int,
+    share_handoff_count: int,
 ) -> dict[str, Any]:
     if app_function_count:
         selected = "appfunctions"
@@ -381,6 +437,12 @@ def _select_route(
         reason = (
             "The app publishes person-bound conversation shortcuts; launching still "
             "requires a shortcut-host or Sharesheet route."
+        )
+    elif share_handoff_count:
+        selected = "public_share_handoff"
+        reason = (
+            "The app accepts Android's public text-share contract; the app owns "
+            "recipient identity and the user must select and confirm the target."
         )
     else:
         selected = "blocked_no_semantic_surface"
