@@ -24,10 +24,10 @@ The planner is treated as untrusted. A capability is invoked only when its schem
 
 ## What is included
 
-- `prototype/` — a dependency-free Python capability kernel, policy gate, task-graph runtime, persistent grant ledger, hash-chained receipts, and a narrow Android AppFunctions ADB adapter.
+- `prototype/` — a dependency-free Python capability kernel, policy gate, task-graph runtime, persistent grant ledger, hash-chained receipts, Android AppFunctions adapter, and read-only semantic-surface router.
 - `reference-app/` — a controlled Android 17 memo provider exposing `putMemo`, `getMemoState`, and `getStoreStats` AppFunctions.
 - `docs/` — architecture notes, Android research, roadmap material, and the internationalization guide.
-- 68 unit tests covering policy, schema validation, replay rejection, Unicode transport, multilingual memo input, and Android command construction.
+- 73 unit tests covering policy, schema validation, replay rejection, Unicode transport, multilingual memo input, Android command construction, and fail-closed semantic routing.
 
 Generated APKs, emulator images, SDKs, raw device logs, receipts, screenshots, and SQLite ledgers are deliberately not published in Git.
 

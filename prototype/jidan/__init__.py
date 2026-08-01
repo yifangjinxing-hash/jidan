@@ -12,10 +12,16 @@ from .nlp import NlpParseError, SemanticAction, parse_memo_command, parse_zh_mem
 from .policy import PolicyEngine, issue_grant
 from .registry import CapabilityRegistry
 from .runtime import JidanRuntime
+from .semantic_surfaces import (
+    SEMANTIC_SURFACE_CAPABILITY_ID,
+    AdbSemanticSurfaceProbe,
+    SemanticSurfaceProbeError,
+)
 
 __all__ = [
     "Capability",
     "CapabilityRegistry",
+    "AdbSemanticSurfaceProbe",
     "Effect",
     "Grant",
     "GrantConsumption",
@@ -26,6 +32,8 @@ __all__ = [
     "PolicyEngine",
     "ReceiptLog",
     "SemanticAction",
+    "SemanticSurfaceProbeError",
+    "SEMANTIC_SURFACE_CAPABILITY_ID",
     "SqliteGrantLedger",
     "Step",
     "TaskPlan",

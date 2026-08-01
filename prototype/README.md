@@ -75,6 +75,31 @@ Dynamic registration requires an explicit package filter, and every supplied dis
 
 This is a developer/extreme-user shell route, not a claim that an ordinary APK owns cross-app privileges. It does not integrate Shizuku or any community fork, does not use a pending-intent execution path, and does not provide a GUI/Accessibility fallback. The command contract follows the official [AppFunctions ADB testing reference](https://developer.android.com/agents/skills/device-ai/appfunctions/references/adb-interaction-testing).
 
+## Semantic-surface routing
+
+`jidan/semantic_surfaces.py` inventories app-authored Android surfaces before any
+GUI controller is considered. The current priority is:
+
+1. typed AppFunctions;
+2. an active notification with `RemoteInput`;
+3. a person-bound conversation shortcut;
+4. fail closed with `blocked_no_semantic_surface`.
+
+OCR, screenshots, and coordinates are deliberately absent from this routing
+decision. They may later propose a visual candidate, but pixels cannot establish
+the identity or authority required for an external send.
+
+Run the read-only inventory through the normal Jidan grant, ledger, and receipt
+pipeline:
+
+```powershell
+python semantic_surface_live.py --adb-path C:\path\to\adb.exe --serial emulator-5554 --package com.example.app --receipt-log .\surface-receipts.jsonl --grant-ledger .\surface-grants.sqlite3 --initialize-grant-ledger --summary .\surface-summary.json
+```
+
+The probe executes only package discovery, AppFunctions listing, shortcut
+listing, and notification inspection. It never opens the target app, taps the
+screen, enters text, or sends a message.
+
 ## Language-neutral memo input
 
 `parse_memo_command()` accepts `memo: <content>` in any Unicode writing system and maps it to the stable `memo.create` semantic action. A BCP 47 `locale_hint` can select a trusted natural-language adapter; the bundled Chinese rules remain the only free-form offline grammar in this prototype. Unknown locales fail closed unless the explicit `memo:` prefix is used.

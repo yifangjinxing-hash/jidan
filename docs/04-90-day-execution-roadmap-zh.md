@@ -6,15 +6,15 @@
 
 ### Phase 1 执行锁（2026-08-01）
 
-本阶段只推进官方 ADB/Shell 通路：`cmd app_function` 动态代理、能力契约归一化、JGraph 调度、计划级授权和回执。Shizuku/Root 仅保留为闭环通过后的可替换实验桥，不并入主程序；Google Play 上架、AAPM 对策、Accessibility/MediaProjection 兼容层全部冻结，不再占用 Phase 1 工程资源。
+本阶段推进两条共用同一 Runtime 的官方通路：用 ADB/Shell 验证 `cmd app_function`、能力契约、JGraph、授权和回执；同时准备 Android 17 AppFunctions Agent Access 的 EAP/OEM 准入材料。Shizuku/Root 仅保留为可替换实验桥，不并入主程序；Accessibility/MediaProjection 兼容层继续冻结。
 
 原先的三条路线保留，但重新排序和定性：
 
 | 轨道 | 定位 | 现在做什么 | 明确不做什么 |
 |---|---|---|---|
 | ADB / Shell Lab | 两周内验证 Android 17 AppFunctions 的真实能力 | 先使用官方 `adb shell cmd app_function`，打通发现、执行、解析、超时、审计；随后再评估 Shizuku UserService | 不把开发者模式、无线调试或 shell 身份宣传为大众产品能力 |
-| Stock APK / Play | 冻结，不属于 Phase 1 | 不投入开发和政策研究 | 不做 Accessibility/MediaProjection 兼容桥，不以商店上架约束当前原型 |
-| AOSP / OEM Core | 真正的系统级产品主线 | Cuttlefish 上的平台签名 broker、AppFunctions、受限 GUI 控制、SELinux、系统确认与回执 | 首版不改 Linux、GKI、HAL、驱动，不把 planner 放进 `system_server` |
+| Stock APK / Agent Access | 新增的官方第三路 | 固定包名与长期签名；实现逐目标授权状态机草案；准备 AppFunctions EAP/OEM allowlist 申请材料 | 不宣称当前公共 SDK 已开放，不绕过设备 allowlist |
+| AOSP / OEM Core | 长期系统级产品线 | Cuttlefish 上的平台签名 broker、AppFunctions、受限 GUI 控制、SELinux、系统确认与回执 | 首版不改 Linux、GKI、HAL、驱动，不把 planner 放进 `system_server` |
 
 这三条不是三个产品。它们共用 JGraph、JCC、授权策略、适配器接口和回执格式，只有执行后端不同。
 
@@ -34,6 +34,7 @@
 4. 让 Jidan 适配器完成：设备探测、函数发现、参数 JSON 编码、执行、错误分类、超时、敏感字段脱敏和不可变审计记录。
 5. 把适配器接入现有 JGraph runtime；模型仍只能输出计划，不能拼接或执行任意 shell 字符串。
 6. 做五组负向测试：无设备、多个设备、权限拒绝、函数不存在、畸形/超大参数。
+7. 对每个目标包先执行语义面探测：`AppFunctions > RemoteInput > person-bound shortcut > blocked`；OCR/坐标不得成为收件人身份依据。
 
 ### 第 14 天 Go / No-Go 门槛
 
