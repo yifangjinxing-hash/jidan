@@ -38,6 +38,21 @@ Translations can be partial during review, but merged locale files must pass the
 
 Natural-language parsers are adapters at the untrusted edge. A parser may accept any language, but it must return the stable semantic action contract, reject ambiguity, preserve the original user text, and never grant or execute a capability directly. Task planning, policy checks, confirmation, execution, and receipts remain separate stages.
 
+## Capability bindings
+
+New platform bindings do not need a central Jidan publication whitelist. They do need a focused implementation, local installation trust, and conformance evidence before a host enables them.
+
+For `message.compose` bindings:
+
+1. Keep the public capability ID, input schema, and output schema unchanged.
+2. Treat `recipient` only as a display hint; the runtime intentionally does not pass it to adapter code.
+3. Return a platform binding plan only. Do not author `delivery`, `sent`, `state`, `riskLevel`, `executionMode`, or other host-owned outcome fields.
+4. Report a data-only integration as `handoff_planned`. Use `handoff_opened` only when the binding verifies the expected native review surface.
+5. Never select a recipient or issue the final Send action.
+6. Add regression tests for malformed input, false-success output, and exception handling.
+
+The first profile lives at [`profiles/message.compose.tool.json`](profiles/message.compose.tool.json), and the reference binding API is in [`prototype/jidan/message_compose.py`](prototype/jidan/message_compose.py).
+
 ## License
 
 By submitting a contribution, you agree that it is licensed under the repository's Apache License 2.0.

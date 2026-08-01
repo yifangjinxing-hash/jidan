@@ -2,6 +2,18 @@
 
 Jidan is designed so language is data at the edge, not part of the trusted machine protocol.
 
+## Project documentation languages
+
+| Language | Entry point | Review status |
+|---|---|---|
+| English | [README](../../README.md) | Source |
+| 简体中文 | [README.zh-CN](../../README.zh-CN.md) | Seed |
+| 繁體中文 | [README.zh-TW](../../README.zh-TW.md) | Machine-assisted seed |
+| 日本語 | [README.ja](../../README.ja.md) | Machine-assisted seed |
+| Español | [README.es](../../README.es.md) | Machine-assisted seed |
+
+Localized READMEs are maintained as welcoming entry points. The English README and machine-readable capability profiles remain the canonical technical references when translations differ. Fluent review is welcome through the [translation issue template](../../.github/ISSUE_TEMPLATE/translation.yml).
+
 ## Three separate guarantees
 
 1. **Unicode transport:** memo text in any writing system can pass through JSON, the task graph, ADB, AppFunctions, storage, readback, and the UI without transliteration or implicit normalization.

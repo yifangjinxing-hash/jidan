@@ -22,6 +22,18 @@ from .semantic_surfaces import (
     AdbSemanticSurfaceProbe,
     SemanticSurfaceProbeError,
 )
+from .message_compose import (
+    HANDOFF_OPENED,
+    HANDOFF_PLANNED,
+    JCL_META_KEY,
+    JCL_PROFILE,
+    MESSAGE_COMPOSE_CAPABILITY_ID,
+    MessageComposeBinding,
+    MessageComposeBindingError,
+    message_compose_mcp_tool,
+    planned_message_compose_binding,
+    wechat_message_compose_binding,
+)
 
 __all__ = [
     "Capability",
@@ -34,6 +46,13 @@ __all__ = [
     "GrantLedgerError",
     "InMemoryGrantLedger",
     "JidanRuntime",
+    "JCL_META_KEY",
+    "JCL_PROFILE",
+    "HANDOFF_OPENED",
+    "HANDOFF_PLANNED",
+    "MESSAGE_COMPOSE_CAPABILITY_ID",
+    "MessageComposeBinding",
+    "MessageComposeBindingError",
     "NlpParseError",
     "PolicyEngine",
     "ReceiptLog",
@@ -46,6 +65,9 @@ __all__ = [
     "WeChatShareAdapterError",
     "WeChatShareHandlerUnavailable",
     "issue_grant",
+    "message_compose_mcp_tool",
     "parse_memo_command",
     "parse_zh_memo_command",
+    "planned_message_compose_binding",
+    "wechat_message_compose_binding",
 ]

@@ -14,6 +14,45 @@ python demo.py --approve
 python -m unittest discover -s tests -v
 ```
 
+## Cross-platform `message.compose` profile
+
+`jidan/message_compose.py` adds the first Jidan Capability Layer (JCL) profile
+without creating a second runtime or transport. The machine-readable
+[`message.compose` MCP Tool profile](../profiles/message.compose.tool.json) maps
+one stable input and output contract to host-selected Android, iOS, Web, or
+community bindings.
+
+The caller invokes only the capability ID. The host chooses a binding during
+trusted startup configuration:
+
+```python
+from jidan.message_compose import planned_message_compose_binding
+from jidan.registry import CapabilityRegistry
+
+registry = CapabilityRegistry()
+planned_message_compose_binding("web").register(registry)
+result = registry.invoke("message.compose", {"content": "hello"})
+```
+
+Run all three built-in plans:
+
+```powershell
+python message_compose_demo.py
+```
+
+Built-in iOS, Web, and generic Android adapters are data-only plans and report
+`handoff_planned`; they do not claim a system UI was opened. The verified WeChat
+wrapper can report `handoff_opened` only after the underlying adapter proves the
+exact recipient picker is foreground. Both states keep delivery
+`attempted=false`, `sent=false`, and `verified=false` because Jidan never selects
+a recipient or issues Send.
+
+The optional `recipient` input is display-only and is never passed to an adapter.
+Adapters cannot author core outcome fields such as `delivery`, `sent`,
+`riskLevel`, or `executionMode`. Publishing a binding needs no central Jidan
+whitelist, but installing and executing third-party code remains a local trust
+and isolation decision.
+
 ## Android 17 AppFunctions Phase 1 adapter
 
 `jidan/android_appfunctions.py` is an argv-only adapter for the official Android shell surface:

@@ -2,7 +2,7 @@
 
 ## 产品定义
 
-> **Jidan 是目标原生、能力驱动、用户持有最终权力的 Agent 操作系统。**
+> **Jidan 是目标原生、能力驱动、用户持有最终权力的开放能力层与确定性执行 Runtime。**
 
 它不先替换 Linux、驱动、Binder、ART 和 APK 生态，而是先替换 Android 上层最重要的系统原语：
 
@@ -15,6 +15,8 @@
 | 模型直接调工具 | 模型只提出计划，确定性 Broker 执行 |
 | 成功等于某个 UI 出现 | 成功必须有独立验证证据和回执 |
 | 失败就报错 | 可逆步骤补偿，用户可暂停、撤销或接管 |
+
+它可以逐步成为 Agent OS 的上层原语，但首要任务不是自称新的操作系统，而是先证明跨 Android、Apple、Web 与未来平台的能力契约、授权边界和真实结果语义能够互操作。
 
 一句话：**目标即入口，能力即应用，授权即边界，回执即信任。**
 
@@ -58,9 +60,9 @@ flowchart TB
 
 这条边界不可妥协：**模型不是内核。**
 
-## JGraph：超轻量任务执行语言
+## JGraph：Host 内部的可恢复任务表示
 
-JGraph 不是对话历史，而是可恢复、可检查、可序列化的系统任务。
+JGraph 不是新的生态编程语言、传输协议或开发者必学 DSL。它是 Jidan Host 内部可恢复、可检查、可序列化的任务表示；其他 Host 可以使用自己的计划结构，只要对外遵守同一能力契约和结果语义。
 
 ### 节点类型
 
@@ -96,33 +98,43 @@ DRAFT → SIMULATED → AUTHORIZED → RUNNING → WAITING
 6. Provider/版本/schema 改变时重新校验计划。
 7. 低置信度不无限 ReAct，转为询问或用户接管。
 
-## Jidan Capability Contract（JCC）
+## Jidan Capability Layer（JCL）
 
-AppFunctions 是首版发现和调用入口；JCC 在其之上补足安全、事务和资源语义：
+JCL 不另造语法和传输层。公开互操作面直接复用 MCP Tool 与 JSON Schema，并把 Jidan 的最小风险语义放在命名空间 `_meta` 中：
 
 ```json
 {
-  "id": "calendar.event.create",
-  "version": "1.0.0",
-  "provider": {
-    "package": "com.example.calendar",
-    "certificate_sha256": "..."
+  "name": "message.compose",
+  "description": "Prepare an editable message or user-controlled handoff.",
+  "inputSchema": {},
+  "outputSchema": {},
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": true
   },
-  "input_schema": {},
-  "output_schema": {},
-  "effects": ["write"],
-  "data_classes": ["calendar.event"],
-  "network_destinations": [],
-  "risk": "reversible_write",
-  "idempotency": "required",
-  "reversible": true,
-  "compensation": "calendar.event.delete",
-  "verify": "calendar.event.get",
-  "budgets": {"latency_ms": 1500, "energy": "low"}
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "WRITE",
+      "executionMode": "HANDOFF",
+      "reversible": false
+    }
+  }
 }
 ```
 
-Provider 的自然语言描述只用于检索，不可自报低风险或改变系统政策。风险由签名身份、已认证 schema、实际 effect 和系统策略共同决定。
+`profiles/message.compose.tool.json` 是首份可执行 Profile。同一个 `message.compose` 能映射到 Android Intent、Apple Shortcut / Share Sheet、Web 草稿或社区 Binding；调用方只提交能力与参数，平台选择属于 Host 配置。
+
+公开 Profile 保持薄。Provider 证书、真实 scope、幂等记录、网络目的地、金额限制、补偿、预算与持久任务状态由资源责任方和 Host 安全账本保存，不膨胀成每个平台都必须复制的公共 DSL。具体 Binding 只能收紧风险、scope 和确认要求，不能因为 Provider 自报低风险而放宽系统策略。
+
+Profile 的状态必须区分现实：
+
+- `handoff_planned`：仅生成调用计划，不声称界面已拉起；
+- `handoff_opened`：Binding 已验证原生审阅界面；
+- 两者都保持 `delivery.attempted=false`、`sent=false`，最终发送由用户完成。
+
+开放实现不等于盲目执行：发布 Adapter 无需中央白名单，但安装信任、隔离、策略、撤销和一致性测试由每台终端掌握。
 
 调用生命周期：
 
@@ -161,7 +173,7 @@ Human → Task → Agent → Capability → Resource
 - B：系统 API 结果 + 读回验证；
 - C：GUI 语义树或截图验证。
 
-Jidan v0 原型已实现 JCC schema 子集校验、HMAC 计划绑定授权、执行前确认、授权前零副作用和哈希链一致性校验。当前哈希链尚不能抵抗有权限重写整份日志的攻击者，nonce 也仅在单进程内防重放；真机写入前必须补上 Android Keystore/StrongBox 认证回执、SQLite/Proto 原子执行账本与 Provider 证书 allowlist。
+Jidan v0 原型已实现 Schema 子集校验、HMAC 计划绑定授权、执行前确认、授权前零副作用、SQLite 持久 nonce 消费和哈希链一致性校验。当前哈希链尚不能抵抗有权限重写整份日志的攻击者，SQLite 文件也不能抵抗被整体回滚到旧的有效版本；系统版仍需 Android Keystore/StrongBox 认证锚点、受保护的持久任务状态机与 Provider 身份校验。
 
 执行器采用保守失败语义：写入或外部调用一旦进入 Provider，随后发生超时、断线或输出契约失败，就标记为 `outcome_unknown` / `committed_unverified` 并禁止自动重试；只有能证明尚未开始副作用的错误才是普通 `failed`。
 

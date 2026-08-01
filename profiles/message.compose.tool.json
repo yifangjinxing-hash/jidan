@@ -1,0 +1,129 @@
+{
+  "name": "message.compose",
+  "description": "Prepare an editable message or open a user-controlled handoff surface. Never choose a recipient and never send the message.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "recipient": {
+        "type": "string",
+        "maxLength": 256,
+        "description": "Display-only hint. It is never passed to the platform binding and cannot preselect a recipient."
+      },
+      "content": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 4000
+      }
+    },
+    "required": [
+      "content"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "enum": [
+          "handoff_planned",
+          "handoff_opened"
+        ]
+      },
+      "artifact": {
+        "type": "object",
+        "properties": {
+          "mimeType": {
+            "const": "text/plain"
+          },
+          "textSha256": {
+            "type": "string",
+            "minLength": 64,
+            "maxLength": 64
+          },
+          "recipientHint": {
+            "type": "string",
+            "maxLength": 256
+          }
+        },
+        "required": [
+          "mimeType",
+          "textSha256"
+        ],
+        "additionalProperties": false
+      },
+      "delivery": {
+        "type": "object",
+        "properties": {
+          "attempted": {
+            "const": false
+          },
+          "sent": {
+            "const": false
+          },
+          "verified": {
+            "const": false
+          }
+        },
+        "required": [
+          "attempted",
+          "sent",
+          "verified"
+        ],
+        "additionalProperties": false
+      },
+      "adapter": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "platform": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surface": {
+            "type": "string",
+            "minLength": 1
+          },
+          "binding": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "id",
+          "platform",
+          "surface",
+          "binding"
+        ],
+        "additionalProperties": false
+      },
+      "nextAction": {
+        "const": "user_review_and_send"
+      }
+    },
+    "required": [
+      "state",
+      "artifact",
+      "delivery",
+      "adapter",
+      "nextAction"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": true
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "WRITE",
+      "executionMode": "HANDOFF",
+      "reversible": false
+    }
+  }
+}
