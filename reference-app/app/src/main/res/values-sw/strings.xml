@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Kumbukumbu ya marejeleo ya Jidan</string>
+    <string name="screen_title">Kumbukumbu ya marejeleo ya Jidan</string>
+    <string name="screen_subtitle">Uandishi halisi kupitia AppFunctions kwenye Android 17</string>
+    <string name="memo_header">Jidan imeelewa na kuandika:</string>
+    <string name="refresh">Onyesha upya</string>
+    <string name="storage_notice">Data huhifadhiwa ndani ya kifaa na %1$s v%2$s kwenye SharedPreferences.</string>
+    <string name="state_package">Kifurushi: %1$s</string>
+    <string name="state_version">Toleo: %1$s</string>
+    <string name="state_android_api">API ya Android: %1$d</string>
+    <string name="state_physical_mutations">Mabadiliko halisi: %1$d</string>
+    <string name="state_put_invocations">Miito ya putMemo: %1$d</string>
+    <string name="state_memo_count">Idadi ya kumbukumbu: %1$d</string>
+    <string name="app_function_description">Hifadhi ya kumbukumbu inayodhibitiwa na ya ndani tu kwa kuthibitisha grafu za kazi za Jidan, kutobadilika kwa matokeo yanaporudiwa, usomaji wa nyuma na risiti za ukaguzi.</string>
+</resources>

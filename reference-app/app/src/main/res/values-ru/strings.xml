@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Эталонная заметка Jidan</string>
+    <string name="screen_title">Эталонная заметка Jidan</string>
+    <string name="screen_subtitle">Реальная запись через AppFunctions в Android 17</string>
+    <string name="memo_header">Jidan понял и записал:</string>
+    <string name="refresh">Обновить</string>
+    <string name="storage_notice">Данные сохраняются локально приложением %1$s v%2$s в SharedPreferences.</string>
+    <string name="state_package">Пакет: %1$s</string>
+    <string name="state_version">Версия: %1$s</string>
+    <string name="state_android_api">API Android: %1$d</string>
+    <string name="state_physical_mutations">Физические изменения: %1$d</string>
+    <string name="state_put_invocations">Вызовы putMemo: %1$d</string>
+    <string name="state_memo_count">Количество заметок: %1$d</string>
+    <string name="app_function_description">Управляемое локальное хранилище заметок для проверки графов задач Jidan, идемпотентности, обратного чтения и аудиторских квитанций.</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jidan 参考备忘录</string>
+    <string name="screen_title">Jidan 参考备忘录</string>
+    <string name="screen_subtitle">Android 17 AppFunctions 真实写入</string>
+    <string name="memo_header">Jidan 刚刚听懂并写入：</string>
+    <string name="refresh">刷新</string>
+    <string name="storage_notice">数据由 %1$s v%2$s 通过 SharedPreferences 保存在本地。</string>
+    <string name="state_package">软件包：%1$s</string>
+    <string name="state_version">版本：%1$s</string>
+    <string name="state_android_api">Android API：%1$d</string>
+    <string name="state_physical_mutations">物理写入次数：%1$d</string>
+    <string name="state_put_invocations">putMemo 调用次数：%1$d</string>
+    <string name="state_memo_count">备忘录数量：%1$d</string>
+    <string name="app_function_description">受控且仅限本地的备忘录存储，用于验证 Jidan 任务图、幂等性、回读和审计回执。</string>
+</resources>

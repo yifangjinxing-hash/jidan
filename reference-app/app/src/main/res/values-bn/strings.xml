@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jidan রেফারেন্স মেমো</string>
+    <string name="screen_title">Jidan রেফারেন্স মেমো</string>
+    <string name="screen_subtitle">Android 17 AppFunctions-এ বাস্তব লেখা</string>
+    <string name="memo_header">Jidan বুঝে লিখেছে:</string>
+    <string name="refresh">রিফ্রেশ</string>
+    <string name="storage_notice">ডেটা %1$s v%2$s দ্বারা SharedPreferences-এ স্থানীয়ভাবে সংরক্ষিত হয়।</string>
+    <string name="state_package">প্যাকেজ: %1$s</string>
+    <string name="state_version">সংস্করণ: %1$s</string>
+    <string name="state_android_api">Android API: %1$d</string>
+    <string name="state_physical_mutations">বাস্তব পরিবর্তন: %1$d</string>
+    <string name="state_put_invocations">putMemo কল: %1$d</string>
+    <string name="state_memo_count">মেমোর সংখ্যা: %1$d</string>
+    <string name="app_function_description">Jidan-এর টাস্ক গ্রাফ, আইডেমপোটেন্সি, পুনরায় পড়া এবং অডিট রসিদ যাচাইয়ের জন্য নিয়ন্ত্রিত, শুধু-স্থানীয় মেমো স্টোরেজ।</string>
+</resources>

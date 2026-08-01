@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jidan-referentiememo</string>
+    <string name="screen_title">Jidan-referentiememo</string>
+    <string name="screen_subtitle">Echte AppFunctions-schrijfbewerkingen in Android 17</string>
+    <string name="memo_header">Jidan heeft het begrepen en geschreven:</string>
+    <string name="refresh">Vernieuwen</string>
+    <string name="storage_notice">Gegevens worden door %1$s v%2$s lokaal opgeslagen in SharedPreferences.</string>
+    <string name="state_package">Pakket: %1$s</string>
+    <string name="state_version">Versie: %1$s</string>
+    <string name="state_android_api">Android-API: %1$d</string>
+    <string name="state_physical_mutations">Fysieke wijzigingen: %1$d</string>
+    <string name="state_put_invocations">putMemo-aanroepen: %1$d</string>
+    <string name="state_memo_count">Aantal memo’s: %1$d</string>
+    <string name="app_function_description">Gecontroleerde, uitsluitend lokale memo-opslag voor het valideren van Jidan-taakgrafen, idempotentie, teruglezen en auditbewijzen.</string>
+</resources>

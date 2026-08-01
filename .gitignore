@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Android / Gradle
+.gradle/
+.kotlin/
+**/build/
+local.properties
+*.iml
+.idea/
+
+# Runtime and validation artifacts
+evidence/
+*.apk
+*.aab
+*.zip
+*.jsonl
+*.sqlite
+*.sqlite3
+*.sqlite-wal
+*.sqlite-shm
+*.sqlite-journal
+*.sqlite3-wal
+*.sqlite3-shm
+*.sqlite3-journal
+*.log
+.env
+.env.*
+*.jks
+*.keystore
+*.p12
+*.pfx
+
+# Local tools and editors
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

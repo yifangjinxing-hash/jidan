@@ -1,0 +1,19 @@
+{
+  "id": "shopping.add_items",
+  "app": "shopping",
+  "description": "Add items to the user's active shopping list.",
+  "effect": "write",
+  "scopes": ["shopping.list.write"],
+  "requires_confirmation": true,
+  "reversible": true,
+  "adapter": "demo",
+  "input_schema": {
+    "type": "object",
+    "required": ["items"],
+    "properties": {"items": {"type": "array", "items": {"type": "string"}}}
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {"list": {"type": "array", "items": {"type": "string"}}}
+  }
+}

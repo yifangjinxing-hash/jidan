@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jidan Reference Memo</string>
+    <string name="screen_title">Jidan Reference Memo</string>
+    <string name="screen_subtitle">Real Android 17 AppFunctions writes</string>
+    <string name="memo_header">Jidan understood and wrote:</string>
+    <string name="refresh">Refresh</string>
+    <string name="storage_notice">Data is stored locally by %1$s v%2$s in SharedPreferences.</string>
+    <string name="state_package">Package: %1$s</string>
+    <string name="state_version">Version: %1$s</string>
+    <string name="state_android_api">Android API: %1$d</string>
+    <string name="state_physical_mutations">Physical mutations: %1$d</string>
+    <string name="state_put_invocations">putMemo invocations: %1$d</string>
+    <string name="state_memo_count">Memo count: %1$d</string>
+    <string name="app_function_description">Controlled, local-only memo storage for validating Jidan task graphs, idempotency, readback, and audit receipts.</string>
+</resources>

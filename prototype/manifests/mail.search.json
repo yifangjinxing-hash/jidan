@@ -1,0 +1,19 @@
+{
+  "id": "mail.search",
+  "app": "mail",
+  "description": "Search the user's local mail index and return matching messages.",
+  "effect": "read",
+  "scopes": ["mail.content.read"],
+  "requires_confirmation": false,
+  "reversible": true,
+  "adapter": "demo",
+  "input_schema": {
+    "type": "object",
+    "required": ["query"],
+    "properties": {"query": {"type": "string"}}
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {"body": {"type": "string"}}
+  }
+}

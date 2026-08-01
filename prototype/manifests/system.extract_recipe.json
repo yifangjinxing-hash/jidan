@@ -1,0 +1,19 @@
+{
+  "id": "system.extract_recipe",
+  "app": "jidan",
+  "description": "Extract a structured ingredient list from text using a local model.",
+  "effect": "read",
+  "scopes": ["local.inference"],
+  "requires_confirmation": false,
+  "reversible": true,
+  "adapter": "demo",
+  "input_schema": {
+    "type": "object",
+    "required": ["text"],
+    "properties": {"text": {"type": "string"}}
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {"items": {"type": "array", "items": {"type": "string"}}}
+  }
+}

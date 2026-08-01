@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Memo Referensi Jidan</string>
+    <string name="screen_title">Memo Referensi Jidan</string>
+    <string name="screen_subtitle">Penulisan nyata dengan AppFunctions di Android 17</string>
+    <string name="memo_header">Jidan memahami dan menulis:</string>
+    <string name="refresh">Segarkan</string>
+    <string name="storage_notice">Data disimpan secara lokal oleh %1$s v%2$s di SharedPreferences.</string>
+    <string name="state_package">Paket: %1$s</string>
+    <string name="state_version">Versi: %1$s</string>
+    <string name="state_android_api">API Android: %1$d</string>
+    <string name="state_physical_mutations">Mutasi fisik: %1$d</string>
+    <string name="state_put_invocations">Pemanggilan putMemo: %1$d</string>
+    <string name="state_memo_count">Jumlah memo: %1$d</string>
+    <string name="app_function_description">Penyimpanan memo terkontrol yang hanya lokal untuk memvalidasi grafik tugas Jidan, idempotensi, pembacaan balik, dan tanda terima audit.</string>
+</resources>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jidan リファレンスメモ</string>
+    <string name="screen_title">Jidan リファレンスメモ</string>
+    <string name="screen_subtitle">Android 17 AppFunctions による実書き込み</string>
+    <string name="memo_header">Jidan が理解して書き込みました：</string>
+    <string name="refresh">更新</string>
+    <string name="storage_notice">データは %1$s v%2$s により SharedPreferences へローカル保存されます。</string>
+    <string name="state_package">パッケージ：%1$s</string>
+    <string name="state_version">バージョン：%1$s</string>
+    <string name="state_android_api">Android API：%1$d</string>
+    <string name="state_physical_mutations">実変更回数：%1$d</string>
+    <string name="state_put_invocations">putMemo 呼び出し回数：%1$d</string>
+    <string name="state_memo_count">メモ件数：%1$d</string>
+    <string name="app_function_description">Jidan のタスクグラフ、冪等性、読み戻し、監査レシートを検証するための、制御されたローカル専用メモストレージです。</string>
+</resources>

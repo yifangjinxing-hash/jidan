@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">บันทึกช่วยจำอ้างอิง Jidan</string>
+    <string name="screen_title">บันทึกช่วยจำอ้างอิง Jidan</string>
+    <string name="screen_subtitle">การเขียนจริงผ่าน AppFunctions บน Android 17</string>
+    <string name="memo_header">Jidan เข้าใจและเขียนว่า:</string>
+    <string name="refresh">รีเฟรช</string>
+    <string name="storage_notice">ข้อมูลถูกจัดเก็บไว้ในเครื่องโดย %1$s v%2$s ใน SharedPreferences</string>
+    <string name="state_package">แพ็กเกจ: %1$s</string>
+    <string name="state_version">เวอร์ชัน: %1$s</string>
+    <string name="state_android_api">Android API: %1$d</string>
+    <string name="state_physical_mutations">จำนวนการเปลี่ยนแปลงจริง: %1$d</string>
+    <string name="state_put_invocations">จำนวนการเรียก putMemo: %1$d</string>
+    <string name="state_memo_count">จำนวนบันทึก: %1$d</string>
+    <string name="app_function_description">พื้นที่จัดเก็บบันทึกแบบควบคุมและอยู่ในเครื่องเท่านั้น สำหรับตรวจสอบกราฟงานของ Jidan การทำงานซ้ำโดยได้ผลเดิม การอ่านกลับ และหลักฐานการตรวจสอบ</string>
+</resources>

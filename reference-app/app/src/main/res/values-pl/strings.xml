@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Notatka referencyjna Jidan</string>
+    <string name="screen_title">Notatka referencyjna Jidan</string>
+    <string name="screen_subtitle">Rzeczywisty zapis przez AppFunctions w Androidzie 17</string>
+    <string name="memo_header">Jidan zrozumiał i zapisał:</string>
+    <string name="refresh">Odśwież</string>
+    <string name="storage_notice">Dane są przechowywane lokalnie przez %1$s v%2$s w SharedPreferences.</string>
+    <string name="state_package">Pakiet: %1$s</string>
+    <string name="state_version">Wersja: %1$s</string>
+    <string name="state_android_api">API Androida: %1$d</string>
+    <string name="state_physical_mutations">Fizyczne zmiany: %1$d</string>
+    <string name="state_put_invocations">Wywołania putMemo: %1$d</string>
+    <string name="state_memo_count">Liczba notatek: %1$d</string>
+    <string name="app_function_description">Kontrolowany, wyłącznie lokalny magazyn notatek do sprawdzania grafów zadań Jidan, idempotentności, odczytu zwrotnego i pokwitowań audytowych.</string>
+</resources>

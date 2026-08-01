@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">مذكرة Jidan المرجعية</string>
+    <string name="screen_title">مذكرة Jidan المرجعية</string>
+    <string name="screen_subtitle">عمليات كتابة فعلية عبر AppFunctions في Android 17</string>
+    <string name="memo_header">فهم Jidan وكتب:</string>
+    <string name="refresh">تحديث</string>
+    <string name="storage_notice">تُحفظ البيانات محليًا بواسطة %1$s بالإصدار %2$s في SharedPreferences.</string>
+    <string name="state_package">الحزمة: %1$s</string>
+    <string name="state_version">الإصدار: %1$s</string>
+    <string name="state_android_api">واجهة Android البرمجية: %1$d</string>
+    <string name="state_physical_mutations">عمليات التعديل الفعلية: %1$d</string>
+    <string name="state_put_invocations">استدعاءات putMemo: %1$d</string>
+    <string name="state_memo_count">عدد المذكرات: %1$d</string>
+    <string name="app_function_description">مساحة تخزين مذكرات مضبوطة ومحلية فقط للتحقق من مخططات مهام Jidan وثبات النتائج عند التكرار وإعادة القراءة وإيصالات التدقيق.</string>
+</resources>

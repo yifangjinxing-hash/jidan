@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Bản ghi nhớ tham chiếu Jidan</string>
+    <string name="screen_title">Bản ghi nhớ tham chiếu Jidan</string>
+    <string name="screen_subtitle">Ghi thực bằng AppFunctions trên Android 17</string>
+    <string name="memo_header">Jidan đã hiểu và ghi lại:</string>
+    <string name="refresh">Làm mới</string>
+    <string name="storage_notice">Dữ liệu được %1$s v%2$s lưu cục bộ trong SharedPreferences.</string>
+    <string name="state_package">Gói: %1$s</string>
+    <string name="state_version">Phiên bản: %1$s</string>
+    <string name="state_android_api">API Android: %1$d</string>
+    <string name="state_physical_mutations">Số lần thay đổi vật lý: %1$d</string>
+    <string name="state_put_invocations">Số lần gọi putMemo: %1$d</string>
+    <string name="state_memo_count">Số bản ghi nhớ: %1$d</string>
+    <string name="app_function_description">Kho lưu trữ bản ghi nhớ có kiểm soát và chỉ dùng cục bộ để xác thực đồ thị tác vụ Jidan, tính lũy đẳng, việc đọc lại và biên nhận kiểm toán.</string>
+</resources>

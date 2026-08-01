@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mémo de référence Jidan</string>
+    <string name="screen_title">Mémo de référence Jidan</string>
+    <string name="screen_subtitle">Écritures AppFunctions réelles sur Android 17</string>
+    <string name="memo_header">Jidan a compris et écrit :</string>
+    <string name="refresh">Actualiser</string>
+    <string name="storage_notice">Les données sont stockées localement par %1$s v%2$s dans SharedPreferences.</string>
+    <string name="state_package">Package : %1$s</string>
+    <string name="state_version">Version : %1$s</string>
+    <string name="state_android_api">API Android : %1$d</string>
+    <string name="state_physical_mutations">Modifications physiques : %1$d</string>
+    <string name="state_put_invocations">Appels de putMemo : %1$d</string>
+    <string name="state_memo_count">Nombre de mémos : %1$d</string>
+    <string name="app_function_description">Stockage de mémos contrôlé et exclusivement local pour valider les graphes de tâches Jidan, l’idempotence, la relecture et les reçus d’audit.</string>
+</resources>

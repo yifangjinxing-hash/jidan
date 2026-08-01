@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Jidan 참조 메모</string>
+    <string name="screen_title">Jidan 참조 메모</string>
+    <string name="screen_subtitle">Android 17 AppFunctions 실제 쓰기</string>
+    <string name="memo_header">Jidan이 이해하고 기록한 내용:</string>
+    <string name="refresh">새로고침</string>
+    <string name="storage_notice">데이터는 %1$s v%2$s에 의해 SharedPreferences에 로컬로 저장됩니다.</string>
+    <string name="state_package">패키지: %1$s</string>
+    <string name="state_version">버전: %1$s</string>
+    <string name="state_android_api">Android API: %1$d</string>
+    <string name="state_physical_mutations">물리적 변경 횟수: %1$d</string>
+    <string name="state_put_invocations">putMemo 호출 횟수: %1$d</string>
+    <string name="state_memo_count">메모 수: %1$d</string>
+    <string name="app_function_description">Jidan 작업 그래프, 멱등성, 다시 읽기 및 감사 영수증을 검증하기 위한 제어된 로컬 전용 메모 저장소입니다.</string>
+</resources>

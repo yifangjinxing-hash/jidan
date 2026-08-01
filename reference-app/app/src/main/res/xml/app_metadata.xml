@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
+    appfn:description="Controlled local memo test provider. Use putMemo with a unique operationId for each intended physical mutation. Retrying the exact operationId and payload is safe and must be reported as a replay. Use getMemoState to verify persisted content and counters."
+    appfn:displayDescription="@string/app_function_description" />

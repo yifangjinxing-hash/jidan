@@ -1,0 +1,37 @@
+name: Translation improvement
+description: Add or improve a Jidan language pack
+title: "[i18n]: "
+labels: [translation]
+body:
+  - type: input
+    id: locale
+    attributes:
+      label: BCP 47 locale
+      placeholder: e.g. ar, pt-BR, zh-Hant
+    validations:
+      required: true
+  - type: dropdown
+    id: fluency
+    attributes:
+      label: Review level
+      options:
+        - Native speaker
+        - Fluent speaker
+        - Learning / machine-assisted draft
+    validations:
+      required: true
+  - type: textarea
+    id: change
+    attributes:
+      label: Proposed wording and context
+    validations:
+      required: true
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I preserved resource keys and formatting placeholders.
+          required: true
+        - label: I checked the text in the Android UI or provided screenshots.
+          required: false
