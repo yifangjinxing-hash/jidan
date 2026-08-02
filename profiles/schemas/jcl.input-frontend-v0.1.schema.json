@@ -1,0 +1,220 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "JCL Input Frontend Profile 0.1",
+  "description": "A compile-only input frontend that proposes existing JCL calls without authority to grant or execute them.",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "const": "../schemas/jcl.input-frontend-v0.1.schema.json"
+    },
+    "profile": {
+      "const": "JCL-Input-Frontend/0.1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 129,
+      "pattern": "^[a-z][a-z0-9.-]{0,63}/[a-zA-Z0-9_.-]{1,64}$"
+    },
+    "kind": {
+      "const": "compile-only"
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "languageTag": {
+          "const": "zh-Latn-pinyin"
+        },
+        "romanization": {
+          "const": "hanyu-pinyin"
+        },
+        "acceptedToneStyles": {
+          "const": [
+            "diacritic",
+            "number",
+            "none"
+          ]
+        },
+        "canonicalToneStyle": {
+          "const": "number"
+        },
+        "neutralToneDigit": {
+          "const": 5
+        },
+        "umlautLookup": {
+          "const": "v"
+        },
+        "normalization": {
+          "const": "unicode-nfc-casefold-explicit-boundaries-numeric-tone-v1"
+        },
+        "syllableSeparator": {
+          "const": "-"
+        },
+        "wordSeparator": {
+          "const": "."
+        }
+      },
+      "required": [
+        "languageTag",
+        "romanization",
+        "acceptedToneStyles",
+        "canonicalToneStyle",
+        "neutralToneDigit",
+        "umlautLookup",
+        "normalization",
+        "syllableSeparator",
+        "wordSeparator"
+      ],
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "const": "jcl-invocation-proposal"
+        },
+        "capabilityAllowlist": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]{0,127}$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "schemaValidationRequired": {
+          "const": true
+        }
+      },
+      "required": [
+        "contract",
+        "capabilityAllowlist",
+        "schemaValidationRequired"
+      ],
+      "additionalProperties": false
+    },
+    "resolution": {
+      "type": "object",
+      "properties": {
+        "unknown": {
+          "const": "reject"
+        },
+        "ambiguous": {
+          "const": "reject"
+        },
+        "toneless": {
+          "const": "accept-if-unique"
+        },
+        "fuzzyMatch": {
+          "const": false
+        },
+        "payloadMode": {
+          "const": "verbatim"
+        }
+      },
+      "required": [
+        "unknown",
+        "ambiguous",
+        "toneless",
+        "fuzzyMatch",
+        "payloadMode"
+      ],
+      "additionalProperties": false
+    },
+    "security": {
+      "type": "object",
+      "properties": {
+        "authority": {
+          "const": "none"
+        },
+        "mayGrant": {
+          "const": false
+        },
+        "mayExecute": {
+          "const": false
+        },
+        "maySelectRecipient": {
+          "const": false
+        },
+        "maySend": {
+          "const": false
+        }
+      },
+      "required": [
+        "authority",
+        "mayGrant",
+        "mayExecute",
+        "maySelectRecipient",
+        "maySend"
+      ],
+      "additionalProperties": false
+    },
+    "implementation": {
+      "type": "object",
+      "properties": {
+        "compiler": {
+          "const": "jidan.pinyin-explicit-v0.1"
+        },
+        "aliasSetSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "compiler",
+        "aliasSetSha256"
+      ],
+      "additionalProperties": false
+    },
+    "aliases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256,
+            "pattern": "^[a-z]+[1-5](?:-[a-z]+[1-5])*(?:\\.[a-z]+[1-5](?:-[a-z]+[1-5])*)*$"
+          },
+          "display": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          },
+          "capability": {
+            "type": "string",
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]{0,127}$"
+          }
+        },
+        "required": [
+          "key",
+          "display",
+          "label",
+          "capability"
+        ],
+        "additionalProperties": false
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "$schema",
+    "profile",
+    "id",
+    "kind",
+    "source",
+    "target",
+    "resolution",
+    "security",
+    "implementation",
+    "aliases"
+  ],
+  "additionalProperties": false
+}

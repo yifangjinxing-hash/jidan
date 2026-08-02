@@ -12,6 +12,7 @@
 <p align="center">
   <a href="#-クイックスタート"><img src="https://img.shields.io/badge/クイックスタート-195A41?style=for-the-badge" alt="クイックスタート" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
+  <a href="profiles/frontends/zh-Latn-pinyin.frontend.json"><img src="https://img.shields.io/badge/Pinyin_Frontend-0.1-6D5BD0?style=for-the-badge" alt="Pinyin Frontend 0.1" /></a>
   <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/UI_Locale-23-D9A441?style=for-the-badge" alt="23個のシード UI ロケール" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contributions-Welcome-3978C6?style=for-the-badge" alt="コントリビューション歓迎" /></a>
 </p>
@@ -59,6 +60,7 @@ result = registry.invoke("message.compose", {"content": "3時に会いましょ�
 | `message.compose` | Apple Shortcut / Share Sheet | データのみのプラン |
 | `message.compose` | Web 編集可能ドラフト | データのみのプラン |
 | `message.compose` | コミュニティ Adapter | ローカル登録。中央の公開ホワイトリストは不要 |
+| Pinyin Frontend 0.1 | 制御エイリアス → `message.compose` | オプション。payload は原文のまま保持し、曖昧なエイリアスは拒否 |
 
 結果は現実の状態を明示します。
 
@@ -75,6 +77,12 @@ result = registry.invoke("message.compose", {"content": "3時に会いましょ�
 ```
 
 `handoff_planned` は呼び出しプランが準備できたことだけを表し、UI が開いたとは主張しません。実際に Android Picker が前面に表示されたことを検証した場合に限り `handoff_opened` を返します。それでも Jidan は宛先を選ばず、送信ボタンも押さないため、`sent` は `false` のままです。
+
+## 🔤 オプションの Pinyin compiler frontend
+
+[Pinyin Frontend 0.1](profiles/frontends/zh-Latn-pinyin.frontend.json) は、拼音の**制御エイリアスだけ**を既存の `message.compose` 呼び出しへコンパイルする、任意で利用できる入力フロントエンドです。メッセージの payload は翻字、翻訳、再解釈を行わず、入力された文字列のまま保持します。フロントエンド自体には権限の付与、プラットフォーム Binding の選択、実行、宛先選択、送信を行う権限はありません。
+
+声調なしの拼音は、正規化後に候補が1つだけとなる場合に限って受理します。複数の意味や Capability に解釈できる場合は推測せず拒否し、確認を求めます。これは JCL の bytecode でも、新しい DSL でもありません。機械間の安定した表現は引き続き Capability ID と JSON Schema です。設計と信頼境界の詳細は [JCL Pinyin Frontend 設計ノート](docs/05-jcl-pinyin-frontend-zh.md)を参照してください。
 
 ## 🧭 アーキテクチャと現在の実装
 
@@ -98,6 +106,7 @@ Android / Apple / Web / 新しいプラットフォーム
 - **公開の自由は盲目的な実行を意味しません。** 誰でも Adapter を実装できますが、各端末がインストールの信頼、ポリシー、隔離、取り消しを管理します。
 - **宛先ヒントは権限ではありません。** `message.compose.recipient` はプラットフォーム Binding に渡されません。
 - **Adapter は成功を自己申告できません。** 配送状態は Host が生成し、第三者の出力をそのまま採用しません。
+- **拼音の解釈は権限ではありません。** Pinyin Frontend は候補となる `message.compose` 呼び出しを作るだけで、曖昧な入力は拒否され、通常の Schema、Grant、確認ゲートを迂回できません。
 - **不明な結果は不明のまま扱います。** 外部効果が曖昧な操作を「成功」として自動再試行しません。
 - **最後の決定権は利用者にあります。** 送信、支払い、削除、セキュリティ設定の変更には明示的な確定境界が必要です。
 
@@ -132,6 +141,8 @@ Windows では `gradlew.bat` を使用してください。PowerShell 5.1 の Un
 ## 🌍 23個のシード Locale
 
 Jidan は人間の言語を機械プロトコルから分離します。任意の Unicode 本文は JSON、タスクグラフ、ADB、保存、読み戻し、UI を通過できます。一方、能力 ID、Schema フィールド、Grant、ハッシュ、Receipt の値は安定した ASCII 契約のままです。Android Reference UI には、RTL のアラビア語を含む **23個のシード Locale** があります。`memo: <本文>` は言語に依存しない決定論的な入口です。
+
+Pinyin Frontend はこの言語分離を変更しません。拼音を JCL の共通言語にするのではなく、`zh-Latn-pinyin` 利用者向けの任意の制御入力として追加します。制御エイリアスだけが解析対象であり、その後ろの payload は日本語、中国語、英語、絵文字を含めて原文のまま `message.compose` に渡されます。
 
 これらのシード翻訳は、コミュニティが改善するための出発点です。本ページおよび一部の言語リソースは機械支援で翻訳されており、**母語話者による全面的なレビュー済みとは主張しません**。詳細と修正方法は[言語と国際化のガイド](docs/i18n/README.md)をご覧ください。
 

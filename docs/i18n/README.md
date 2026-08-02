@@ -14,11 +14,12 @@ Jidan is designed so language is data at the edge, not part of the trusted machi
 
 Localized READMEs are maintained as welcoming entry points. The English README and machine-readable capability profiles remain the canonical technical references when translations differ. Fluent review is welcome through the [translation issue template](../../.github/ISSUE_TEMPLATE/translation.yml).
 
-## Three separate guarantees
+## Four separate guarantees
 
 1. **Unicode transport:** memo text in any writing system can pass through JSON, the task graph, ADB, AppFunctions, storage, readback, and the UI without transliteration or implicit normalization.
 2. **Localized UI:** Android strings use resource qualifiers and BCP 47 locale configuration. Unknown locales fall back to the complete English resource set.
 3. **Semantic understanding:** the bundled `memo: <content>` prefix is language-neutral. The offline Chinese rule parser is one optional adapter. Free-form understanding in another language requires a reviewed parser or constrained multilingual-model adapter; it must still emit the same stable semantic action.
+4. **Compile-only input frontends:** the optional [`zh-Latn-pinyin` profile](../../profiles/frontends/zh-Latn-pinyin.frontend.json) resolves reviewed Pinyin control aliases to existing capability IDs. It preserves payloads verbatim, has no execution authority, and rejects unknown or ambiguous aliases. A frontend profile is not a UI locale or a new machine protocol.
 
 These guarantees are deliberately not conflated. Shipping an interface translation does not mean a language has a safe natural-language parser, and accepting Unicode does not mean every phrase is understood.
 

@@ -12,6 +12,7 @@
 <p align="center">
   <a href="#-inicio-rápido"><img src="https://img.shields.io/badge/Inicio_rápido-195A41?style=for-the-badge" alt="Inicio rápido" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/Perfil_JCL-0.1-2F8F68?style=for-the-badge" alt="Perfil JCL 0.1" /></a>
+  <a href="profiles/frontends/zh-Latn-pinyin.frontend.json"><img src="https://img.shields.io/badge/Frontend_Pinyin-0.1-7A5AF8?style=for-the-badge" alt="Frontend opcional de pinyin 0.1" /></a>
   <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/Locales_UI-23-D9A441?style=for-the-badge" alt="23 locales semilla de interfaz" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contribuciones-Bienvenidas-3978C6?style=for-the-badge" alt="Contribuciones bienvenidas" /></a>
 </p>
@@ -76,9 +77,26 @@ Cada resultado expresa con precisión lo que ocurrió:
 
 `handoff_planned` significa que existe un plan de traspaso; nunca se presenta como una interfaz ya abierta. Un selector de Android abierto y comprobado informa `handoff_opened`, pero la entrega sigue con `sent: false`: Jidan no elige al destinatario ni pulsa **Enviar**.
 
+## 🔤 Frontend opcional de pinyin
+
+El [perfil de frontend `zh-Latn-pinyin` 0.1](profiles/frontends/zh-Latn-pinyin.frontend.json) solo compila alias de control restringidos a la capacidad existente `message.compose`. Conserva literalmente el valor del payload: no lo traduce, translitera ni normaliza. Resolver un alias no concede autoridad, no confirma una acción y no ejecuta nada.
+
+Se permiten alias sin tonos únicamente cuando identifican una sola entrada. Si falta una coincidencia o existe más de una, la compilación se rechaza sin adivinar. Este frontend no es bytecode, un lenguaje de programación ni un DSL nuevo; es una tabla determinista y versionada de alias hacia un contrato ya definido. Consulta el documento de [diseño, normalización y límites de seguridad](docs/05-jcl-pinyin-frontend-zh.md).
+
 ## ✅ Estado actual
 
-El prototipo incluye un registro de capacidades con validación de esquemas, grafos de tareas, permisos con alcance, una puerta de confirmación, rechazo persistente de repeticiones y recibos encadenados por hash. También incluye un proveedor de referencia controlado para Android 17 AppFunctions, descubrimiento de superficies semánticas y un traspaso nativo verificado al selector de WeChat.
+| Capa | Estado | Evidencia y límite |
+|---|---:|---|
+| Registro de capacidades y validación de esquemas | ✅ | Prototipo Python sin dependencias externas |
+| Grafos de tareas, permisos con alcance y puerta de confirmación | ✅ | Preflight y ejecución deterministas |
+| Rechazo persistente de repeticiones | ✅ | Libro mayor de permisos en SQLite |
+| Recibos de ejecución encadenados por hash | ✅ | Registro de recibos del runtime |
+| Android 17 AppFunctions | ✅ | Proveedor controlado de referencia y harness en vivo |
+| Descubrimiento de superficies semánticas | ✅ | AppFunctions → RemoteInput → atajo → compartir público |
+| Traspaso nativo verificado a WeChat | ✅ | Actividad exacta del selector; no elige destinatario ni pulsa Enviar |
+| Perfil multiplataforma `message.compose` | 🧪 | Planes Android, iOS y Web; binding de Android verificado |
+| Frontend opcional de pinyin 0.1 | 🧪 | Solo alias de control → `message.compose`; payload literal, sin autoridad ni ejecución; la ambigüedad se rechaza |
+| Sistema operativo móvil de agentes listo para producción | 🗺️ | Todavía no se afirma |
 
 El perfil multiplataforma `message.compose` sigue siendo experimental: Android, iOS y Web tienen planes de adaptador, mientras que la evidencia de apertura verificada disponible actualmente corresponde al binding de Android. Jidan todavía no afirma ser un sistema operativo de agentes móvil listo para producción.
 
@@ -139,6 +157,9 @@ Jidan mantiene el lenguaje humano separado del protocolo de máquina:
 - `memo: <content>` ofrece una entrada determinista independiente del idioma;
 - los identificadores de capacidades, campos de esquema, permisos, hashes y valores de recibos permanecen como contratos ASCII estables;
 - añadir traducciones de interfaz o adaptadores lingüísticos revisados no requiere bifurcar el protocolo.
+
+> [!NOTE]
+> El pinyin es únicamente una ortografía opcional para alias de control. Los tonos pueden omitirse solo si la resolución es única; cualquier colisión o ambigüedad se rechaza. El contenido del payload permanece literal y fuera de la resolución lingüística, por lo que el frontend no adquiere autoridad ni capacidad de ejecución.
 
 Las traducciones semilla son un punto de partida abierto y no implican revisión por hablantes nativos. Consulta [Idiomas e internacionalización](docs/i18n/README.md) para ayudar a mejorarlas.
 

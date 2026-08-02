@@ -98,6 +98,20 @@ DRAFT → SIMULATED → AUTHORIZED → RUNNING → WAITING
 6. Provider/版本/schema 改变时重新校验计划。
 7. 低置信度不无限 ReAct，转为询问或用户接管。
 
+## 输入 Frontend：拼音是源码，不是权限
+
+语言输入位于 JCL 信任边界之外。可选的 Pinyin Frontend 把经过审查的 `zh-Latn-pinyin` 控制别名编译成现有 capability ID 与 JSON 参数提案；它不改变 JCL Profile，也不能调用 Registry、选择平台、发放 Grant 或执行 Adapter。
+
+```text
+chuàng-jiàn.cǎo-gǎo + 原样正文
+        ↓ NFC / 显式边界 / 数字调 / 唯一别名
+InvocationProposal(message.compose, {content: 原样正文})
+        ↓ 仍按不可信数据处理
+Schema → Policy → Grant → Confirm → Runtime → Binding
+```
+
+控制面和数据面严格分离：拼音只解释动作别名；姓名、正文、URL、金额、账号和凭据不转写。无声调别名只有在全表唯一时才能编译；同音冲突、未知词、混合脚本、不可见字符和模糊匹配全部 fail closed。完整 Profile 与依据见[《JCL 拼音编译前端 0.1》](05-jcl-pinyin-frontend-zh.md)。
+
 ## Jidan Capability Layer（JCL）
 
 JCL 不另造语法和传输层。公开互操作面直接复用 MCP Tool 与 JSON Schema，并把 Jidan 的最小风险语义放在命名空间 `_meta` 中：

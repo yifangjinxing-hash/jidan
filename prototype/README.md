@@ -53,6 +53,42 @@ Adapters cannot author core outcome fields such as `delivery`, `sent`,
 whitelist, but installing and executing third-party code remains a local trust
 and isolation decision.
 
+## Optional Pinyin compiler frontend
+
+`jidan/pinyin_frontend.py` implements the compile-only
+[`JCL-Input-Frontend/0.1`](../profiles/frontends/zh-Latn-pinyin.frontend.json).
+It resolves a reviewed `zh-Latn-pinyin` control alias to an existing capability
+ID and returns an authority-free `InvocationProposal`:
+
+```python
+compiler = PinyinCompiler.from_profile(profile)
+proposal = compiler.compile(
+    "chuàng-jiàn.cǎo-gǎo",
+    {"content": "下午三点见。"},
+)
+
+assert proposal.capability == "message.compose"
+# Next, place proposal.capability and proposal.arguments in a TaskPlan.
+# The normal schema, Grant, confirmation, Runtime, binding, and receipt
+# stages remain mandatory; see pinyin_frontend_demo.py for the full flow.
+```
+
+Run the end-to-end data-only example:
+
+```powershell
+python pinyin_frontend_demo.py
+```
+
+The frontend performs NFC normalization, explicit word/syllable boundary
+parsing, marked-tone to ASCII numeric-tone conversion, versioned exact alias
+lookup, and collision rejection. Toneless input is accepted only when the
+input resolves to exactly one reviewed alias. It performs no Han-to-Pinyin
+guessing, fuzzy matching, schema validation bypass, grant issuance, registry
+invocation, platform selection, recipient selection, or send action. Only the
+control alias is normalized; payload text is defensively copied and preserved
+verbatim. The resulting proposal still passes through the normal JCL schema,
+policy, grant, confirmation, runtime, binding, and receipt chain.
+
 ## Android 17 AppFunctions Phase 1 adapter
 
 `jidan/android_appfunctions.py` is an argv-only adapter for the official Android shell surface:

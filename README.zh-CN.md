@@ -12,6 +12,7 @@
 <p align="center">
   <a href="#-快速开始"><img src="https://img.shields.io/badge/快速开始-195A41?style=for-the-badge" alt="快速开始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
+  <a href="profiles/frontends/zh-Latn-pinyin.frontend.json"><img src="https://img.shields.io/badge/拼音前端-0.1-6E5AA8?style=for-the-badge" alt="拼音编译前端 0.1" /></a>
   <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/UI_语言包-23-D9A441?style=for-the-badge" alt="23 个种子 UI 语言包" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/欢迎-共同建设-3978C6?style=for-the-badge" alt="欢迎共同建设" /></a>
 </p>
@@ -76,11 +77,21 @@ result = registry.invoke("message.compose", {"content": "下午三点见。"})
 
 `handoff_planned` 绝不能冒充“界面已经拉起”。只有真实验证过 Android Picker 才能报告 `handoff_opened`；即便如此，发送仍是 `false`，因为 Jidan 不选择联系人，也不点击发送。
 
+### 可选的拼音编译前端
+
+[`JCL-Input-Frontend/0.1`](profiles/frontends/zh-Latn-pinyin.frontend.json) 可以把经过审查的拼音控制别名编译到同一能力，而不修改 MCP Tool Profile：
+
+```text
+chuàng-jiàn.cǎo-gǎo  →  chuang4-jian4.cao3-gao3  →  message.compose
+```
+
+拼音是源码，不是字节码，也不是新 DSL：Frontend 没有任何授权或执行能力，只能产生一份仍不可信的调用提案。正文逐字符保留；声调和音节边界显式；无声调输入仅在全表恰好命中一个审查过的别名时接受；同音歧义直接拒绝。完整规则见[拼音编译前端设计](docs/05-jcl-pinyin-frontend-zh.md)。
+
 ## 🧭 架构
 
 ```mermaid
 flowchart LR
-    H["人的目标"] --> P["AI 规划器<br/>不可信"]
+    H["人的目标"] --> P["不可信提案来源<br/>AI 规划器 · 拼音前端"]
     P --> C["稳定能力<br/>message.compose"]
     C --> G{"确定性安全门<br/>schema · scope · grant · 确认"}
     G --> R["Host 选择 Binding"]
@@ -114,6 +125,7 @@ flowchart LR
 | 语义表面发现 | ✅ | AppFunctions → RemoteInput → Shortcut → 公开分享 |
 | 微信原生交接验证 | ✅ | 验证准确 Picker；不选人、不发送 |
 | 跨端 `message.compose` Profile | 🧪 | Android / iOS / Web 计划；Android 已验证 Binding |
+| 只编译不执行的拼音前端 | 🧪 | 显式别名、NFC 归一化、同音冲突拒绝 |
 | 生产级移动 Agent OS | 🗺️ | 尚未宣称完成 |
 
 ## 🛡️ 把安全写进结构
@@ -121,6 +133,7 @@ flowchart LR
 - **AI 规划器不是安全边界：**模型输出始终按不可信数据验证。
 - **开放发布不等于盲目执行：**任何人都能实现 Adapter，但本机仍掌握安装信任、策略、隔离与撤销。
 - **收件人提示不是授权：**`message.compose.recipient` 永远不会传给平台 Binding。
+- **语言别名不是授权：**拼音只能提出稳定能力，不能发 Grant、执行、选择平台或改写正文。
 - **Adapter 无权宣布成功：**发送状态由 Host 生成，不照抄第三方返回值。
 - **模糊结果不会被重试成成功：**未知就是未知，并保守写入回执。
 - **用户拥有最后一步：**发送、支付、删除和安全设置必须具有明确提交边界。
@@ -135,6 +148,7 @@ flowchart LR
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
+python pinyin_frontend_demo.py
 python appfunctions_smoke.py
 ```
 
@@ -156,7 +170,7 @@ Windows 请用 `gradlew.bat`。PowerShell 5.1 的 Unicode 注意事项见[原型
 ## 🗂️ 仓库地图
 
 ```text
-profiles/       与 MCP 兼容的 JCL 能力 Profile
+profiles/       与 MCP 兼容的 JCL 能力及只编译不执行的输入 Frontend
 prototype/      能力内核、Adapter、策略、授权、回执与演示
 reference-app/  受控 Android 17 AppFunctions Provider
 docs/           架构、调研、路线图与国际化说明
@@ -169,6 +183,7 @@ APK、模拟器镜像、原始设备日志、截图、回执和 SQLite 账本不
 - 任意 Unicode 正文可以穿过 JSON、任务图、ADB、存储、回读和 UI。
 - Android Reference UI 已提供 **23 个种子 Locale**，包括 RTL 阿拉伯语。
 - `memo: <正文>` 是语言无关的确定性入口。
+- 可选的 `zh-Latn-pinyin` 前端只编译经过审查的控制别名，正文始终原样保留。
 - 能力 ID、Schema 字段、Grant、哈希和回执值始终保持稳定 ASCII。
 - 新增 UI 翻译和受审查的语言 Adapter，不需要 Fork 协议。
 
@@ -176,7 +191,7 @@ APK、模拟器镜像、原始设备日志、截图、回执和 SQLite 账本不
 
 ## 🤝 一起建设
 
-我们尤其欢迎：新平台 `message.compose` Binding、能抓住“假成功”的一致性测试、23 个 Locale 的母语审校、受约束的语言 Adapter，以及基于受控设备的可复现实验。
+我们尤其欢迎：新平台 `message.compose` Binding、能抓住“假成功”的一致性测试、23 个 Locale 的母语审校、带声调与冲突测试的拼音别名、受约束的语言 Adapter，以及基于受控设备的可复现实验。
 
 从 [CONTRIBUTING.md](CONTRIBUTING.md) 和 [90 天路线图](docs/04-90-day-execution-roadmap-zh.md)开始。
 

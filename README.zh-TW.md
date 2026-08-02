@@ -12,6 +12,7 @@
 <p align="center">
   <a href="#-快速開始"><img src="https://img.shields.io/badge/快速開始-195A41?style=for-the-badge" alt="快速開始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
+  <a href="profiles/frontends/zh-Latn-pinyin.frontend.json"><img src="https://img.shields.io/badge/Pinyin_Frontend-0.1-8A5A2B?style=for-the-badge" alt="Pinyin Frontend 0.1" /></a>
   <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/UI_Locale-23-D9A441?style=for-the-badge" alt="23 個種子 UI Locale" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/歡迎-共同建設-3978C6?style=for-the-badge" alt="歡迎共同建設" /></a>
 </p>
@@ -76,6 +77,12 @@ result = registry.invoke("message.compose", {"content": "下午三點見。"})
 
 `handoff_planned` 只表示呼叫計畫已準備，絕不冒充「介面已開啟」。只有真正驗證 Android Picker 已出現在前景後，才能回報 `handoff_opened`；即使如此，`sent` 仍為 `false`，因為 Jidan 不選擇收件人，也不按下傳送。
 
+## 🔤 可選拼音編譯前端
+
+[`Pinyin Frontend 0.1`](profiles/frontends/zh-Latn-pinyin.frontend.json) 是位於 Host 輸入邊界的可選、僅編譯前端，**不是 JCL 位元組碼，也不是新 DSL**。它只把受限的拼音控制別名編譯成既有 `message.compose` 呼叫提案；能力 ID、Schema 與 JCL 0.1 保持不變，訊息正文則逐字保留，不會被靜默改寫或自動轉成漢字。
+
+這個 Frontend 沒有授權、Grant、執行、選擇收件人或傳送的權力。無聲調拼音只在能唯一命中受審查別名時接受；未知輸入或同音歧義一律拒絕，交還使用者釐清。編譯結果仍是不受信任的提案，必須完整通過原有 Schema、策略、授權、確認、執行與回執鏈。設計與威脅邊界詳見[JCL 拼音前端說明](docs/05-jcl-pinyin-frontend-zh.md)。
+
 ## 🧭 架構與目前進度
 
 ```text
@@ -90,11 +97,16 @@ Android / Apple / Web / 新平台
 人類完成最後動作 → 回執
 ```
 
+| 新增層級 | 狀態 | 目前證據 |
+|---|---:|---|
+| 可選 Pinyin Frontend 0.1 | 🧪 | 受限控制別名 → `message.compose` 提案；正文原樣保留，歧義拒絕 |
+
 目前原型已包含：無第三方依賴的能力註冊與 Schema 驗證、任務圖與限權 Grant、確認閘門、SQLite 重放阻擋、雜湊鏈回執、Android 17 AppFunctions 受控驗證、語意表面探索，以及不選人、不傳送的微信原生交接。Android、iOS 與 Web 的 `message.compose` 資料計畫已提供；這不代表生產級行動 Agent OS 已完成。
 
 ## 🛡️ 安全邊界
 
 - **AI 規劃器不是安全邊界：**模型輸出一律視為不可信資料並接受驗證。
+- **拼音前端不擁有權限：**它只能產生 `message.compose` 提案，不能授權、執行、選擇收件人或傳送；歧義必須拒絕。
 - **開放發布不等於盲目執行：**任何人都能實作 Adapter，但每台裝置仍掌握安裝信任、政策、隔離與撤銷。
 - **收件人提示不是授權：**`message.compose.recipient` 不會傳入平台 Binding。
 - **Adapter 不能自行宣告成功：**傳送狀態由 Host 產生，不照抄第三方輸出。
@@ -131,7 +143,7 @@ Windows 請使用 `gradlew.bat`。PowerShell 5.1 的 Unicode 注意事項請參�
 
 ## 🌍 23 個種子 Locale
 
-Jidan 將人類語言與機器協定分離。任意 Unicode 正文可穿過 JSON、任務圖、ADB、儲存、回讀與 UI；能力 ID、Schema 欄位、Grant、雜湊及回執值則維持穩定的 ASCII 契約。Android Reference UI 目前提供 **23 個種子 Locale**，包括 RTL 阿拉伯文；`memo: <正文>` 是語言無關的確定性入口。
+Jidan 將人類語言與機器協定分離。任意 Unicode 正文可穿過 JSON、任務圖、ADB、儲存、回讀與 UI；能力 ID、Schema 欄位、Grant、雜湊及回執值則維持穩定的 ASCII 契約。Android Reference UI 目前提供 **23 個種子 Locale**，包括 RTL 阿拉伯文；`memo: <正文>` 是語言無關的確定性入口。Pinyin Frontend 只是其中一個可選輸入前端，不是所有語言必須經過的底層；它只編譯控制別名，不改寫使用者正文。
 
 這些種子翻譯是供社群改進的起點。本頁與部分語言資源使用機器輔助翻譯，**不宣稱已由母語者完整審校**。詳情與校訂方式請見[語言與國際化指南](docs/i18n/README.md)。
 

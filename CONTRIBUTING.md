@@ -38,6 +38,18 @@ Translations can be partial during review, but merged locale files must pass the
 
 Natural-language parsers are adapters at the untrusted edge. A parser may accept any language, but it must return the stable semantic action contract, reject ambiguity, preserve the original user text, and never grant or execute a capability directly. Task planning, policy checks, confirmation, execution, and receipts remain separate stages.
 
+Pinyin frontend aliases follow the same boundary. A contribution must use the
+registered `zh-Latn-pinyin` tag, provide full tones and explicit syllable/word
+boundaries, map to an existing stable capability ID, preserve payload data
+verbatim, and add unknown/ambiguous/mixed-script regression cases. Runtime
+Han-to-Pinyin guessing, fuzzy matching, first-match collision handling, direct
+Registry invocation, and aliases that silently widen an action (for example,
+mapping “send” to “compose”) are not accepted. Update the reviewed alias-set
+hash in the frontend profile and run `test_pinyin_frontend.py`.
+
+See [the Pinyin frontend design](docs/05-jcl-pinyin-frontend-zh.md) and the
+[machine-readable profile](profiles/frontends/zh-Latn-pinyin.frontend.json).
+
 ## Capability bindings
 
 New platform bindings do not need a central Jidan publication whitelist. They do need a focused implementation, local installation trust, and conformance evidence before a host enables them.

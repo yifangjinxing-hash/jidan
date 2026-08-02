@@ -11,4 +11,5 @@
 - Added fail-closed Android semantic-surface routing and a verified WeChat text-share handoff that stops at the native recipient picker.
 - Added the MCP-compatible JCL 0.1 `message.compose` profile with Android, iOS, and Web plan bindings plus a verified Android/WeChat wrapper.
 - Added host-owned no-send outcome semantics, recipient-hint isolation, and adapter false-success regression tests.
+- Added the compile-only JCL Pinyin Frontend 0.1 with NFC normalization, explicit tone/boundary rules, hashed aliases, fail-closed homophone handling, and verbatim payload preservation.
 - Rebuilt the project landing pages with a local hero illustration, architecture visualization, capability status table, and multilingual README entry points.
