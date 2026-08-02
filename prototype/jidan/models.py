@@ -122,6 +122,7 @@ class Grant:
     expires_at: int
     nonce: str
     signature: str
+    capability_digests: tuple[tuple[str, str], ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)

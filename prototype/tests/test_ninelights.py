@@ -52,6 +52,9 @@ class NineLightsTests(unittest.TestCase):
             capabilities={step.capability for step in plan.steps},
             scopes=(),
             max_effect=Effect.READ,
+            capability_digests=self.registry().definition_digests(
+                {step.capability for step in plan.steps}
+            ),
         )
 
     def test_checked_in_profiles_match_runtime_exports(self) -> None:

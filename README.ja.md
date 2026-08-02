@@ -87,10 +87,25 @@ plan = TaskPlan(
 
 ## 🎮 Nine Lights：小さな相互運用性チェック
 
+<p align="center">
+  <img src="docs/assets/ninelights-icon.png" alt="Nine Lights 3 × 3 パズルのアイコン" width="180" />
+</p>
+
 [`game.ninelights.start`](profiles/game.ninelights.start.tool.json) と
 [`game.ninelights.press`](profiles/game.ninelights.press.tool.json) は、決定論的な 3 × 3 ライトパズルを記述します。Python CLI の各操作は TaskPlan、最小 READ Grant、`JidanRuntime`、ハッシュチェーン Receipt を通ります。独立した JavaScript Web Host は同じ Profile を実装し、同じ[適合性ベクトル](profiles/conformance/game.ninelights.vectors.json)を再生します。
 
 リポジトリを clone した後、依存関係のない [Nine Lights Web UI](prototype/web/ninelights.html) をブラウザーで直接開けます。ビルドは不要です。
+
+Windows では中国語デスクトップ UI を起動するか、専用アイコン付きの単一 EXE を作成できます。
+
+```powershell
+cd prototype
+python -m pip install PyInstaller==6.21.0
+python ninelights_gui.py
+powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
+```
+
+出力先は `prototype/build/pyinstaller/dist/JidanNineLights.exe` です。ローカル開発ビルドは未署名です。Windows SmartScreen を回避せず、信頼できるチェックアウトから自分でビルドした EXE だけを実行し、SHA-256 をビルドスクリプトの出力と照合してください。ローカルポリシーがスクリプトを拒否する場合は、内容を確認して組織で承認された実行方法を使ってください。
 
 これは観測可能な意味論の共有を示すだけで、Runtime の共有、汎用ゲーム言語、Android/iOS 対応を示すものではありません。[範囲と証拠の説明](docs/07-universal-game-spike-zh.md)（中国語）を参照してください。
 
@@ -121,6 +136,7 @@ Web → 編集可能な Web 確認画面
 - **公開の自由は盲目的な実行を意味しません。** 誰でも Adapter を実装できますが、各端末がインストールの信頼、ポリシー、隔離、取り消しを管理します。
 - **宛先ヒントは権限ではありません。** `message.compose.recipient` はプラットフォーム Binding に渡されません。
 - **Adapter は成功を自己申告できません。** 配送状態は Host が生成し、第三者の出力をそのまま採用しません。
+- **認可は名前だけに結び付きません。** Grant は有効な能力定義を固定し、Schema、effect、Adapter ID が変われば再認可を要求します。
 - **入力 Frontend は権限ではありません。** 言語や UI の入力は Grant を発行せず、実行、プラットフォーム選択、確認済み payload の書き換えもできません。
 - **不明な結果は不明のまま扱います。** 外部効果が曖昧な操作を「成功」として自動再試行しません。
 - **最後の決定権は利用者にあります。** 送信、支払い、削除、セキュリティ設定の変更には明示的な確定境界が必要です。
@@ -135,6 +151,7 @@ Python 3.11+ で、外部依存のないテストスイートとクロスプラ�
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
+python ninelights_gui.py --self-test
 python ninelights_demo.py --level cross --moves 5
 node tools/check_ninelights_web.js
 python appfunctions_smoke.py
@@ -169,7 +186,7 @@ Jidan は人間の言語を機械プロトコルから分離します。任意�
 
 新しい `message.compose` プラットフォーム Binding、偽の成功を検出する適合性テスト、23個の Locale の母語レビュー、Python Runtime をインポートせず共有ベクトルに合格する独立 Nine Lights Host、既存のセマンティック ID だけを出力する制約付き言語 Adapter、管理下のアプリや端末で再現できるテストを歓迎します。
 
-[CONTRIBUTING.md](CONTRIBUTING.md) と [90日ロードマップ](docs/04-90-day-execution-roadmap-zh.md)から始めてください。
+[CONTRIBUTING.md](CONTRIBUTING.md)、[90日ロードマップ](docs/04-90-day-execution-roadmap-zh.md)、[直近7日間のプロトコルレビュー](docs/08-seven-day-protocol-review-zh.md)（簡体字中国語）から始めてください。
 
 ## ライセンス
 

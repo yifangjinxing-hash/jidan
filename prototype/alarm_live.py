@@ -137,6 +137,7 @@ def main() -> int:
         {capability.id},
         capability.scopes,
         Effect.EXTERNAL,
+        capability_digests=registry.definition_digests({capability.id}),
     )
     preflight = runtime.execute(plan, preview)
     if preflight.status != "awaiting_confirmation":
@@ -166,6 +167,7 @@ def main() -> int:
         capability.scopes,
         Effect.EXTERNAL,
         approved_steps={"set_alarm"},
+        capability_digests=registry.definition_digests({capability.id}),
     )
     result = runtime.execute(plan, grant)
     ledger.checkpoint()

@@ -88,10 +88,25 @@ plan = TaskPlan(
 
 ### Nine Lights：一个小型互操作检查
 
+<p align="center">
+  <img src="docs/assets/ninelights-icon.png" alt="九灯：三乘三翻灯小游戏图标" width="180" />
+</p>
+
 [`game.ninelights.start`](profiles/game.ninelights.start.tool.json) 与
 [`game.ninelights.press`](profiles/game.ninelights.press.tool.json) 描述一款确定性的 3 × 3 翻灯游戏。Python CLI 的每个动作都经过 TaskPlan、最小 READ Grant、`JidanRuntime` 和哈希链 Receipt；独立 JavaScript Web Host 则实现相同 Profile，并重放同一份[一致性向量](profiles/conformance/game.ninelights.vectors.json)。
 
 克隆仓库后，可以直接用浏览器打开无依赖的 [Nine Lights Web UI](prototype/web/ninelights.html)，无需构建步骤。
+
+Windows 用户也可以直接启动中文窗口，或打包成带独立图标的单文件 EXE：
+
+```powershell
+cd prototype
+python -m pip install PyInstaller==6.21.0
+python ninelights_gui.py
+powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
+```
+
+生成文件位于 `prototype/build/pyinstaller/dist/JidanNineLights.exe`。本地开发构建未签名；不要绕过 Windows SmartScreen。只运行由可信检出自行构建的 EXE，并把文件 SHA-256 与构建脚本打印的值比对。若本机策略阻止脚本，请先检查脚本，并采用组织批准的执行方式。
 
 这证明的是外部可观察语义可以共享，不是共享 Runtime、通用游戏语言或 Android/iOS 已适配。边界与运行方法见[小游戏尖峰说明](docs/07-universal-game-spike-zh.md)。
 
@@ -136,6 +151,8 @@ flowchart LR
 | 任务图、限权 Grant、确认门 | ✅ | 确定性预检与执行 |
 | 持久重放拦截 | ✅ | SQLite 授权账本 |
 | 哈希链执行回执 | ✅ | Runtime Receipt Log |
+| 能力定义指纹授权 | ✅ | Grant 绑定 Schema、风险与 Adapter；定义变化即失效 |
+| 发现错误分层 | ✅ | 已落地纯分类器与单测；真实连接和回退集成仍待实现 |
 | Android 17 AppFunctions | ✅ | 受控 Provider 与真机 Harness |
 | 语义表面发现 | ✅ | AppFunctions → RemoteInput → Shortcut → 公开分享 |
 | 微信原生交接验证 | ✅ | 验证准确 Picker；不选人、不发送 |
@@ -151,6 +168,7 @@ flowchart LR
 - **收件人提示不是授权：**`message.compose.recipient` 永远不会传给平台 Binding。
 - **输入 Frontend 不是授权：**语言或 UI 输入不能发 Grant、执行、选择平台或改写已经确认的正文。
 - **Adapter 无权宣布成功：**发送状态由 Host 生成，不照抄第三方返回值。
+- **授权不只绑定名字：**Grant 绑定能力定义指纹；同名能力的 Schema、风险或 Adapter 变化后必须重新授权。
 - **模糊结果不会被重试成成功：**未知就是未知，并保守写入回执。
 - **用户拥有最后一步：**发送、支付、删除和安全设置必须具有明确提交边界。
 
@@ -164,6 +182,7 @@ flowchart LR
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
+python ninelights_gui.py --self-test
 python ninelights_demo.py --level cross --moves 5
 node tools/check_ninelights_web.js
 python appfunctions_smoke.py
@@ -212,7 +231,7 @@ APK、模拟器镜像、原始设备日志、截图、回执和 SQLite 账本不
 
 我们尤其欢迎：新平台 `message.compose` Binding、能抓住“假成功”的一致性测试、23 个 Locale 的母语审校、不导入 Python Runtime 但能通过共享向量的独立 Nine Lights Host、受约束的语言 Adapter，以及基于受控设备的可复现实验。
 
-从 [CONTRIBUTING.md](CONTRIBUTING.md) 和 [90 天路线图](docs/04-90-day-execution-roadmap-zh.md)开始。
+从 [CONTRIBUTING.md](CONTRIBUTING.md)、[90 天路线图](docs/04-90-day-execution-roadmap-zh.md)和[近七日协议复盘](docs/08-seven-day-protocol-review-zh.md)开始。
 
 ## 许可证
 

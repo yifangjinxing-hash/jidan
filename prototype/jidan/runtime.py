@@ -32,13 +32,15 @@ class JidanRuntime:
         for step in plan.steps:
             try:
                 capability = self.registry.get(step.capability)
+                # A Grant may bind only an executable, sealed Registry entry.
+                self.registry.definition_digest(step.capability)
                 self._validate_refs(step.arguments, prior_steps)
                 self.registry.validate_input(
                     step.capability,
                     step.arguments,
                     allow_refs=True,
                 )
-            except (KeyError, ValueError) as exc:
+            except (KeyError, RuntimeError, ValueError) as exc:
                 decisions.append(Decision(step.id, step.capability, "denied", str(exc)))
                 prior_steps.add(step.id)
                 continue
@@ -99,6 +101,7 @@ class JidanRuntime:
                 task_id=plan.id,
                 step_id=step.id,
                 capability=capability.id,
+                capability_digest=self.registry.definition_digest(capability.id),
                 effect=capability.effect.label(),
                 status=status,
                 arguments=arguments,

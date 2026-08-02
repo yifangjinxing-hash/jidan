@@ -12,6 +12,12 @@ from .nlp import NlpParseError, SemanticAction, parse_memo_command, parse_zh_mem
 from .policy import PolicyEngine, issue_grant
 from .registry import CapabilityRegistry
 from .runtime import JidanRuntime
+from .discovery import (
+    DiscoveryError,
+    DiscoveryErrorKind,
+    classify_discovery_response,
+    classify_transport_error,
+)
 from .android_share import (
     AdbWeChatShareAdapter,
     WeChatShareAdapterError,
@@ -62,6 +68,8 @@ from .ninelights import (
 __all__ = [
     "Capability",
     "CapabilityRegistry",
+    "DiscoveryError",
+    "DiscoveryErrorKind",
     "AdbWeChatShareAdapter",
     "AdbSemanticSurfaceProbe",
     "Effect",
@@ -102,6 +110,8 @@ __all__ = [
     "WeChatShareAdapterError",
     "WeChatShareHandlerUnavailable",
     "issue_grant",
+    "classify_discovery_response",
+    "classify_transport_error",
     "message_compose_mcp_tool",
     "normalize_pinyin_alias",
     "ninelights_capabilities",

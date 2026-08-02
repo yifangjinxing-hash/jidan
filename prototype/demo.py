@@ -121,6 +121,9 @@ def main() -> None:
         capabilities=(step.capability for step in plan.steps),
         scopes={"mail.content.read", "local.inference", "shopping.list.write"},
         max_effect=Effect.WRITE,
+        capability_digests=runtime.registry.definition_digests(
+            step.capability for step in plan.steps
+        ),
     )
 
     gated = runtime.execute(plan, grant)
@@ -136,6 +139,9 @@ def main() -> None:
             scopes={"mail.content.read", "local.inference", "shopping.list.write"},
             max_effect=Effect.WRITE,
             approved_steps={"add_to_list"},
+            capability_digests=runtime.registry.definition_digests(
+                step.capability for step in plan.steps
+            ),
         )
         completed = runtime.execute(plan, approved_grant)
         print("\nAFTER EXPLICIT APPROVAL")

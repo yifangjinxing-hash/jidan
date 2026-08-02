@@ -56,6 +56,7 @@ for platform in ("android", "ios", "web"):
         capabilities={capability.id},
         scopes=capability.scopes,
         max_effect=Effect.WRITE,
+        capability_digests=registry.definition_digests({capability.id}),
     )
     stopped = runtime.execute(plan, unapproved)
 
@@ -68,6 +69,7 @@ for platform in ("android", "ios", "web"):
             scopes=capability.scopes,
             max_effect=Effect.WRITE,
             approved_steps={"compose"},
+            capability_digests=registry.definition_digests({capability.id}),
         )
         simulated_result = asdict(runtime.execute(plan, approved))
 

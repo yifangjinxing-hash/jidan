@@ -18,3 +18,7 @@
 - Updated the public `message.compose` demo and README examples to pass through TaskPlan, Grant, confirmation, Runtime, and Receipt instead of presenting direct Registry invocation as the product path.
 - Hardened `message.compose` so generic/community bindings can report only `handoff_planned`, recursively reject nested adapter-authored outcome claims, and require an explicit demo-only flag before simulated approval.
 - Rebuilt the project landing pages with a local hero illustration, architecture visualization, capability status table, and multilingual README entry points.
+- Added a native Chinese Nine Lights desktop UI, reproducible one-file Windows build, headless packaged self-test, and generated PNG/ICO app artwork.
+- Made capability-definition digests mandatory in newly issued Grants, intentionally invalidated pre-digest Grants, rejected same-name definition drift before adapter invocation, prevented in-place handler replacement, and recorded the effective digest in every Receipt.
+- Added transport-neutral discovery error classification so authentication, unsupported discovery, call-scoped JSON-RPC errors, malformed protocol responses, and transport failures cannot collapse into one misleading state.
+- Added a strict 2026-07-27—2026-08-02 protocol/community review and revised the 90-day route around stateless requests, versioned platform adapters, explicit parameter support, verifiable commit stages, and opaque asset handles.

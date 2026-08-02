@@ -105,6 +105,7 @@ def main() -> int:
         {capability.id},
         capability.scopes,
         Effect.READ,
+        capability_digests=registry.definition_digests({capability.id}),
     )
     try:
         result = runtime.execute(plan, grant)

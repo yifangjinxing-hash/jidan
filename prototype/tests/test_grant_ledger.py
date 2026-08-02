@@ -16,6 +16,7 @@ PROTOTYPE_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROTOTYPE_ROOT))
 
 from demo import build_demo_runtime, build_plan  # noqa: E402
+from jidan.registry import capability_digest  # noqa: E402
 from jidan import (  # noqa: E402
     Capability,
     Effect,
@@ -47,6 +48,9 @@ class GrantLedgerTests(unittest.TestCase):
                 {"mail.content.read", "local.inference", "shopping.list.write"},
                 Effect.WRITE,
                 approved_steps={"add_to_list"},
+                capability_digests=runtime.registry.definition_digests(
+                    step.capability for step in plan.steps
+                ),
             )
 
             first = runtime.execute(plan, grant)
@@ -151,12 +155,22 @@ class GrantLedgerTests(unittest.TestCase):
             capability = Capability(
                 id="test.process_write",
                 app="test",
-                description="Cross-process write",
+                description="Append exactly one durable cross-process test marker",
                 effect=Effect.WRITE,
                 scopes=frozenset({"test.process.write"}),
                 requires_confirmation=True,
                 reversible=False,
+                input_schema={"type": "object", "additionalProperties": False},
+                output_schema={
+                    "type": "object",
+                    "required": ["ok"],
+                    "properties": {"ok": {"type": "boolean"}},
+                    "additionalProperties": False,
+                },
             )
+            definition_digests = {
+                capability.id: capability_digest(capability)
+            }
             plan = TaskPlan(
                 id="cross.process.runtime",
                 goal="Prove persistent replay rejection",
@@ -169,6 +183,7 @@ class GrantLedgerTests(unittest.TestCase):
                 capability.scopes,
                 Effect.WRITE,
                 approved_steps={"write"},
+                capability_digests=definition_digests,
             )
             grant_path.write_text(
                 json.dumps(
@@ -182,6 +197,7 @@ class GrantLedgerTests(unittest.TestCase):
                         "expires_at": grant.expires_at,
                         "nonce": grant.nonce,
                         "signature": grant.signature,
+                        "capability_digests": list(grant.capability_digests),
                     },
                     sort_keys=True,
                 ),
@@ -282,6 +298,9 @@ class GrantLedgerTests(unittest.TestCase):
                 {"mail.content.read", "local.inference", "shopping.list.write"},
                 Effect.WRITE,
                 approved_steps={"add_to_list"},
+                capability_digests=runtime.registry.definition_digests(
+                    step.capability for step in plan.steps
+                ),
             )
             blocker = sqlite3.connect(ledger_path, isolation_level=None)
             blocker.execute("BEGIN IMMEDIATE")
@@ -370,6 +389,9 @@ class GrantLedgerTests(unittest.TestCase):
             {"mail.content.read", "local.inference", "shopping.list.write"},
             Effect.WRITE,
             approved_steps={"add_to_list"},
+            capability_digests=runtime.registry.definition_digests(
+                step.capability for step in plan.steps
+            ),
         )
 
         result = runtime.execute(plan, grant)

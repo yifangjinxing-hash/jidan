@@ -124,6 +124,7 @@ def main() -> int:
         {capability.id},
         capability.scopes,
         Effect.WRITE,
+        capability_digests=registry.definition_digests({capability.id}),
     )
     preflight = runtime.execute(plan, preview_grant)
     if preflight.status != "awaiting_confirmation":
@@ -153,6 +154,7 @@ def main() -> int:
         capability.scopes,
         Effect.WRITE,
         approved_steps={"open_wechat_handoff"},
+        capability_digests=registry.definition_digests({capability.id}),
     )
     try:
         result = runtime.execute(plan, grant)

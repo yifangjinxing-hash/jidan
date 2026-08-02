@@ -80,6 +80,7 @@ def run_smoke() -> dict[str, Any]:
         [capability.id],
         capability.scopes,
         Effect.EXTERNAL,
+        capability_digests=registry.definition_digests({capability.id}),
     )
 
     waiting = runtime.execute(plan, initial_grant)
@@ -96,6 +97,7 @@ def run_smoke() -> dict[str, Any]:
         capability.scopes,
         Effect.EXTERNAL,
         approved_steps={"create_note"},
+        capability_digests=registry.definition_digests({capability.id}),
     )
     completed = runtime.execute(plan, approved_grant)
     if completed.status != "completed":

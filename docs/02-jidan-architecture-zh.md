@@ -170,6 +170,10 @@ Discover → Normalize → Simulate → Plan → Authorize
          → Issue Token → Execute → Verify → Receipt → Compensate
 ```
 
+对外请求保持自包含：协议层不依赖粘性连接或隐式 Session；确实需要跨调用延续时，只传递有作用域、有期限、可验证的显式 handle。Host 的持久任务、幂等账本与授权状态仍然存在，但它们不是传输连接中的隐藏状态。
+
+发现失败也不能压成一个布尔值。Jidan 的 Adapter 公共分类至少区分 `auth_required`、`discovery_unsupported`、`call_error`、`protocol_error` 与 `transport_error`。一个可解码的 JSON-RPC 调用错误只结束当前调用，不得把连接永久判死；401/403 也不得伪装成“旧协议不支持”。
+
 ## 授权模型
 
 权力链为：
@@ -179,6 +183,8 @@ Human → Task → Agent → Capability → Resource
 ```
 
 能力令牌只能缩小，不能扩权，至少绑定：用户、任务 ID、Provider、函数、资源/字段、调用次数、到期时间、网络目的地、金额/联系人范围、前后台条件和策略版本。
+
+Jidan v0 的 Grant 还强制绑定每个能力的规范化定义指纹：Capability ID、App、描述、Effect、Scope、确认/可逆规则、输入输出 Schema 与 Adapter ID。Registry 在注册时保存深拷贝且禁止原地替换已经绑定的 Handler；签发后任一受保护字段变化，旧 Grant 会在调用 Handler 前被拒绝。Receipt 同时记录实际能力指纹，便于事后对照。这个机制证明“授权的是哪份契约”，但不等于 Adapter 二进制签名或发布者信誉；后两者仍属于安装信任与供应链工作。
 
 确认分级：
 
@@ -200,7 +206,7 @@ Human → Task → Agent → Capability → Resource
 - B：系统 API 结果 + 读回验证；
 - C：GUI 语义树或截图验证。
 
-Jidan v0 原型已实现 Schema 子集校验、HMAC 计划绑定授权、执行前确认、授权前零副作用、SQLite 持久 nonce 消费和哈希链一致性校验。当前哈希链尚不能抵抗有权限重写整份日志的攻击者，SQLite 文件也不能抵抗被整体回滚到旧的有效版本；系统版仍需 Android Keystore/StrongBox 认证锚点、受保护的持久任务状态机与 Provider 身份校验。
+Jidan v0 原型已实现 Schema 子集校验、HMAC 计划与能力定义指纹绑定授权、执行前确认、授权前零副作用、SQLite 持久 nonce 消费和哈希链一致性校验。当前哈希链尚不能抵抗有权限重写整份日志的攻击者，SQLite 文件也不能抵抗被整体回滚到旧的有效版本；系统版仍需 Android Keystore/StrongBox 认证锚点、受保护的持久任务状态机与 Provider 身份校验。
 
 执行器采用保守失败语义：写入或外部调用一旦进入 Provider，随后发生超时、断线或输出契约失败，就标记为 `outcome_unknown` / `committed_unverified` 并禁止自动重试；只有能证明尚未开始副作用的错误才是普通 `failed`。
 

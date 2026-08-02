@@ -68,6 +68,7 @@ class NineLightsHost:
             capabilities={capability_id},
             scopes=(),
             max_effect=Effect.READ,
+            capability_digests=self.registry.definition_digests({capability_id}),
         )
         result = self.runtime.execute(plan, grant)
         if result.status != "completed":

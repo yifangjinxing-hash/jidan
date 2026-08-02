@@ -149,6 +149,7 @@ def main() -> int:
         {target.capability.id},
         target.capability.scopes,
         Effect.EXTERNAL,
+        capability_digests=registry.definition_digests({target.capability.id}),
     )
     preflight = runtime.execute(preflight_plan, unapproved)
     if preflight.status != "awaiting_confirmation":
@@ -186,6 +187,7 @@ def main() -> int:
             target.capability.scopes,
             Effect.EXTERNAL,
             approved_steps={"call"},
+            capability_digests=registry.definition_digests({target.capability.id}),
         )
         result = runtime.execute(plan, grant)
         runs.append(

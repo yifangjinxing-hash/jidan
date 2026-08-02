@@ -2,6 +2,13 @@
 
 This dependency-free Python prototype tests one architectural claim: an AI planner must not be the security boundary. A model may propose a task graph, but a deterministic kernel must validate capabilities and their schemas, attenuate authority, stop for consent, execute adapters, and produce hash-chained receipts.
 
+Every newly issued Grant also pins the canonical digest of each effective
+capability definition. A same-name change to its Schema, effect, confirmation
+rule, or adapter identity is rejected before invocation, and the digest is
+copied into every Receipt. Registered handlers cannot be replaced in place.
+Signed Grants created before this field existed are intentionally incompatible
+and must be reissued from the current trusted Registry.
+
 ## Core demo
 
 The original demo searches local mail, extracts recipe ingredients, and requests a shopping-list write. It stops before any step executes until that write is approved, then emits one hash-chained receipt per step.
@@ -88,6 +95,50 @@ python ninelights_demo.py --level cross --moves 5
 python ninelights_demo.py --level corners --moves 1,9
 python ninelights_demo.py --level full --moves 1,3,5,7,9 --json
 ```
+
+For a normal Windows game window, launch the dependency-free Tkinter surface:
+
+```powershell
+python ninelights_gui.py
+```
+
+It provides a Chinese 3 × 3 board, three levels, mouse and number-key controls,
+restart, move count, and a completion dialog. It stays offline, and every start
+and press still passes through the same trusted Host and receipt chain. The
+headless check exercises the fixed solution for all three levels without
+creating a window:
+
+```powershell
+python ninelights_gui.py --self-test
+```
+
+To build the single-file Windows executable, use a Python environment that
+includes Tcl/Tk and PyInstaller 6.21.0:
+
+```powershell
+python -m pip install PyInstaller==6.21.0
+powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
+```
+
+The ignored build output is
+`build/pyinstaller/dist/JidanNineLights.exe`. The executable is unsigned in
+local development. Do not bypass Windows SmartScreen: run only an EXE you built
+from a trusted checkout, and compare its SHA-256 with the value printed by the
+build script. If local policy blocks scripts, inspect the script and use your
+organization's approved execution process.
+
+The checked-in PNG/ICO artwork at `../docs/assets/ninelights-icon.*` was created
+for this game. The PNG appears in the documentation; the ICO is embedded into
+the Windows build.
+
+## Protocol discovery error boundary
+
+`jidan/discovery.py` keeps discovery failures explicit and transport-neutral:
+`auth_required`, `discovery_unsupported`, `call_error`, `protocol_error`, and
+`transport_error`. In particular, a decodable JSON-RPC error carried by HTTP
+400/404 is scoped to that call and does not poison the next request; 401/403 is
+never silently downgraded to “old protocol unsupported.” The classifier performs
+no I/O and leaves connection lifecycle to the owning adapter.
 
 The browser version at `web/ninelights.html` is a separate dependency-free
 JavaScript Host. It does not invoke Python or claim to run `JidanRuntime`.

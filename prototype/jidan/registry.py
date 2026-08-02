@@ -1,15 +1,41 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from copy import deepcopy
 from pathlib import Path
 from typing import Any, Mapping
+import hashlib
 import json
 
 from .models import Capability
 
 
 CapabilityHandler = Callable[[Mapping[str, Any]], Mapping[str, Any]]
+
+
+def capability_digest(capability: Capability) -> str:
+    """Return the immutable content identity of one effective capability."""
+
+    payload = {
+        "id": capability.id,
+        "app": capability.app,
+        "description": capability.description,
+        "effect": capability.effect.label(),
+        "scopes": sorted(capability.scopes),
+        "requiresConfirmation": capability.requires_confirmation,
+        "reversible": capability.reversible,
+        "inputSchema": capability.input_schema,
+        "outputSchema": capability.output_schema,
+        "adapter": capability.adapter,
+    }
+    encoded = json.dumps(
+        payload,
+        ensure_ascii=False,
+        allow_nan=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
 
 
 class CapabilityInputError(ValueError):
@@ -30,6 +56,7 @@ class CapabilityRegistry:
     def __init__(self) -> None:
         self._capabilities: dict[str, Capability] = {}
         self._handlers: dict[str, CapabilityHandler] = {}
+        self._sealed: set[str] = set()
 
     def load_directory(self, directory: str | Path) -> None:
         for path in sorted(Path(directory).glob("*.json")):
@@ -45,20 +72,43 @@ class CapabilityRegistry:
     ) -> None:
         if capability.id in self._capabilities:
             raise ValueError(f"duplicate capability: {capability.id}")
-        self._capabilities[capability.id] = capability
+        # Capability is frozen, but its schema mappings may not be. Keep an
+        # isolated snapshot so a publisher cannot mutate a registered contract.
+        self._capabilities[capability.id] = deepcopy(capability)
         if handler is not None:
             self._handlers[capability.id] = handler
 
     def bind(self, capability_id: str, handler: CapabilityHandler) -> None:
         if capability_id not in self._capabilities:
             raise KeyError(f"unknown capability: {capability_id}")
+        if capability_id in self._sealed:
+            raise ValueError(f"capability definition is sealed: {capability_id}")
+        if capability_id in self._handlers:
+            raise ValueError(f"capability adapter is already bound: {capability_id}")
         self._handlers[capability_id] = handler
 
     def get(self, capability_id: str) -> Capability:
         try:
-            return self._capabilities[capability_id]
+            return deepcopy(self._capabilities[capability_id])
         except KeyError as exc:
             raise KeyError(f"unknown capability: {capability_id}") from exc
+
+    def definition_digest(self, capability_id: str) -> str:
+        if capability_id not in self._handlers:
+            raise RuntimeError(
+                f"capability has no bound adapter and cannot be sealed: {capability_id}"
+            )
+        self._sealed.add(capability_id)
+        return capability_digest(self.get(capability_id))
+
+    def definition_digests(
+        self,
+        capability_ids: Iterable[str],
+    ) -> dict[str, str]:
+        return {
+            capability_id: self.definition_digest(capability_id)
+            for capability_id in sorted(set(capability_ids))
+        }
 
     def validate_input(
         self,
@@ -97,7 +147,9 @@ class CapabilityRegistry:
         return normalized
 
     def list(self) -> tuple[Capability, ...]:
-        return tuple(self._capabilities[key] for key in sorted(self._capabilities))
+        return tuple(
+            deepcopy(self._capabilities[key]) for key in sorted(self._capabilities)
+        )
 
 
 def _validate_schema(

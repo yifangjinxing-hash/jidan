@@ -88,6 +88,10 @@ Cada resultado expresa con precisión lo que ocurrió:
 
 ## 🎮 Nine Lights: una comprobación pequeña de interoperabilidad
 
+<p align="center">
+  <img src="docs/assets/ninelights-icon.png" alt="Icono del rompecabezas Nine Lights 3 por 3" width="180" />
+</p>
+
 [`game.ninelights.start`](profiles/game.ninelights.start.tool.json) y
 [`game.ninelights.press`](profiles/game.ninelights.press.tool.json) describen un
 rompecabezas determinista de luces 3 × 3. La CLI de Python envía cada acción por
@@ -97,6 +101,22 @@ los mismos [vectores de conformidad](profiles/conformance/game.ninelights.vector
 Después de clonar el repositorio, abre directamente en el navegador la
 [interfaz web de Nine Lights](prototype/web/ninelights.html); no requiere
 compilación.
+
+En Windows también puedes abrir la interfaz de escritorio en chino o crear un
+EXE de un solo archivo con su propio icono:
+
+```powershell
+cd prototype
+python -m pip install PyInstaller==6.21.0
+python ninelights_gui.py
+powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
+```
+
+El resultado queda en `prototype/build/pyinstaller/dist/JidanNineLights.exe`.
+La compilación local no está firmada. No omitas Windows SmartScreen: ejecuta solo
+un EXE creado por ti desde una copia de confianza y compara su SHA-256 con el
+valor que imprime el script. Si la política local bloquea scripts, revísalo y
+usa el proceso de ejecución aprobado por tu organización.
 
 Esto demuestra semántica observable compartida, no un Runtime compartido, un
 lenguaje general para juegos ni soporte Android/iOS. Consulta la
@@ -162,6 +182,7 @@ El perfil multiplataforma `message.compose` sigue siendo experimental: Android, 
 - **Publicación abierta no significa ejecución ciega.** Cualquiera puede implementar un adaptador, pero cada dispositivo conserva sus propias decisiones de confianza, instalación, política y aislamiento.
 - **Una sugerencia de destinatario no concede autoridad.** `message.compose.recipient` nunca se entrega al adaptador de plataforma.
 - **Un adaptador no puede declarar el éxito.** El host genera el estado de entrega; no lo copia de la salida de terceros.
+- **La autorización no se vincula solo a un nombre.** El Grant fija la definición efectiva; un cambio de esquema, efecto o identidad del adaptador exige una autorización nueva.
 - **Un efecto ambiguo no se reintenta como si hubiera tenido éxito.** Los resultados desconocidos permanecen desconocidos y se registran de forma conservadora.
 - **La persona conserva la última palabra.** Enviar, pagar, eliminar y cambiar ajustes de seguridad exige un límite explícito de confirmación.
 
@@ -175,6 +196,7 @@ Ejecuta con Python 3.11 o posterior el conjunto completo de pruebas del prototip
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
+python ninelights_gui.py --self-test
 python ninelights_demo.py --level cross --moves 5
 node tools/check_ninelights_web.js
 python appfunctions_smoke.py
@@ -234,7 +256,7 @@ Son especialmente útiles:
 - un adaptador lingüístico restringido que emita identificadores semánticos existentes;
 - pruebas reproducibles con una aplicación o un dispositivo controlados.
 
-Empieza por [CONTRIBUTING.md](CONTRIBUTING.md) y la [hoja de ruta de 90 días](docs/04-90-day-execution-roadmap-zh.md).
+Empieza por [CONTRIBUTING.md](CONTRIBUTING.md), la [hoja de ruta de 90 días](docs/04-90-day-execution-roadmap-zh.md) y la [revisión de protocolos de los últimos siete días](docs/08-seven-day-protocol-review-zh.md) (en chino simplificado).
 
 > [!NOTE]
 > Este README es una traducción inicial asistida por máquina y no afirma haber sido revisada por una persona hablante nativa. Si una traducción difiere, el [README en inglés](README.md) y los perfiles de capacidad legibles por máquina son las referencias técnicas canónicas.

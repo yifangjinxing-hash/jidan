@@ -224,6 +224,7 @@ class PinyinCompilerTests(unittest.TestCase):
             capabilities={capability.id},
             scopes=capability.scopes,
             max_effect=Effect.WRITE,
+            capability_digests=registry.definition_digests({capability.id}),
         )
 
         stopped = runtime.execute(plan, unapproved)
@@ -237,6 +238,7 @@ class PinyinCompilerTests(unittest.TestCase):
             scopes=capability.scopes,
             max_effect=Effect.WRITE,
             approved_steps={"compose"},
+            capability_digests=registry.definition_digests({capability.id}),
         )
         completed = runtime.execute(plan, approved)
 

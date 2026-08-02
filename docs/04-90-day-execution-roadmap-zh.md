@@ -4,7 +4,7 @@
 
 ## 2026-08-02 历史镜鉴修正
 
-C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者吸收差异”，不是“所有平台最终共用同一种语言、ABI、Runtime 或 UI”。本路线因此把冻结对象从公共 JGraph/共享实现改为 **JCL 的外部可观察语义、Profile 版本与 conformance fixtures**；JGraph 继续是 Host 内部实现。自然语言只能产生无权限 Proposal；Pinyin Frontend 0.1 已于 2026-08-02 冻结归档，只保留兼容与复现，不再扩展语法或别名。依据见[历史镜鉴与路线护栏](06-history-lessons-and-route-guardrails-zh.md)。
+C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者吸收差异”，不是“所有平台最终共用同一种语言、ABI、Runtime 或 UI”。本路线因此把冻结对象从公共 JGraph/共享实现改为 **JCL 的外部可观察语义、Profile 版本与 conformance fixtures**；JGraph 继续是 Host 内部实现。自然语言只能产生无权限 Proposal；Pinyin Frontend 0.1 已于 2026-08-02 标记为 **`archived/experimental`**，只保留兼容、复现与安全修复，不属于本 90 天主线，不占用近期里程碑或 Gate。依据见[历史镜鉴与路线护栏](06-history-lessons-and-route-guardrails-zh.md)。
 
 路线顺序调整为：
 
@@ -14,6 +14,20 @@ C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者�
 ```
 
 ## 路线裁决
+
+### 近期平台事实（2026-07-27—08-02）
+
+- **Android 官方状态**：[AppFunctions 文档](https://developer.android.com/ai/appfunctions)于 2026-07-31 更新，仍是 experimental preview，运行于 Android 16+；跨包发现与执行需要 `EXECUTE_APP_FUNCTIONS`，完整 Agent 链路目前只向有限 app/system agent 开放，EAP 登记不等于获得访问权。
+- **Android 官方实现变化**：2026-07-29 更新的[官方 AppFunctions skill](https://github.com/android/skills/commit/4e1674995b166427c6e55c72bbd0d87b46d146db)已转向 `AppFunctionServiceEntryPoint` 架构，并再次要求敏感数据与破坏性动作经过用户确认。
+- **Apple 开发者论坛信号，不等同正式平台承诺**：近期报告显示，[新 App Schema 宏与旧 deployment target 存在共存困难](https://developer.apple.com/forums/thread/839105)；[Siri 可能已经解析并口头宣布动作，但 `perform()` 仍未执行](https://developer.apple.com/forums/thread/839079)；[Foundation Models beta 也出现无工具时索要工具和输出 JSON 的复现](https://developer.apple.com/forums/thread/840236)。这些都只能作为增加真机回归与回执校验的依据，不能直接泛化为正式版结论。
+
+### 由事实导出的近期设计裁决
+
+- Android AppFunctions、Apple App Intents 和 Web/MCP 都是 **versioned adapter**，不是 JCL 核心。每个 Binding 单独声明 adapter 版本、平台/最低系统版本、已测试最高版本、支持的 JCL Profile 和保证等级。
+- 参数能力必须显式协商：Binding 返回 `supportedParameters` 与 `unsupportedParameters`；收到不支持的参数时只能拒绝或请求补充/降级，禁止静默忽略。
+- 回执采用公共阶段：`discovered → resolved → perform_started → committed → verified`，并保留 `rejected / unknown`。系统口头播报、UI 打开或参数解析最多证明 `resolved`，不得冒充 `committed`。
+- 文件和图片只通过受作用域约束的 opaque asset handle 传递；JCL 上下文不内联 base64。handle 至少携带 MIME、大小、摘要、过期时间和访问范围，再由 adapter 映射为 `IntentFile`、内容 URI 或其他平台原生对象。
+- 每个 adapter 进入 active 前必须通过按 **adapter 版本 × OS/SDK × 设备 × capability** 记录的真机 conformance matrix；模拟器、索引成功或自然语言命中不能替代真实 `perform/commit` 证据。
 
 ### Phase 1 执行锁（2026-08-01）
 
@@ -81,7 +95,10 @@ C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者�
 - HMAC 开发密钥替换为 Android Keystore；有 StrongBox 时记录硬件保证等级。
 - 所有公开 Demo 必须经过 TaskPlan、Grant、Confirmation、Runtime 和 Receipt；直接 Registry 调用只允许出现在明确标注的 Adapter conformance test 中。
 - 至少让一名非核心开发者在不修改 Runtime 的前提下完成一个计划型 Binding 并跑过一致性测试。
-- Pinyin Frontend 保持冻结：兼容性修复和安全回归可以合入，不新增语法、别名、模糊匹配或新的活跃入口。
+- 冻结最小 `AdapterManifest`：包含 adapter/Profile 版本、平台范围、`supportedParameters`、`unsupportedParameters`、effect、确认方式与保证等级；旧版本并存而不是覆盖更新。
+- 冻结 `ExecutionReceipt.stage` 的公共阶段与转换规则；adapter 必须附上平台原生调用证据，无法判断时返回 `unknown`，不得猜测成功。
+- 冻结 `AssetHandle` 最小结构：`id / mimeType / size / sha256 / expiresAt / scope`；授权主体、目标 capability 或有效期不匹配时拒绝解析。
+- Pinyin Frontend 保持 **`archived/experimental`**：仅兼容性、安全修复与历史复现可以合入；不新增语法、别名、模糊匹配、活跃入口，也不计入本路线完成度。
 
 ### AOSP
 
@@ -123,13 +140,17 @@ C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者�
 
 ### 真机矩阵
 
-至少覆盖三档设备：
+先发布可机器读取的 adapter conformance matrix。每个单元格记录 adapter/Profile 版本、OS/SDK、设备 build、声明参数、实际阶段、原生回执证据与已知限制；任何升级都只更新对应单元格，不修改 JCL capability ID。
+
+Android 性能与一致性至少覆盖三档设备：
 
 - Pixel / 原生 Android 17 基线；
 - 一台主流 OEM Android 17；
 - 一台中端设备，用于内存、热和电量边界。
 
 分别测量首 token、完整 JGraph 生成、端到端任务时延、峰值/常驻内存、温升、热降频和日均增量耗电。Cuttlefish 结果不得替代 NPU 与功耗数据。
+
+Apple adapter 若进入 active，还必须在匹配 Xcode/OS 版本的 iPhone 真机上分别证明发现、`perform_started`、`committed` 与读回验证；否则只能标记 `handoff_planned` 或 `unknown`。
 
 ### 发布物
 
@@ -159,6 +180,7 @@ C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者�
 - 自动发送、支付、删除、安装和系统安全设置。
 - 全天候运行的大模型、自训练端侧模型和自造网络协议。
 - 把自然语言或拼音定义成公共协议、字节码或机器底层。
+- 重启 Pinyin Frontend 产品化、扩语法或把该实验归档重新列为近期主线。
 - 强制所有 Host 使用同一 JGraph Runtime、UI 框架或共享 C++ Core。
 - 把 C ABI 作为万能跨平台能力层，或另造必须降维到 C/汇编的新编译塔。
 - 用 WebView、浏览器桥或容器宣称已经获得原生 OS、联系人或跨 App 权限。

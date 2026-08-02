@@ -87,10 +87,25 @@ plan = TaskPlan(
 
 ## 🎮 Nine Lights：小型互操作檢查
 
+<p align="center">
+  <img src="docs/assets/ninelights-icon.png" alt="九燈 3 × 3 翻燈遊戲圖示" width="180" />
+</p>
+
 [`game.ninelights.start`](profiles/game.ninelights.start.tool.json) 與
 [`game.ninelights.press`](profiles/game.ninelights.press.tool.json) 描述一款確定性的 3 × 3 翻燈遊戲。Python CLI 的每個動作都經過 TaskPlan、最小 READ Grant、`JidanRuntime` 與雜湊鏈 Receipt；獨立 JavaScript Web Host 則實作相同 Profile，並重放同一份[一致性向量](profiles/conformance/game.ninelights.vectors.json)。
 
 複製倉庫後，可直接用瀏覽器開啟無依賴的 [Nine Lights Web UI](prototype/web/ninelights.html)，不需要建置步驟。
+
+Windows 使用者也可以開啟中文桌面視窗，或建置帶獨立圖示的單檔 EXE：
+
+```powershell
+cd prototype
+python -m pip install PyInstaller==6.21.0
+python ninelights_gui.py
+powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
+```
+
+輸出位於 `prototype/build/pyinstaller/dist/JidanNineLights.exe`。本機開發版本未簽署；請勿繞過 Windows SmartScreen。只執行從可信任檢出自行建置的 EXE，並將檔案 SHA-256 與建置腳本輸出的值比對。若本機原則阻擋腳本，請先檢查腳本，再採用組織核准的執行方式。
 
 這只證明外部可觀察語意可共享，不代表共享 Runtime、通用遊戲語言或 Android/iOS 已支援。詳見[尖峰範圍與證據](docs/07-universal-game-spike-zh.md)。
 
@@ -124,6 +139,7 @@ Web → 可編輯 Web 審閱介面
 
 - **AI 規劃器不是安全邊界：**模型輸出一律視為不可信資料並接受驗證。
 - **輸入 Frontend 不擁有權限：**語言或 UI 輸入不能發出 Grant、執行、選擇平台或改寫已確認內容。
+- **授權不只綁定名稱：**Grant 會固定有效能力定義；Schema、風險或 Adapter 身分變更後必須重新授權。
 - **開放發布不等於盲目執行：**任何人都能實作 Adapter，但每台裝置仍掌握安裝信任、政策、隔離與撤銷。
 - **收件人提示不是授權：**`message.compose.recipient` 不會傳入平台 Binding。
 - **Adapter 不能自行宣告成功：**傳送狀態由 Host 產生，不照抄第三方輸出。
@@ -140,6 +156,7 @@ Web → 可編輯 Web 審閱介面
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
+python ninelights_gui.py --self-test
 python ninelights_demo.py --level cross --moves 5
 node tools/check_ninelights_web.js
 python appfunctions_smoke.py
@@ -172,7 +189,7 @@ Jidan 將人類語言與機器協定分離。任意 Unicode 正文可穿過 JSON
 
 歡迎貢獻新的 `message.compose` 平台 Binding、能攔截「假成功」的一致性測試、23 個 Locale 的母語校訂、不匯入 Python Runtime 但通過共享向量的獨立 Nine Lights Host、只產生既有語意 ID 的受限語言 Adapter，以及可在受控 App 或裝置上重現的測試。
 
-請先閱讀 [CONTRIBUTING.md](CONTRIBUTING.md) 與 [90 天路線圖](docs/04-90-day-execution-roadmap-zh.md)。
+請先閱讀 [CONTRIBUTING.md](CONTRIBUTING.md)、[90 天路線圖](docs/04-90-day-execution-roadmap-zh.md)與[近七日協定複盤](docs/08-seven-day-protocol-review-zh.md)（簡體中文）。
 
 ## 授權條款
 
