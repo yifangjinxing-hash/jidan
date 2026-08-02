@@ -12,7 +12,7 @@
 <p align="center">
   <a href="#-クイックスタート"><img src="https://img.shields.io/badge/クイックスタート-195A41?style=for-the-badge" alt="クイックスタート" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
-  <a href="profiles/frontends/zh-Latn-pinyin.frontend.json"><img src="https://img.shields.io/badge/Pinyin_Frontend-0.1-6D5BD0?style=for-the-badge" alt="Pinyin Frontend 0.1" /></a>
+  <a href="docs/07-universal-game-spike-zh.md"><img src="https://img.shields.io/badge/Nine_Lights-Conformance_Spike-6D5BD0?style=for-the-badge" alt="Nine Lights conformance spike" /></a>
   <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/UI_Locale-23-D9A441?style=for-the-badge" alt="23個のシード UI ロケール" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contributions-Welcome-3978C6?style=for-the-badge" alt="コントリビューション歓迎" /></a>
 </p>
@@ -40,7 +40,7 @@
 
 長期的な目標は「もう1つのスーパーアプリ」ではありません。Android、Apple、Web、HarmonyOS、Windows、そして将来の Host が、同じ安定したインテント意味論を実装できる薄く開かれた互換レイヤーです。
 
-> **共有するのは意味論であり、実装ではありません。** 自然言語と Pinyin は交換可能な Frontend、JCL は機械契約です。Kotlin、Swift、JavaScript、C/C++ は Host または Adapter の実装選択であり、Web Binding は引き続きブラウザー Sandbox の制約を受けます。[歴史から得た設計上の教訓](docs/06-history-lessons-and-route-guardrails-zh.md)（中国語）も参照してください。
+> **共有するのは意味論であり、実装ではありません。** 自然言語と UI 入力は JCL の機械契約の外側にあり、Kotlin、Swift、JavaScript、C/C++ は Host または Adapter の実装選択です。Web Binding は引き続きブラウザー Sandbox の制約を受けます。Pinyin 0.1 は凍結済みの実験で、プロジェクトの基盤ではありません。[歴史から得た設計上の教訓](docs/06-history-lessons-and-route-guardrails-zh.md)（中国語）も参照してください。
 
 ## 🔌 `message.compose`：1つの契約、複数の Binding
 
@@ -68,7 +68,6 @@ plan = TaskPlan(
 | `message.compose` | Apple Shortcut / Share Sheet | データのみのプラン |
 | `message.compose` | Web 編集可能ドラフト | データのみのプラン |
 | `message.compose` | コミュニティ Adapter | ローカル登録。中央の公開ホワイトリストは不要 |
-| Pinyin Frontend 0.1 | 制御エイリアス → `message.compose` | オプション。payload は原文のまま保持し、曖昧なエイリアスは拒否 |
 
 結果は現実の状態を明示します。
 
@@ -86,11 +85,17 @@ plan = TaskPlan(
 
 `handoff_planned` は呼び出しプランが準備できたことだけを表し、UI が開いたとは主張しません。実際に Android Picker が前面に表示されたことを検証した場合に限り `handoff_opened` を返します。それでも Jidan は宛先を選ばず、送信ボタンも押さないため、`sent` は `false` のままです。
 
-## 🔤 オプションの Pinyin compiler frontend
+## 🎮 Nine Lights：小さな相互運用性チェック
 
-[Pinyin Frontend 0.1](profiles/frontends/zh-Latn-pinyin.frontend.json) は、拼音の**制御エイリアスだけ**を既存の `message.compose` 呼び出しへコンパイルする、任意で利用できる入力フロントエンドです。メッセージの payload は翻字、翻訳、再解釈を行わず、入力された文字列のまま保持します。フロントエンド自体には権限の付与、プラットフォーム Binding の選択、実行、宛先選択、送信を行う権限はありません。
+[`game.ninelights.start`](profiles/game.ninelights.start.tool.json) と
+[`game.ninelights.press`](profiles/game.ninelights.press.tool.json) は、決定論的な 3 × 3 ライトパズルを記述します。Python CLI の各操作は TaskPlan、最小 READ Grant、`JidanRuntime`、ハッシュチェーン Receipt を通ります。独立した JavaScript Web Host は同じ Profile を実装し、同じ[適合性ベクトル](profiles/conformance/game.ninelights.vectors.json)を再生します。
 
-声調なしの拼音は、正規化後に候補が1つだけとなる場合に限って受理します。複数の意味や Capability に解釈できる場合は推測せず拒否し、確認を求めます。これは JCL の bytecode でも、新しい DSL でもありません。機械間の安定した表現は引き続き Capability ID と JSON Schema です。設計と信頼境界の詳細は [JCL Pinyin Frontend 設計ノート](docs/05-jcl-pinyin-frontend-zh.md)を参照してください。
+リポジトリを clone した後、依存関係のない [Nine Lights Web UI](prototype/web/ninelights.html) をブラウザーで直接開けます。ビルドは不要です。
+
+これは観測可能な意味論の共有を示すだけで、Runtime の共有、汎用ゲーム言語、Android/iOS 対応を示すものではありません。[範囲と証拠の説明](docs/07-universal-game-spike-zh.md)（中国語）を参照してください。
+
+> [!NOTE]
+> Pinyin Frontend 0.1 実験は 2026-08-02 に凍結されました。コード、Profile、デモ、テストは互換性と再現のために残しますが、アクティブなルートやクイックスタートではありません。新しい構文やエイリアスは受け付けません。
 
 ## 🧭 アーキテクチャと現在の実装
 
@@ -116,7 +121,7 @@ Web → 編集可能な Web 確認画面
 - **公開の自由は盲目的な実行を意味しません。** 誰でも Adapter を実装できますが、各端末がインストールの信頼、ポリシー、隔離、取り消しを管理します。
 - **宛先ヒントは権限ではありません。** `message.compose.recipient` はプラットフォーム Binding に渡されません。
 - **Adapter は成功を自己申告できません。** 配送状態は Host が生成し、第三者の出力をそのまま採用しません。
-- **拼音の解釈は権限ではありません。** Pinyin Frontend は候補となる `message.compose` 呼び出しを作るだけで、曖昧な入力は拒否され、通常の Schema、Grant、確認ゲートを迂回できません。
+- **入力 Frontend は権限ではありません。** 言語や UI の入力は Grant を発行せず、実行、プラットフォーム選択、確認済み payload の書き換えもできません。
 - **不明な結果は不明のまま扱います。** 外部効果が曖昧な操作を「成功」として自動再試行しません。
 - **最後の決定権は利用者にあります。** 送信、支払い、削除、セキュリティ設定の変更には明示的な確定境界が必要です。
 
@@ -130,11 +135,12 @@ Python 3.11+ で、外部依存のないテストスイートとクロスプラ�
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
-python pinyin_frontend_demo.py
+python ninelights_demo.py --level cross --moves 5
+node tools/check_ninelights_web.js
 python appfunctions_smoke.py
 ```
 
-2つのメッセージデモは既定で `awaiting_confirmation` で停止します。`--simulate-approval` はローカルなデータプランの残りを試すためだけの明示的なシミュレーションで、実際のユーザー確認を示すものではありません。
+メッセージデモは既定で `awaiting_confirmation` で停止します。`--simulate-approval` は明示的なシミュレーションで、実際のユーザー確認を示しません。Nine Lights はローカルな READ/COMPUTE デモなので確認は不要ですが、Python 経路は完全な Runtime と Receipt チェーンを使用します。
 
 Android の全言語リソースを検証します。
 
@@ -155,13 +161,13 @@ Windows では `gradlew.bat` を使用してください。PowerShell 5.1 の Un
 
 Jidan は人間の言語を機械プロトコルから分離します。任意の Unicode 本文は JSON、タスクグラフ、ADB、保存、読み戻し、UI を通過できます。一方、能力 ID、Schema フィールド、Grant、ハッシュ、Receipt の値は安定した ASCII 契約のままです。Android Reference UI には、RTL のアラビア語を含む **23個のシード Locale** があります。`memo: <本文>` は言語に依存しない決定論的な入口です。
 
-Pinyin Frontend はこの言語分離を変更しません。拼音を JCL の共通言語にするのではなく、`zh-Latn-pinyin` 利用者向けの任意の制御入力として追加します。制御エイリアスだけが解析対象であり、その後ろの payload は日本語、中国語、英語、絵文字を含めて原文のまま `message.compose` に渡されます。
+凍結済みの Pinyin Frontend は互換性と再現のためだけに残されており、JCL の共通言語でも、すべての入力が通る基盤でもありません。
 
 これらのシード翻訳は、コミュニティが改善するための出発点です。本ページおよび一部の言語リソースは機械支援で翻訳されており、**母語話者による全面的なレビュー済みとは主張しません**。詳細と修正方法は[言語と国際化のガイド](docs/i18n/README.md)をご覧ください。
 
 ## 🤝 コントリビューション
 
-新しい `message.compose` プラットフォーム Binding、偽の成功を検出する適合性テスト、23個の Locale の母語レビュー、既存のセマンティック ID だけを出力する制約付き言語 Adapter、管理下のアプリや端末で再現できるテストを歓迎します。
+新しい `message.compose` プラットフォーム Binding、偽の成功を検出する適合性テスト、23個の Locale の母語レビュー、Python Runtime をインポートせず共有ベクトルに合格する独立 Nine Lights Host、既存のセマンティック ID だけを出力する制約付き言語 Adapter、管理下のアプリや端末で再現できるテストを歓迎します。
 
 [CONTRIBUTING.md](CONTRIBUTING.md) と [90日ロードマップ](docs/04-90-day-execution-roadmap-zh.md)から始めてください。
 

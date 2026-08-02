@@ -34,6 +34,7 @@ from .message_compose import (
     planned_message_compose_binding,
     wechat_message_compose_binding,
 )
+# Frozen compatibility experiment; retained so existing imports keep working.
 from .pinyin_frontend import (
     JCL_INPUT_FRONTEND_PROFILE,
     PINYIN_COMPILER_ID,
@@ -46,6 +47,16 @@ from .pinyin_frontend import (
     PinyinCompiler,
     PinyinProfileError,
     normalize_pinyin_alias,
+)
+from .ninelights import (
+    NINELIGHTS_PRESS_CAPABILITY_ID,
+    NINELIGHTS_RULES_VERSION,
+    NINELIGHTS_START_CAPABILITY_ID,
+    ninelights_capabilities,
+    ninelights_mcp_tools,
+    ninelights_press,
+    ninelights_start,
+    register_ninelights,
 )
 
 __all__ = [
@@ -68,6 +79,9 @@ __all__ = [
     "MessageComposeBinding",
     "MessageComposeBindingError",
     "NlpParseError",
+    "NINELIGHTS_PRESS_CAPABILITY_ID",
+    "NINELIGHTS_RULES_VERSION",
+    "NINELIGHTS_START_CAPABILITY_ID",
     "PINYIN_COMPILER_ID",
     "PINYIN_FRONTEND_ID",
     "PINYIN_LANGUAGE_TAG",
@@ -90,8 +104,13 @@ __all__ = [
     "issue_grant",
     "message_compose_mcp_tool",
     "normalize_pinyin_alias",
+    "ninelights_capabilities",
+    "ninelights_mcp_tools",
+    "ninelights_press",
+    "ninelights_start",
     "parse_memo_command",
     "parse_zh_memo_command",
     "planned_message_compose_binding",
+    "register_ninelights",
     "wechat_message_compose_binding",
 ]

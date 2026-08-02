@@ -12,7 +12,7 @@
 <p align="center">
   <a href="#-inicio-rápido"><img src="https://img.shields.io/badge/Inicio_rápido-195A41?style=for-the-badge" alt="Inicio rápido" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/Perfil_JCL-0.1-2F8F68?style=for-the-badge" alt="Perfil JCL 0.1" /></a>
-  <a href="profiles/frontends/zh-Latn-pinyin.frontend.json"><img src="https://img.shields.io/badge/Frontend_Pinyin-0.1-7A5AF8?style=for-the-badge" alt="Frontend opcional de pinyin 0.1" /></a>
+  <a href="docs/07-universal-game-spike-zh.md"><img src="https://img.shields.io/badge/Nine_Lights-Prueba_de_conformidad-7A5AF8?style=for-the-badge" alt="Prueba de conformidad Nine Lights" /></a>
   <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/Locales_UI-23-D9A441?style=for-the-badge" alt="23 locales semilla de interfaz" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contribuciones-Bienvenidas-3978C6?style=for-the-badge" alt="Contribuciones bienvenidas" /></a>
 </p>
@@ -40,7 +40,7 @@ objetivo humano → acción semántica → contrato de capacidad → control de 
 
 El objetivo a largo plazo no es crear «otra superaplicación», sino una capa de compatibilidad fina y abierta en la que Android, Apple, Web, HarmonyOS, Windows y futuros hosts puedan implementar la misma semántica estable de intención.
 
-> **Se comparte la semántica, no la implementación.** El lenguaje natural y el pinyin son frontends reemplazables; JCL es el contrato de máquina; Kotlin, Swift, JavaScript y C/C++ son decisiones internas del host o adaptador. Un binding web sigue limitado por el sandbox del navegador. Consulta las [lecciones históricas y límites de la ruta](docs/06-history-lessons-and-route-guardrails-zh.md) (en chino).
+> **Se comparte la semántica, no la implementación.** El lenguaje natural y la interfaz quedan fuera del contrato de máquina JCL; Kotlin, Swift, JavaScript y C/C++ son decisiones internas del host o adaptador. Un binding web sigue limitado por el sandbox del navegador. El experimento Pinyin 0.1 está congelado y no es la base del proyecto. Consulta las [lecciones históricas y límites de la ruta](docs/06-history-lessons-and-route-guardrails-zh.md) (en chino).
 
 ## 🔌 Un contrato, múltiples adaptadores
 
@@ -86,17 +86,33 @@ Cada resultado expresa con precisión lo que ocurrió:
 
 `handoff_planned` significa que existe un plan de traspaso; nunca se presenta como una interfaz ya abierta. Un selector de Android abierto y comprobado informa `handoff_opened`, pero la entrega sigue con `sent: false`: Jidan no elige al destinatario ni pulsa **Enviar**.
 
-## 🔤 Frontend opcional de pinyin
+## 🎮 Nine Lights: una comprobación pequeña de interoperabilidad
 
-El [perfil de frontend `zh-Latn-pinyin` 0.1](profiles/frontends/zh-Latn-pinyin.frontend.json) solo compila alias de control restringidos a la capacidad existente `message.compose`. Conserva literalmente el valor del payload: no lo traduce, translitera ni normaliza. Resolver un alias no concede autoridad, no confirma una acción y no ejecuta nada.
+[`game.ninelights.start`](profiles/game.ninelights.start.tool.json) y
+[`game.ninelights.press`](profiles/game.ninelights.press.tool.json) describen un
+rompecabezas determinista de luces 3 × 3. La CLI de Python envía cada acción por
+TaskPlan, un Grant READ mínimo, `JidanRuntime` y recibos encadenados por hash. Un
+Host web JavaScript independiente implementa los mismos perfiles y reproduce
+los mismos [vectores de conformidad](profiles/conformance/game.ninelights.vectors.json).
+Después de clonar el repositorio, abre directamente en el navegador la
+[interfaz web de Nine Lights](prototype/web/ninelights.html); no requiere
+compilación.
 
-Se permiten alias sin tonos únicamente cuando identifican una sola entrada. Si falta una coincidencia o existe más de una, la compilación se rechaza sin adivinar. Este frontend no es bytecode, un lenguaje de programación ni un DSL nuevo; es una tabla determinista y versionada de alias hacia un contrato ya definido. Consulta el documento de [diseño, normalización y límites de seguridad](docs/05-jcl-pinyin-frontend-zh.md).
+Esto demuestra semántica observable compartida, no un Runtime compartido, un
+lenguaje general para juegos ni soporte Android/iOS. Consulta la
+[nota de alcance y evidencia](docs/07-universal-game-spike-zh.md) (en chino).
+
+> [!NOTE]
+> El experimento Pinyin Frontend 0.1 quedó congelado el 2026-08-02. Su código,
+> perfil, demo y pruebas se conservan para compatibilidad y reproducción, pero
+> ya no forman parte de la ruta activa ni del inicio rápido. No se aceptan
+> sintaxis ni alias nuevos.
 
 ## 🧭 Arquitectura
 
 ```mermaid
 flowchart LR
-    H["Objetivo humano"] --> P["Propuesta no confiable<br/>planificador IA · frontend pinyin"]
+    H["Objetivo humano"] --> P["Propuesta no confiable<br/>planificador IA · entrada de interfaz"]
     P --> C["Capacidad estable<br/>message.compose"]
     C --> G{"Puerta determinista<br/>schema · scope · grant · confirmación"}
     G --> R["Binding elegido por el Host"]
@@ -134,7 +150,8 @@ flowchart LR
 | Descubrimiento de superficies semánticas | ✅ | AppFunctions → RemoteInput → atajo → compartir público |
 | Traspaso nativo verificado a WeChat | ✅ | Actividad exacta del selector; no elige destinatario ni pulsa Enviar |
 | Perfil multiplataforma `message.compose` | 🧪 | Planes Android, iOS y Web; binding de Android verificado |
-| Frontend opcional de pinyin 0.1 | 🧪 | Solo alias de control → `message.compose`; payload literal, sin autoridad ni ejecución; la ambigüedad se rechaza |
+| Prueba semántica Nine Lights | 🧪 | Runtime/recibos Python + Host JS independiente; vectores compartidos |
+| Pinyin Frontend 0.1 | ⏸️ | Experimento de compatibilidad congelado; sin sintaxis ni alias nuevos |
 | Sistema operativo móvil de agentes listo para producción | 🗺️ | Todavía no se afirma |
 
 El perfil multiplataforma `message.compose` sigue siendo experimental: Android, iOS y Web tienen planes de adaptador, mientras que la evidencia de apertura verificada disponible actualmente corresponde al binding de Android. Jidan todavía no afirma ser un sistema operativo de agentes móvil listo para producción.
@@ -158,11 +175,12 @@ Ejecuta con Python 3.11 o posterior el conjunto completo de pruebas del prototip
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
-python pinyin_frontend_demo.py
+python ninelights_demo.py --level cross --moves 5
+node tools/check_ninelights_web.js
 python appfunctions_smoke.py
 ```
 
-Las dos demostraciones de mensajes se detienen por defecto en `awaiting_confirmation`. `--simulate-approval` solo permite recorrer las etapas restantes del plan de datos local; queda marcado como simulación y no demuestra una confirmación real de la persona usuaria.
+La demostración de mensajes se detiene por defecto en `awaiting_confirmation`; `--simulate-approval` queda marcado como simulación y no demuestra una confirmación real. Nine Lights es una demostración local READ/COMPUTE que no requiere confirmación, aunque su ruta Python sí utiliza el Runtime y la cadena de recibos completos.
 
 Desde la raíz del repositorio, valida los paquetes de idioma de Android:
 
@@ -201,7 +219,7 @@ Jidan mantiene el lenguaje humano separado del protocolo de máquina:
 - añadir traducciones de interfaz o adaptadores lingüísticos revisados no requiere bifurcar el protocolo.
 
 > [!NOTE]
-> El pinyin es únicamente una ortografía opcional para alias de control. Los tonos pueden omitirse solo si la resolución es única; cualquier colisión o ambigüedad se rechaza. El contenido del payload permanece literal y fuera de la resolución lingüística, por lo que el frontend no adquiere autoridad ni capacidad de ejecución.
+> El experimento `zh-Latn-pinyin` está congelado y se conserva únicamente para compatibilidad y reproducción. No se amplían sus alias ni su sintaxis.
 
 Las traducciones semilla son un punto de partida abierto y no implican revisión por hablantes nativos. Consulta [Idiomas e internacionalización](docs/i18n/README.md) para ayudar a mejorarlas.
 
@@ -212,6 +230,7 @@ Son especialmente útiles:
 - un nuevo adaptador de plataforma para `message.compose`;
 - una prueba de conformidad que detecte falsos estados de éxito;
 - la revisión por una persona hablante nativa de uno de los 23 paquetes semilla;
+- un Host Nine Lights independiente que supere los vectores compartidos sin importar el Runtime Python;
 - un adaptador lingüístico restringido que emita identificadores semánticos existentes;
 - pruebas reproducibles con una aplicación o un dispositivo controlados.
 

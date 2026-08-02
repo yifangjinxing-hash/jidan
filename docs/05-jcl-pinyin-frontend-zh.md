@@ -1,10 +1,14 @@
-# JCL 拼音编译前端 0.1
+# JCL 拼音编译前端 0.1（冻结归档）
+
+> **冻结状态（2026-08-02）：**本实验的代码、Profile、演示与测试暂时保留用于兼容和复现，但已退出 Jidan 活跃路线。只接受不改变既有行为的兼容性修复与安全回归；不接受新语法、新别名、模糊匹配、新 capability 映射或新的产品入口。
+
+本文记录的是已经完成的实验边界，不是下一阶段语言路线。JCL 的重点继续回到既有 Capability、Profile、Host、Binding、Runtime 与 conformance vectors。
 
 ## 一句话定位
 
 > **拼音可以成为 JCL Frontend 的人类友好输入拼写，但不能成为 JCL 源码、字节码、权限标识、机器底层或唯一机器语言。**
 
-JCL 的跨端公共表示仍然是稳定的 capability ID、JSON Schema 与结果语义；JCL 0.1 的首个公开序列化采用与 MCP 兼容的 Tool Profile。拼音前端只是位于信任边界之外的可选编译器：它把经过审查的拼音控制别名转换成一份尚未授权的 JCL 调用提案。
+JCL 的跨端公共表示仍然是稳定的 capability ID、JSON Schema 与结果语义；JCL 0.1 的首个公开序列化采用与 MCP 兼容的 Tool Profile。冻结的拼音前端位于信任边界之外：它只能把既有、经过审查的拼音控制别名转换成一份尚未授权的 JCL 调用提案。
 
 ```text
 拼音控制别名 + 原样参数
@@ -121,12 +125,12 @@ Jidan 0.1 采用比通用 Unicode 标识符更窄的允许集：输入只能由�
 
 这一边界遵循 [Unicode UAX #31 标识符建议](https://www.unicode.org/reports/tr31/)与 [Unicode UTS #39 安全机制](https://www.unicode.org/reports/tr39/)的原则：用于授权的标识符必须明确限制字符集合并防止视觉混淆。最终授权、签名、计划哈希和回执仍只绑定 `message.compose` 这样的稳定 ASCII capability ID。
 
-## Profile 与实现
+## Profile 与冻结实现
 
 ```text
 profiles/
   message.compose.tool.json                  # JCL 能力契约，不因拼音改变
-  frontends/zh-Latn-pinyin.frontend.json     # 可选编译前端
+  frontends/zh-Latn-pinyin.frontend.json     # 冻结兼容前端
   schemas/jcl.input-frontend-v0.1.schema.json
 
 prototype/jidan/pinyin_frontend.py           # 确定性、无网络编译器
@@ -136,7 +140,7 @@ prototype/tests/test_pinyin_frontend.py       # 归一化、冲突和权限边�
 
 JSON Schema 负责可表达的结构约束；alias 是否落在 allowlist、规范化后是否冲突、完整审阅记录哈希是否匹配，仍必须由语义 Loader 再校验。
 
-运行演示：
+复现历史演示（不属于快速开始）：
 
 ```bash
 cd prototype
@@ -145,15 +149,8 @@ python pinyin_frontend_demo.py
 
 默认输出停在 `awaiting_confirmation`。`--simulate-approval` 只用于本地演示后续 Grant、Runtime 与回执阶段，输出会明确标记为模拟批准，不能当作真实用户确认。
 
-## 扩展新别名
+## 冻结维护规则
 
-贡献一个新拼音别名时必须同时提供：
+不再扩展新别名。后续只处理能保持既有 Profile、alias set 哈希、规范化结果与失败语义不变的兼容性问题和安全回归。任何新语法、新 alias、新 capability 映射、模糊匹配或产品入口都应另行提出研究问题，不能修改这个冻结版本。
 
-1. 带完整声调和显式音节边界的 canonical key；
-2. 人类显示形式与准确中文含义；
-3. 已存在的稳定 capability ID；
-4. 去调冲突、未知输入、混合脚本和正文原样保留测试；
-5. 更新后的 alias set 哈希；
-6. 对风险语义的解释，尤其不能把“准备”“打开”和“已发送”混为一谈。
-
-新增别名不需要中央许可，但 Host 仍可依据本地信任与策略决定是否安装或启用该 Frontend。
+Host 仍可依据本地信任与策略决定是否安装或启用该兼容 Frontend；保留代码不等于默认启用。

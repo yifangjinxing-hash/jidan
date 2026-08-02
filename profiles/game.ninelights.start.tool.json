@@ -1,0 +1,47 @@
+{
+  "name": "game.ninelights.start",
+  "description": "Start one of the fixed Nine Lights levels.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "levelId": {
+        "enum": ["cross", "corners", "full"]
+      }
+    },
+    "required": ["levelId"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "rulesVersion": {"const": "ninelights/1"},
+      "levelId": {"enum": ["cross", "corners", "full"]},
+      "cells": {
+        "type": "array",
+        "minItems": 9,
+        "maxItems": 9,
+        "items": {"type": "integer", "enum": [0, 1]}
+      },
+      "moveCount": {"type": "integer"},
+      "status": {"enum": ["playing", "won"]}
+    },
+    "required": ["rulesVersion", "levelId", "cells", "moveCount", "status"],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "READ",
+      "executionMode": "COMPUTE",
+      "reversible": true,
+      "stateModel": "STATELESS"
+    }
+  }
+}

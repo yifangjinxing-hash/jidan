@@ -6,11 +6,11 @@
 
 > **Jidan 统一的是意图语义、风险与可观察结果；不统一人类语言、源代码、UI、Runtime、C ABI 或平台权限。**
 
-JCL 因此不是“下一代 C ABI”，也不是把自然语言一路编译成汇编的新语言工具链。它是一条薄的**语义兼容腰部**：上面可以有自然语言、拼音、按钮、语音和其他 Frontend；下面可以有 Android AppFunctions、Intent、Apple App Intents、Web、C/C++ 库或未来平台 Binding。
+JCL 因此不是“下一代 C ABI”，也不是把自然语言一路编译成汇编的新语言工具链。它是一条薄的**语义兼容腰部**：上面可以有自然语言、按钮、语音和其他 Frontend；下面可以有 Android AppFunctions、Intent、Apple App Intents、Web、C/C++ 库或未来平台 Binding。Pinyin Frontend 0.1 是已冻结的输入实验，不再作为活跃路线。
 
 ```mermaid
 flowchart TB
-    H["人类目标 · 自然语言 · 拼音 · UI"] --> F["可替换 Compiler Frontend<br/>只产生不可信 Proposal"]
+    H["人类目标 · 自然语言 · UI"] --> F["可替换输入 Frontend<br/>只产生不可信 Proposal"]
     F --> J["JCL 薄腰<br/>capability ID · JSON Schema · 结果语义"]
     J --> G["Host 权力边界<br/>Policy · Grant · Confirm · Receipt"]
     G --> B["平台原生 Binding"]
@@ -32,7 +32,7 @@ flowchart TB
 | C 与 UNIX | C 让大量 UNIX **源代码**可以跨机器复用，并把机器相关部分隔离出来 | 世界存在一个 Windows、Linux、Android、iOS 通用的“C ABI” | 共享语义契约与测试；本机 ABI 只留在 Adapter 内部 |
 | 托管语言与 VM | Java 用平台无关字节码与 JVM 把许多移植负担移入 Runtime；GC 自动管理堆内存，不可达对象可被回收 | 面向对象、GC 与 VM 是同一件事；Runtime 消灭了资源、并发和平台差异 | Host Runtime 统一验证、授权、确认和回执，但不强迫所有实现进入同一 VM 或 JGraph DSL |
 | Web 与容器 | Web 标准与兼容性规则让内容和应用覆盖更多设备；OCI 规范了镜像、Runtime 与分发接口 | Web “无视”操作系统；容器获得了所有 Host 的原生权限和一致行为 | Web 只是一个受浏览器沙箱约束的 Binding；容器是打包、隔离与部署机制，不是跨 Host 的能力或权限语义 |
-| 自然语言与 AI | 生成式 AI 允许用户用自然语言表达任务并生成候选代码，降低部分任务的操作门槛 | Prompt 是确定性程序；模型输出可以直接携带权限或现实结果 | 自然语言与拼音只编译为 Proposal；Host 按明确、可审计的规则校验与授权，再执行并记录结果 |
+| 自然语言与 AI | 生成式 AI 允许用户用自然语言表达任务并生成候选代码，降低部分任务的操作门槛 | Prompt 是确定性程序；模型输出可以直接携带权限或现实结果 | 输入 Frontend 只产生 Proposal；Host 按明确、可审计的规则校验与授权，再执行并记录结果 |
 
 ## 第三层：C 的胜利是源代码可移植，不是万能 ABI
 
@@ -93,7 +93,7 @@ MCP 的演进也支持这条边界：2026-07-28 版移除协议级 session 与�
 所以 Jidan 的语言路径固定为：
 
 ```text
-自然语言 / 拼音 / UI
+自然语言 / UI / 其他输入 Frontend
         ↓ 不确定、可拒绝、可追问
 InvocationProposal
         ↓ 确定性验证
@@ -108,7 +108,7 @@ Frontend 不得直接调用 Registry、选择 Adapter、扩大 scope、签发 Gr
 
 | 跨 Host 的薄公共面 | Host / Binding 本地实现 |
 |---|---|
-| Capability ID 与 Profile 版本 | 自然语言、拼音、语音和 UI 解析器 |
+| Capability ID 与 Profile 版本 | 自然语言、语音、UI 与已冻结的拼音兼容解析器 |
 | 输入/输出 JSON Schema | JGraph、调度器、缓存与状态存储 |
 | 风险分类与结果状态语义 | Kotlin / Swift / JS / C/C++ 代码 |
 | Conformance fixtures | OS 权限、Provider 身份与安装信任 |
@@ -126,12 +126,13 @@ Frontend 不得直接调用 Registry、选择 Adapter、扩大 scope、签发 Gr
 - JGraph 保持 Host 内部，不要求独立实现者采用；
 - 没有真实场景和至少两个实现证明的字段，不进入公共 Profile。
 
-### P1：把 AI 和拼音做成可替换 Frontend
+### P1：发展可替换 Frontend，冻结拼音语法实验
 
 - 编译结果只能是无权限 Proposal；
 - 未知、歧义和低置信度必须拒绝或追问；
 - 用户内容字段默认不翻译、不转写、不猜测；只有命令槽可按已审查规则规范化为 capability/枚举，除非用户另行明确要求转换内容；
 - 用 false resolve、abstention、payload preservation 和零 Adapter 调用衡量质量，不用“听起来聪明”衡量。
+- Pinyin Frontend 0.1 自 2026-08-02 起只接受兼容性修复与安全回归，不新增语法、别名或活跃产品入口。
 
 ### P2：把 Host 做成真正权力边界
 
@@ -155,6 +156,8 @@ Frontend 不得直接调用 Registry、选择 Adapter、扩大 scope、签发 Gr
 - UI 必须让用户分清 `planned`、`opened`、`sent/committed` 与 `unknown`。
 
 详细天数、Gate 与交付物见[90 天执行路线图](04-90-day-execution-roadmap-zh.md)。
+
+Nine Lights 尖峰把这条历史结论做成了一个很小的可运行检查：Python Host 使用完整 Runtime 与 Receipt，独立 JavaScript Web Host 使用相同 Profile 和 conformance vectors，但不共享 Runtime。它只证明外部语义可以对齐，边界与局限见[《Nine Lights：一次“共享语义，不共享 Runtime”的小游戏尖峰》](07-universal-game-spike-zh.md)。
 
 ## 明确不做
 

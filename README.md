@@ -12,7 +12,7 @@
 <p align="center">
   <a href="#-quick-start"><img src="https://img.shields.io/badge/Quick_Start-195A41?style=for-the-badge" alt="Quick start" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
-  <a href="profiles/frontends/zh-Latn-pinyin.frontend.json"><img src="https://img.shields.io/badge/Pinyin_Frontend-0.1-6E5AA8?style=for-the-badge" alt="Pinyin Frontend 0.1" /></a>
+  <a href="docs/07-universal-game-spike-zh.md"><img src="https://img.shields.io/badge/Nine_Lights-Conformance_Spike-6E5AA8?style=for-the-badge" alt="Nine Lights conformance spike" /></a>
   <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/UI_Locales-23-D9A441?style=for-the-badge" alt="23 seed UI locales" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contributions-Welcome-3978C6?style=for-the-badge" alt="Contributions welcome" /></a>
 </p>
@@ -40,7 +40,7 @@ human goal → semantic action → capability contract → policy gate
 
 The long-term target is not “one more super app.” It is a thin, open compatibility layer where Android, Apple, Web, HarmonyOS, Windows, and future hosts can implement the same stable intent semantics.
 
-> **Share semantics, not implementations.** Natural language and Pinyin are replaceable frontends; JCL is the machine contract; Kotlin, Swift, JavaScript, and C/C++ remain Host or adapter choices. Web bindings still live inside the browser sandbox. See the [historical design lessons and route guardrails](docs/06-history-lessons-and-route-guardrails-zh.md) (Chinese).
+> **Share semantics, not implementations.** Natural language and UI inputs remain outside the JCL machine contract; Kotlin, Swift, JavaScript, and C/C++ remain Host or adapter choices. Web bindings still live inside the browser sandbox. The Pinyin 0.1 input experiment is frozen, not the project substrate. See the [historical design lessons and route guardrails](docs/06-history-lessons-and-route-guardrails-zh.md) (Chinese).
 
 ## 🔌 One contract, many bindings
 
@@ -86,21 +86,31 @@ Every result is explicit about reality:
 
 `handoff_planned` never masquerades as an opened UI. A verified Android picker reports `handoff_opened`, but delivery still remains `sent: false` because Jidan never chooses the recipient or presses Send.
 
-### Optional Pinyin compiler frontend
+### Nine Lights: a small interoperability check
 
-[`JCL-Input-Frontend/0.1`](profiles/frontends/zh-Latn-pinyin.frontend.json) lets a reviewed Pinyin control alias compile into the same capability without changing the MCP Tool profile:
+[`game.ninelights.start`](profiles/game.ninelights.start.tool.json) and
+[`game.ninelights.press`](profiles/game.ninelights.press.tool.json) describe a
+deterministic 3 × 3 lights puzzle. The Python CLI sends every action through
+TaskPlan, a minimal READ Grant, `JidanRuntime`, and hash-chained Receipts. A
+separate JavaScript Web Host implements the same Profiles and is checked against
+the same [conformance vectors](profiles/conformance/game.ninelights.vectors.json).
+After cloning the repository, open the dependency-free
+[Nine Lights Web UI](prototype/web/ninelights.html) directly in a browser; no
+build step is required.
 
-```text
-chuàng-jiàn.cǎo-gǎo  →  chuang4-jian4.cao3-gao3  →  message.compose
-```
+This demonstrates shared observable semantics, not a shared Runtime, a general
+game language, or Android/iOS support. See the [scope and evidence note](docs/07-universal-game-spike-zh.md) (Chinese).
 
-Pinyin is an optional input spelling—not JCL source, bytecode, a machine substrate, or a new DSL. The frontend has no authority and emits only an untrusted invocation proposal. Payload text is preserved verbatim, tones and syllable boundaries are explicit, toneless input is accepted only when exactly one reviewed alias matches, and ambiguity fails closed. See the [design and safety rules](docs/05-jcl-pinyin-frontend-zh.md).
+> [!NOTE]
+> The Pinyin Frontend 0.1 experiment was frozen on 2026-08-02. Its code, Profile,
+> demo, and tests remain for compatibility and reproduction, but it is no longer
+> an active route or quick-start feature. New syntax and aliases are out of scope.
 
 ## 🧭 Architecture
 
 ```mermaid
 flowchart LR
-    H["Human goal"] --> P["Untrusted proposal source<br/>AI planner · Pinyin frontend"]
+    H["Human goal"] --> P["Untrusted proposal source<br/>AI planner · UI input"]
     P --> C["Stable capability<br/>message.compose"]
     C --> G{"Deterministic gate<br/>schema · scope · grant · confirmation"}
     G --> R["Host-selected binding"]
@@ -138,7 +148,8 @@ flowchart LR
 | Semantic-surface discovery | ✅ | AppFunctions → RemoteInput → shortcut → public share |
 | Verified WeChat native handoff | ✅ | Exact picker activity; no recipient selection or Send |
 | Cross-platform `message.compose` profile | 🧪 | Android / iOS / Web plans; Android verified binding |
-| Compile-only Pinyin frontend | 🧪 | Explicit aliases, NFC normalization, collision rejection |
+| Nine Lights semantics spike | 🧪 | Python Runtime/Receipts + independent JS Host; shared vectors |
+| Pinyin Frontend 0.1 | ⏸️ | Frozen compatibility experiment; no new syntax or aliases |
 | Production-grade mobile agent OS | 🗺️ | Not claimed yet |
 
 ## 🛡️ Safety by construction
@@ -146,7 +157,7 @@ flowchart LR
 - **The planner is not the security boundary.** Model output is validated as untrusted data.
 - **Open publication is not blind execution.** Anyone may implement an adapter; each device still owns local trust, installation, policy, and isolation.
 - **Recipient hints are not authority.** `message.compose.recipient` is never passed to a platform binding.
-- **Language aliases are not authority.** Pinyin can propose a stable capability but cannot grant, execute, select a platform, or rewrite payload data.
+- **Input frontends are not authority.** Language or UI input cannot grant, execute, select a platform, or rewrite approved payload data.
 - **Adapters cannot declare success.** Delivery state is generated by the host, not copied from third-party adapter output.
 - **Ambiguous effects are not retried as success.** Unknown outcomes remain unknown and are receipted conservatively.
 - **The user keeps the last word.** Send, pay, delete, and security-changing actions require an explicit commit boundary.
@@ -161,11 +172,15 @@ Run the full dependency-free prototype test suite with Python 3.11+:
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
-python pinyin_frontend_demo.py
+python ninelights_demo.py --level cross --moves 5
+node tools/check_ninelights_web.js
 python appfunctions_smoke.py
 ```
 
-Both message demos stop at `awaiting_confirmation` by default. `--simulate-approval` exercises the remaining local data-plan stages, but is labeled as a simulation and is not evidence of a user's confirmation.
+The message demo stops at `awaiting_confirmation` by default. Its
+`--simulate-approval` option is labeled as a simulation and is not evidence of
+a user's confirmation. Nine Lights is a local READ/COMPUTE demo and requires no
+confirmation; its Python path still uses the full Runtime and Receipt chain.
 
 Validate all Android language packs:
 
@@ -185,7 +200,7 @@ On Windows, use `gradlew.bat`. For PowerShell 5.1 Unicode caveats, see the [prot
 ## 🗂️ Repository map
 
 ```text
-profiles/       MCP-compatible JCL capabilities and compile-only frontends
+profiles/       MCP-compatible JCL capabilities and conformance vectors
 prototype/      capability kernel, adapters, policy, grants, receipts, demos
 reference-app/  controlled Android 17 AppFunctions provider
 docs/           architecture, research, roadmap, internationalization
@@ -200,7 +215,7 @@ Jidan separates human language from machine protocol:
 - arbitrary Unicode content survives JSON, task graphs, ADB, storage, readback, and UI;
 - the Android reference UI ships **23 seed locale packs**, including RTL Arabic;
 - `memo: <content>` is a language-neutral deterministic entry point;
-- the optional `zh-Latn-pinyin` frontend compiles reviewed control aliases while preserving payloads verbatim;
+- the frozen `zh-Latn-pinyin` experiment remains available only for compatibility and reproducibility;
 - capability IDs, schema fields, grants, hashes, and receipt values remain stable ASCII contracts;
 - new UI translations and reviewed language adapters do not require a protocol fork.
 
@@ -214,7 +229,7 @@ Useful contributions include:
 - a conformance fixture that catches false-success behavior;
 - native review for one of the 23 seed locale packs;
 - a constrained language adapter that emits existing semantic IDs;
-- a reviewed Pinyin alias with tone, collision, and payload-preservation fixtures;
+- an independent Nine Lights Host that passes the shared vectors without importing the Python Runtime;
 - reproducible tests against a controlled app or device.
 
 Start with [CONTRIBUTING.md](CONTRIBUTING.md) and the [90-day roadmap](docs/04-90-day-execution-roadmap-zh.md).

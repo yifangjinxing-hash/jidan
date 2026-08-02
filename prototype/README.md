@@ -72,44 +72,49 @@ community `MessageComposeBinding` can report only `handoff_planned`;
 a binding needs no central Jidan whitelist, but installing and executing
 third-party code remains a local trust and isolation decision.
 
-## Optional Pinyin compiler frontend
+## Nine Lights conformance spike
 
-`jidan/pinyin_frontend.py` implements the compile-only
-[`JCL-Input-Frontend/0.1`](../profiles/frontends/zh-Latn-pinyin.frontend.json).
-It resolves a reviewed `zh-Latn-pinyin` control alias to an existing capability
-ID and returns an authority-free `InvocationProposal`:
+Nine Lights is a deterministic 3 × 3 lights puzzle used to test one narrower
+claim: independent Hosts can implement the same capability IDs, schemas, state
+transitions, and conformance vectors without sharing a Runtime.
 
-```python
-compiler = PinyinCompiler.from_profile(profile)
-proposal = compiler.compile(
-    "chuàng-jiàn.cǎo-gǎo",
-    {"content": "下午三点见。"},
-)
-
-assert proposal.capability == "message.compose"
-# Next, place proposal.capability and proposal.arguments in a TaskPlan.
-# The normal schema, Grant, confirmation, Runtime, binding, and receipt
-# stages remain mandatory; see pinyin_frontend_demo.py for the full flow.
-```
-
-Compile the alias and stop at the normal confirmation gate:
+The Python CLI routes every `game.ninelights.start` and
+`game.ninelights.press` action through a real TaskPlan, minimal READ Grant,
+`JidanRuntime`, and hash-chained Receipt:
 
 ```powershell
-python pinyin_frontend_demo.py
+python ninelights_demo.py
+python ninelights_demo.py --level cross --moves 5
+python ninelights_demo.py --level corners --moves 1,9
+python ninelights_demo.py --level full --moves 1,3,5,7,9 --json
 ```
 
-Use `python pinyin_frontend_demo.py --simulate-approval` only to exercise the
-remaining data-plan stages; it carries the same explicit demo-only notice.
+The browser version at `web/ninelights.html` is a separate dependency-free
+JavaScript Host. It does not invoke Python or claim to run `JidanRuntime`.
+Instead, both implementations are checked against the same machine-readable
+vectors:
 
-The frontend performs NFC normalization, explicit word/syllable boundary
-parsing, marked-tone to ASCII numeric-tone conversion, versioned exact alias
-lookup, and collision rejection. Toneless input is accepted only when the
-input resolves to exactly one reviewed alias. It performs no Han-to-Pinyin
-guessing, fuzzy matching, schema validation bypass, grant issuance, registry
-invocation, platform selection, recipient selection, or send action. Only the
-control alias is normalized; payload text is defensively copied and preserved
-verbatim. The resulting proposal still passes through the normal JCL schema,
-policy, grant, confirmation, runtime, binding, and receipt chain.
+```powershell
+node tools/check_ninelights_web.js
+```
+
+This is evidence for shared observable semantics, not a universal game
+language, shared Runtime, or Android/iOS support. See the Chinese
+[scope and evidence note](../docs/07-universal-game-spike-zh.md).
+
+## Frozen Pinyin frontend compatibility experiment
+
+The compile-only [`JCL-Input-Frontend/0.1`](../profiles/frontends/zh-Latn-pinyin.frontend.json)
+experiment was frozen on **2026-08-02**. Its implementation, profile, demo, and
+tests remain available for compatibility and reproducibility, but it is no
+longer an active product route or quick-start path. New syntax, aliases, fuzzy
+matching, and capability mappings are not accepted.
+
+The frozen boundary remains unchanged: it can emit only an untrusted
+`InvocationProposal`; it cannot bypass schema validation, issue a Grant,
+invoke the Registry, select a platform or recipient, or execute an action.
+Payload text remains verbatim. See the frozen
+[design note](../docs/05-jcl-pinyin-frontend-zh.md).
 
 ## Android 17 AppFunctions Phase 1 adapter
 

@@ -12,7 +12,7 @@
 <p align="center">
   <a href="#-快速开始"><img src="https://img.shields.io/badge/快速开始-195A41?style=for-the-badge" alt="快速开始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
-  <a href="profiles/frontends/zh-Latn-pinyin.frontend.json"><img src="https://img.shields.io/badge/拼音前端-0.1-6E5AA8?style=for-the-badge" alt="拼音编译前端 0.1" /></a>
+  <a href="docs/07-universal-game-spike-zh.md"><img src="https://img.shields.io/badge/Nine_Lights-一致性尖峰-6E5AA8?style=for-the-badge" alt="Nine Lights 一致性尖峰" /></a>
   <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/UI_语言包-23-D9A441?style=for-the-badge" alt="23 个种子 UI 语言包" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/欢迎-共同建设-3978C6?style=for-the-badge" alt="欢迎共同建设" /></a>
 </p>
@@ -40,7 +40,7 @@
 
 长期目标不是再造一个“超级 App”，而是形成一层薄而开放的兼容腰部，让 Android、Apple、Web、HarmonyOS、Windows 以及未来平台实现同一套稳定意图语义。
 
-> **统一语义，不统一实现。** 自然语言与拼音是可替换 Frontend；JCL 是机器契约；Kotlin、Swift、JavaScript、C/C++ 只是 Host 或 Adapter 的实现选择；Web Binding 仍受浏览器沙箱限制。参见[历史镜鉴与路线护栏](docs/06-history-lessons-and-route-guardrails-zh.md)。
+> **统一语义，不统一实现。** 自然语言与 UI 输入位于 JCL 机器契约之外；Kotlin、Swift、JavaScript、C/C++ 只是 Host 或 Adapter 的实现选择；Web Binding 仍受浏览器沙箱限制。拼音 0.1 已冻结，不是项目底层。参见[历史镜鉴与路线护栏](docs/06-history-lessons-and-route-guardrails-zh.md)。
 
 ## 🔌 一份契约，多端实现
 
@@ -86,21 +86,23 @@ plan = TaskPlan(
 
 `handoff_planned` 绝不能冒充“界面已经拉起”。只有真实验证过 Android Picker 才能报告 `handoff_opened`；即便如此，发送仍是 `false`，因为 Jidan 不选择联系人，也不点击发送。
 
-### 可选的拼音编译前端
+### Nine Lights：一个小型互操作检查
 
-[`JCL-Input-Frontend/0.1`](profiles/frontends/zh-Latn-pinyin.frontend.json) 可以把经过审查的拼音控制别名编译到同一能力，而不修改 MCP Tool Profile：
+[`game.ninelights.start`](profiles/game.ninelights.start.tool.json) 与
+[`game.ninelights.press`](profiles/game.ninelights.press.tool.json) 描述一款确定性的 3 × 3 翻灯游戏。Python CLI 的每个动作都经过 TaskPlan、最小 READ Grant、`JidanRuntime` 和哈希链 Receipt；独立 JavaScript Web Host 则实现相同 Profile，并重放同一份[一致性向量](profiles/conformance/game.ninelights.vectors.json)。
 
-```text
-chuàng-jiàn.cǎo-gǎo  →  chuang4-jian4.cao3-gao3  →  message.compose
-```
+克隆仓库后，可以直接用浏览器打开无依赖的 [Nine Lights Web UI](prototype/web/ninelights.html)，无需构建步骤。
 
-拼音只是可选输入拼写，不是 JCL 源码、字节码、机器底层或新 DSL：Frontend 没有任何授权或执行能力，只能产生一份仍不可信的调用提案。正文逐字符保留；声调和音节边界显式；无声调输入仅在全表恰好命中一个审查过的别名时接受；同音歧义直接拒绝。完整规则见[拼音编译前端设计](docs/05-jcl-pinyin-frontend-zh.md)。
+这证明的是外部可观察语义可以共享，不是共享 Runtime、通用游戏语言或 Android/iOS 已适配。边界与运行方法见[小游戏尖峰说明](docs/07-universal-game-spike-zh.md)。
+
+> [!NOTE]
+> Pinyin Frontend 0.1 实验已于 2026-08-02 冻结。代码、Profile、演示与测试暂时保留用于兼容和复现，但不再属于活跃路线或快速开始；不接受新语法与新别名。
 
 ## 🧭 架构
 
 ```mermaid
 flowchart LR
-    H["人的目标"] --> P["不可信提案来源<br/>AI 规划器 · 拼音前端"]
+    H["人的目标"] --> P["不可信提案来源<br/>AI 规划器 · UI 输入"]
     P --> C["稳定能力<br/>message.compose"]
     C --> G{"确定性安全门<br/>schema · scope · grant · 确认"}
     G --> R["Host 选择 Binding"]
@@ -138,7 +140,8 @@ flowchart LR
 | 语义表面发现 | ✅ | AppFunctions → RemoteInput → Shortcut → 公开分享 |
 | 微信原生交接验证 | ✅ | 验证准确 Picker；不选人、不发送 |
 | 跨端 `message.compose` Profile | 🧪 | Android / iOS / Web 计划；Android 已验证 Binding |
-| 只编译不执行的拼音前端 | 🧪 | 显式别名、NFC 归一化、同音冲突拒绝 |
+| Nine Lights 语义尖峰 | 🧪 | Python Runtime/Receipt + 独立 JS Host；共享向量 |
+| Pinyin Frontend 0.1 | ⏸️ | 冻结兼容实验；不新增语法或别名 |
 | 生产级移动 Agent OS | 🗺️ | 尚未宣称完成 |
 
 ## 🛡️ 把安全写进结构
@@ -146,7 +149,7 @@ flowchart LR
 - **AI 规划器不是安全边界：**模型输出始终按不可信数据验证。
 - **开放发布不等于盲目执行：**任何人都能实现 Adapter，但本机仍掌握安装信任、策略、隔离与撤销。
 - **收件人提示不是授权：**`message.compose.recipient` 永远不会传给平台 Binding。
-- **语言别名不是授权：**拼音只能提出稳定能力，不能发 Grant、执行、选择平台或改写正文。
+- **输入 Frontend 不是授权：**语言或 UI 输入不能发 Grant、执行、选择平台或改写已经确认的正文。
 - **Adapter 无权宣布成功：**发送状态由 Host 生成，不照抄第三方返回值。
 - **模糊结果不会被重试成成功：**未知就是未知，并保守写入回执。
 - **用户拥有最后一步：**发送、支付、删除和安全设置必须具有明确提交边界。
@@ -161,11 +164,12 @@ flowchart LR
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
-python pinyin_frontend_demo.py
+python ninelights_demo.py --level cross --moves 5
+node tools/check_ninelights_web.js
 python appfunctions_smoke.py
 ```
 
-两个消息演示默认都停在 `awaiting_confirmation`。`--simulate-approval` 只用于继续演示本地数据计划的后续阶段，输出会明确标成模拟批准，不能当作用户真的确认过。
+消息演示默认停在 `awaiting_confirmation`；`--simulate-approval` 会明确标成模拟批准，不能当作用户真的确认过。Nine Lights 是本地 READ/COMPUTE 演示，无需人工确认，但 Python 路径仍经过完整 Runtime 与 Receipt 链。
 
 检查全部 Android 语言包：
 
@@ -185,7 +189,7 @@ Windows 请用 `gradlew.bat`。PowerShell 5.1 的 Unicode 注意事项见[原型
 ## 🗂️ 仓库地图
 
 ```text
-profiles/       与 MCP 兼容的 JCL 能力及只编译不执行的输入 Frontend
+profiles/       与 MCP 兼容的 JCL 能力及一致性向量
 prototype/      能力内核、Adapter、策略、授权、回执与演示
 reference-app/  受控 Android 17 AppFunctions Provider
 docs/           架构、调研、路线图与国际化说明
@@ -198,7 +202,7 @@ APK、模拟器镜像、原始设备日志、截图、回执和 SQLite 账本不
 - 任意 Unicode 正文可以穿过 JSON、任务图、ADB、存储、回读和 UI。
 - Android Reference UI 已提供 **23 个种子 Locale**，包括 RTL 阿拉伯语。
 - `memo: <正文>` 是语言无关的确定性入口。
-- 可选的 `zh-Latn-pinyin` 前端只编译经过审查的控制别名，正文始终原样保留。
+- 已冻结的 `zh-Latn-pinyin` 实验只为兼容和复现保留。
 - 能力 ID、Schema 字段、Grant、哈希和回执值始终保持稳定 ASCII。
 - 新增 UI 翻译和受审查的语言 Adapter，不需要 Fork 协议。
 
@@ -206,7 +210,7 @@ APK、模拟器镜像、原始设备日志、截图、回执和 SQLite 账本不
 
 ## 🤝 一起建设
 
-我们尤其欢迎：新平台 `message.compose` Binding、能抓住“假成功”的一致性测试、23 个 Locale 的母语审校、带声调与冲突测试的拼音别名、受约束的语言 Adapter，以及基于受控设备的可复现实验。
+我们尤其欢迎：新平台 `message.compose` Binding、能抓住“假成功”的一致性测试、23 个 Locale 的母语审校、不导入 Python Runtime 但能通过共享向量的独立 Nine Lights Host、受约束的语言 Adapter，以及基于受控设备的可复现实验。
 
 从 [CONTRIBUTING.md](CONTRIBUTING.md) 和 [90 天路线图](docs/04-90-day-execution-roadmap-zh.md)开始。
 

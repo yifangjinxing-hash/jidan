@@ -1,0 +1,76 @@
+{
+  "name": "game.ninelights.press",
+  "description": "Press one Nine Lights cell and return the complete next state. No state is retained by the capability.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "type": "object",
+        "properties": {
+          "rulesVersion": {"const": "ninelights/1"},
+          "levelId": {"enum": ["cross", "corners", "full"]},
+          "cells": {
+            "type": "array",
+            "minItems": 9,
+            "maxItems": 9,
+            "items": {"type": "integer", "enum": [0, 1]}
+          },
+          "moveCount": {"type": "integer"},
+          "status": {"enum": ["playing", "won"]}
+        },
+        "required": ["rulesVersion", "levelId", "cells", "moveCount", "status"],
+        "additionalProperties": false
+      },
+      "cell": {"type": "integer", "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8]}
+    },
+    "required": ["state", "cell"],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "type": "object",
+        "properties": {
+          "rulesVersion": {"const": "ninelights/1"},
+          "levelId": {"enum": ["cross", "corners", "full"]},
+          "cells": {
+            "type": "array",
+            "minItems": 9,
+            "maxItems": 9,
+            "items": {"type": "integer", "enum": [0, 1]}
+          },
+          "moveCount": {"type": "integer"},
+          "status": {"enum": ["playing", "won"]}
+        },
+        "required": ["rulesVersion", "levelId", "cells", "moveCount", "status"],
+        "additionalProperties": false
+      },
+      "changedCells": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 5,
+        "items": {"type": "integer", "enum": [0, 1, 2, 3, 4, 5, 6, 7, 8]}
+      },
+      "event": {"enum": ["pressed", "won"]}
+    },
+    "required": ["state", "changedCells", "event"],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "READ",
+      "executionMode": "COMPUTE",
+      "reversible": true,
+      "stateModel": "STATELESS"
+    }
+  }
+}

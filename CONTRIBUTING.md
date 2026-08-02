@@ -38,17 +38,26 @@ Translations can be partial during review, but merged locale files must pass the
 
 Natural-language parsers are adapters at the untrusted edge. A parser may accept any language, but it must return the stable semantic action contract, reject ambiguity, preserve the original user text, and never grant or execute a capability directly. Task planning, policy checks, confirmation, execution, and receipts remain separate stages.
 
-Pinyin frontend aliases follow the same boundary. A contribution must use the
-registered `zh-Latn-pinyin` tag, provide full tones and explicit syllable/word
-boundaries, map to an existing stable capability ID, preserve payload data
-verbatim, and add unknown/ambiguous/mixed-script regression cases. Runtime
-Han-to-Pinyin guessing, fuzzy matching, first-match collision handling, direct
-Registry invocation, and aliases that silently widen an action (for example,
-mapping “send” to “compose”) are not accepted. Update the reviewed alias-set
-hash in the frontend profile and run `test_pinyin_frontend.py`.
+The Pinyin Frontend 0.1 experiment was frozen on **2026-08-02**. Its code,
+profile, demo, and tests remain for compatibility and reproducibility. Security
+fixes and regressions that preserve the frozen behavior are welcome; new
+syntax, aliases, fuzzy matching, capability mappings, or active product entry
+points are not. See the [frozen design note](docs/05-jcl-pinyin-frontend-zh.md).
 
-See [the Pinyin frontend design](docs/05-jcl-pinyin-frontend-zh.md) and the
-[machine-readable profile](profiles/frontends/zh-Latn-pinyin.frontend.json).
+## Conformance spikes
+
+Nine Lights tests semantic portability rather than shared implementation. A
+change to `game.ninelights.start` or `game.ninelights.press` must:
+
+1. keep platform and UI fields out of the public Profile;
+2. preserve stateless, deterministic state transitions and fail-closed invalid-state handling;
+3. update shared vectors only when the public contract is intentionally versioned;
+4. run both the Python tests and `node prototype/tools/check_ninelights_web.js`;
+5. state separately which Host uses `JidanRuntime` and which implements the contract independently.
+
+Passing the same vectors does not justify claims about Android, iOS, a shared
+Runtime, or a general-purpose game language. See the
+[Nine Lights evidence boundary](docs/07-universal-game-spike-zh.md).
 
 ## Capability bindings
 

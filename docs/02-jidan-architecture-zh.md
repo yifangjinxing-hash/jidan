@@ -100,9 +100,9 @@ DRAFT → SIMULATED → AUTHORIZED → RUNNING → WAITING
 6. Provider/版本/schema 改变时重新校验计划。
 7. 低置信度不无限 ReAct，转为询问或用户接管。
 
-## 输入 Frontend：拼音是可选输入，不是机器底层
+## 输入 Frontend：语言实验不是机器底层
 
-语言输入位于 JCL 信任边界之外。可选的 Pinyin Frontend 把经过审查的 `zh-Latn-pinyin` 控制别名编译成现有 capability ID 与 JSON 参数提案；它不是 JCL 源码、字节码、公共协议或机器底层，不改变 JCL Profile，也不能调用 Registry、选择平台、发放 Grant 或执行 Adapter。
+语言输入位于 JCL 信任边界之外。Pinyin Frontend 0.1 曾验证“受审查别名只能产生无权限 Proposal”这条边界；该实验已于 **2026-08-02 冻结归档**。现有代码、Profile 与测试暂时保留用于兼容和复现，但不再进入活跃路线，不接受新语法、模糊解析或别名扩张。
 
 ```text
 chuàng-jiàn.cǎo-gǎo + 原样正文
@@ -112,7 +112,7 @@ InvocationProposal(message.compose, {content: 原样正文})
 Schema → Policy → Grant → Confirm → Runtime → Binding
 ```
 
-控制面和数据面严格分离：拼音只解释动作别名；姓名、正文、URL、金额、账号和凭据不转写。无声调别名只有在全表唯一时才能编译；同音冲突、未知词、混合脚本、不可见字符和模糊匹配全部 fail closed。完整 Profile 与依据见[《JCL 拼音编译前端 0.1》](05-jcl-pinyin-frontend-zh.md)。
+冻结版本仍遵守原边界：它不是 JCL 源码、字节码、公共协议或机器底层，不能调用 Registry、选择平台、发放 Grant 或执行 Adapter；姓名、正文、URL、金额、账号和凭据也不转写。完整冻结设计与依据见[《JCL 拼音编译前端 0.1》](05-jcl-pinyin-frontend-zh.md)。后续输入研究应围绕既有能力的可验证调用，而不是继续发明语言表面。
 
 ## Jidan Capability Layer（JCL）
 
@@ -142,11 +142,13 @@ JCL 不另造语法和传输层。当前公开 Profile 直接复用 MCP Tool 与
 
 `profiles/message.compose.tool.json` 是首份可执行 Profile。同一个 `message.compose` 能映射到 Android Intent、Apple Shortcut / Share Sheet、Web 草稿或社区 Binding；调用方只提交能力与参数，平台选择属于 Host 配置。
 
+[`game.ninelights.start` 与 `game.ninelights.press`](07-universal-game-spike-zh.md) 是一个更小的离线一致性尖峰：Python CLI 通过完整 TaskPlan、Grant、Runtime 与 Receipt 执行，Web 则使用独立 JavaScript Host 重放同一组 conformance vectors。它验证共享语义，不宣称共享 Runtime 或移动端覆盖。
+
 共享语义不等于共享实现、权限或保证等级：Web Binding 仍受浏览器沙箱限制，Apple/Android 各自保留原生权限与生命周期，C ABI 只可能存在于某个本地 Adapter 内部。跨 Host 的边界如下：
 
 | 可跨 Host 共享 | 必须留在 Host / Binding 本地 |
 |---|---|
-| Capability ID、Profile 版本与 JSON Schema | 自然语言、拼音、语音与 UI Frontend |
+| Capability ID、Profile 版本与 JSON Schema | 自然语言、语音、UI 与已冻结的拼音兼容 Frontend |
 | 风险、结果与回执语义 | JGraph、调度、缓存和持久状态实现 |
 | Conformance fixtures 与最低安全不变量 | Kotlin / Swift / JavaScript / C/C++ 代码 |
 | 关键精确状态示例：Profile 的 `handoff_planned / handoff_opened`、Task 的 `completed / unknown`、Receipt 的 `succeeded / committed_unverified / outcome_unknown` | OS 权限、Provider 身份、原生 UI 与生命周期 |

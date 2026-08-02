@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>九灯 · JCL 独立 Web Binding</title>
+  <style>
+    :root {
+      --ink: #f7f4e8;
+      --muted: #9ba6a8;
+      --panel: rgba(19, 27, 30, 0.88);
+      --line: rgba(255, 255, 255, 0.1);
+      --off: #26363a;
+      --light: #ffca53;
+      --accent: #72e0c2;
+      --danger: #ff8e8e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 50% 8%, rgba(255, 202, 83, 0.13), transparent 34rem),
+        linear-gradient(155deg, #091215 0%, #101d20 58%, #081113 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+
+    button, select { font: inherit; }
+
+    .shell {
+      width: min(100% - 2rem, 62rem);
+      margin: 0 auto;
+      padding: 2.5rem 0 3rem;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.55rem;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.4rem, 8vw, 5.2rem);
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+
+    .lede {
+      max-width: 45rem;
+      margin: 1rem 0 1.6rem;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .host-note {
+      padding: 0.85rem 1rem;
+      border: 1px solid rgba(114, 224, 194, 0.28);
+      border-radius: 0.8rem;
+      background: rgba(114, 224, 194, 0.07);
+      color: #c8f6e8;
+      line-height: 1.5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(17rem, 25rem) minmax(16rem, 1fr);
+      gap: 1.2rem;
+      margin-top: 1.2rem;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 1.25rem;
+      background: var(--panel);
+      box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(12px);
+    }
+
+    .game { padding: clamp(1rem, 4vw, 1.5rem); }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.8rem;
+      align-items: end;
+      margin-bottom: 1.25rem;
+    }
+
+    label, .label {
+      display: block;
+      margin-bottom: 0.35rem;
+      color: var(--muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    select, .secondary {
+      min-height: 2.7rem;
+      border: 1px solid var(--line);
+      border-radius: 0.7rem;
+      color: var(--ink);
+      background: #172427;
+    }
+
+    select { width: 100%; padding: 0 0.75rem; }
+
+    .secondary {
+      padding: 0 1rem;
+      cursor: pointer;
+    }
+
+    .secondary:hover { border-color: rgba(114, 224, 194, 0.55); }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.65rem;
+      aspect-ratio: 1;
+    }
+
+    .cell {
+      position: relative;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+      color: #738286;
+      background: var(--off);
+      cursor: pointer;
+      transition: transform 120ms ease, background 160ms ease, box-shadow 160ms ease;
+    }
+
+    .cell:hover:not(:disabled) { transform: translateY(-2px); }
+    .cell:active:not(:disabled) { transform: translateY(1px) scale(0.98); }
+    .cell:disabled { cursor: default; opacity: 0.62; }
+
+    .cell.is-on {
+      color: #382606;
+      border-color: rgba(255, 226, 145, 0.82);
+      background: var(--light);
+      box-shadow: 0 0 1.6rem rgba(255, 202, 83, 0.32), inset 0 0 1rem rgba(255, 255, 255, 0.32);
+    }
+
+    .cell-number {
+      position: absolute;
+      top: 0.42rem;
+      left: 0.55rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+      opacity: 0.72;
+    }
+
+    .lamp {
+      width: 34%;
+      aspect-ratio: 1;
+      border: 0.22rem solid currentColor;
+      border-radius: 50%;
+    }
+
+    .summary {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .metric strong { display: block; font-size: 1.25rem; }
+    .metric:last-child { text-align: right; }
+
+    .status-text[data-status="won"] { color: var(--light); }
+
+    .help {
+      margin: 1rem 0 0;
+      color: var(--muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+
+    .details { padding: 1.25rem; }
+    .details h2 { margin: 0 0 1rem; font-size: 1rem; }
+
+    .facts {
+      display: grid;
+      gap: 0.85rem;
+      margin: 0;
+    }
+
+    .facts > div {
+      padding-bottom: 0.85rem;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .facts dt { color: var(--muted); font-size: 0.75rem; }
+    .facts dd { margin: 0.3rem 0 0; overflow-wrap: anywhere; }
+
+    code {
+      color: #b7f2e2;
+      font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+      font-size: 0.82rem;
+    }
+
+    .check[data-ok="true"] { color: var(--accent); }
+    .check[data-ok="false"] { color: var(--danger); }
+
+    details { margin-top: 1rem; }
+    summary { color: var(--muted); cursor: pointer; }
+
+    pre {
+      max-height: 15rem;
+      overflow: auto;
+      padding: 0.8rem;
+      border-radius: 0.65rem;
+      color: #cbd5d6;
+      background: #091214;
+      font: 0.72rem/1.55 ui-monospace, SFMono-Regular, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    :focus-visible {
+      outline: 0.2rem solid #fff;
+      outline-offset: 0.18rem;
+    }
+
+    @media (max-width: 46rem) {
+      .shell { padding-top: 1.5rem; }
+      .layout { grid-template-columns: 1fr; }
+      .details { order: -1; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell" aria-labelledby="page-title">
+    <p class="eyebrow">JCL contract probe · Nine Lights</p>
+    <h1 id="page-title">九灯</h1>
+    <p class="lede">按下一格会翻转它自己和上下左右的灯。让九盏灯全部熄灭即可获胜；规则确定、没有随机数，也不需要网络。</p>
+    <p class="host-note"><strong>证据边界：</strong>这是独立 JavaScript Host 对同一 JCL 契约的实现，不经过 Python <code>JidanRuntime</code>，也不代表 Android 或 iOS Binding 已完成。</p>
+
+    <div class="layout">
+      <section class="panel game" aria-labelledby="game-heading">
+        <h2 id="game-heading" class="eyebrow">离线棋盘</h2>
+        <div class="toolbar">
+          <div>
+            <label for="level-select">选择关卡</label>
+            <select id="level-select">
+              <option value="cross">十字 · 入门</option>
+              <option value="corners">双角 · 进阶</option>
+              <option value="full">满灯 · 挑战</option>
+            </select>
+          </div>
+          <button id="restart" class="secondary" type="button">重新开始</button>
+        </div>
+
+        <div id="board" class="board" role="group" aria-label="九灯 3 乘 3 棋盘">
+          <button class="cell" type="button" data-cell="0"><span class="cell-number">1</span><span class="lamp" aria-hidden="true"></span></button>
+          <button class="cell" type="button" data-cell="1"><span class="cell-number">2</span><span class="lamp" aria-hidden="true"></span></button>
+          <button class="cell" type="button" data-cell="2"><span class="cell-number">3</span><span class="lamp" aria-hidden="true"></span></button>
+          <button class="cell" type="button" data-cell="3"><span class="cell-number">4</span><span class="lamp" aria-hidden="true"></span></button>
+          <button class="cell" type="button" data-cell="4"><span class="cell-number">5</span><span class="lamp" aria-hidden="true"></span></button>
+          <button class="cell" type="button" data-cell="5"><span class="cell-number">6</span><span class="lamp" aria-hidden="true"></span></button>
+          <button class="cell" type="button" data-cell="6"><span class="cell-number">7</span><span class="lamp" aria-hidden="true"></span></button>
+          <button class="cell" type="button" data-cell="7"><span class="cell-number">8</span><span class="lamp" aria-hidden="true"></span></button>
+          <button class="cell" type="button" data-cell="8"><span class="cell-number">9</span><span class="lamp" aria-hidden="true"></span></button>
+        </div>
+
+        <div class="summary">
+          <div class="metric">
+            <span class="label">步数</span>
+            <strong id="move-count">0</strong>
+          </div>
+          <div class="metric">
+            <span class="label">状态</span>
+            <strong id="game-status" class="status-text" role="status" aria-live="polite">进行中</strong>
+          </div>
+        </div>
+        <p class="help">鼠标或触控可直接按灯；键盘数字 <strong>1–9</strong> 对应从左到右、从上到下的九格。</p>
+      </section>
+
+      <aside class="panel details" aria-labelledby="contract-heading">
+        <h2 id="contract-heading">契约与本地证据</h2>
+        <dl class="facts">
+          <div>
+            <dt>Host</dt>
+            <dd>独立 JavaScript · 浏览器本地状态</dd>
+          </div>
+          <div>
+            <dt>开始能力</dt>
+            <dd><code id="start-capability"></code></dd>
+          </div>
+          <div>
+            <dt>翻灯能力</dt>
+            <dd><code id="press-capability"></code></dd>
+          </div>
+          <div>
+            <dt>规则版本</dt>
+            <dd><code id="rules-version"></code></dd>
+          </div>
+          <div>
+            <dt>浏览器内置一致性</dt>
+            <dd id="conformance" class="check" role="status" aria-live="polite">正在检查…</dd>
+          </div>
+        </dl>
+        <p class="help">权威仓库向量由 <code>node prototype/tools/check_ninelights_web.js</code> 独立读取并核验。</p>
+        <details>
+          <summary>最近一次能力结果</summary>
+          <pre id="last-result" aria-live="polite"></pre>
+        </details>
+      </aside>
+    </div>
+  </main>
+
+  <script src="ninelights.js"></script>
+  <script>
+    (function () {
+      "use strict";
+
+      var api = window.NineLights;
+      var board = document.getElementById("board");
+      var cells = Array.prototype.slice.call(board.querySelectorAll(".cell"));
+      var levelSelect = document.getElementById("level-select");
+      var restartButton = document.getElementById("restart");
+      var moveCount = document.getElementById("move-count");
+      var gameStatus = document.getElementById("game-status");
+      var lastResult = document.getElementById("last-result");
+      var conformance = document.getElementById("conformance");
+      var state = null;
+
+      document.getElementById("start-capability").textContent = api.START_CAPABILITY_ID;
+      document.getElementById("press-capability").textContent = api.PRESS_CAPABILITY_ID;
+      document.getElementById("rules-version").textContent = api.RULES_VERSION;
+
+      function render(result) {
+        var won = state.status === "won";
+        cells.forEach(function (button, index) {
+          var on = state.cells[index] === 1;
+          button.classList.toggle("is-on", on);
+          button.setAttribute("aria-pressed", on ? "true" : "false");
+          button.setAttribute("aria-label", "第 " + (index + 1) + " 格，" + (on ? "亮" : "灭"));
+          button.disabled = won;
+        });
+        moveCount.textContent = String(state.moveCount);
+        gameStatus.textContent = won ? "已完成" : "进行中";
+        gameStatus.dataset.status = state.status;
+        lastResult.textContent = JSON.stringify(result, null, 2);
+      }
+
+      function begin() {
+        state = api.invoke(api.START_CAPABILITY_ID, { levelId: levelSelect.value });
+        render({ capability: api.START_CAPABILITY_ID, output: state });
+      }
+
+      function pressCell(cell) {
+        if (!state || state.status === "won") {
+          return;
+        }
+        var output = api.invoke(api.PRESS_CAPABILITY_ID, { state: state, cell: cell });
+        state = output.state;
+        render({ capability: api.PRESS_CAPABILITY_ID, arguments: { cell: cell }, output: output });
+      }
+
+      cells.forEach(function (button) {
+        button.addEventListener("click", function () {
+          pressCell(Number(button.dataset.cell));
+        });
+      });
+
+      levelSelect.addEventListener("change", begin);
+      restartButton.addEventListener("click", begin);
+      document.addEventListener("keydown", function (event) {
+        var tagName = event.target && event.target.tagName;
+        if (event.ctrlKey || event.metaKey || event.altKey || event.repeat || tagName === "SELECT" || tagName === "INPUT" || tagName === "TEXTAREA") {
+          return;
+        }
+        if (/^[1-9]$/.test(event.key)) {
+          event.preventDefault();
+          pressCell(Number(event.key) - 1);
+        }
+      });
+
+      var result = api.runConformance();
+      conformance.dataset.ok = String(result.ok);
+      conformance.textContent = result.ok
+        ? result.passed + "/" + result.total + " 通过"
+        : result.passed + "/" + result.total + " 通过；失败：" + result.failures.join("、");
+      begin();
+    })();
+  </script>
+</body>
+</html>

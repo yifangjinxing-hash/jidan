@@ -4,7 +4,7 @@
 
 ## 2026-08-02 历史镜鉴修正
 
-C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者吸收差异”，不是“所有平台最终共用同一种语言、ABI、Runtime 或 UI”。本路线因此把冻结对象从公共 JGraph/共享实现改为 **JCL 的外部可观察语义、Profile 版本与 conformance fixtures**；JGraph 继续是 Host 内部实现。自然语言和拼音只产生无权限 Proposal，不能成为公共协议或执行入口。依据见[历史镜鉴与路线护栏](06-history-lessons-and-route-guardrails-zh.md)。
+C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者吸收差异”，不是“所有平台最终共用同一种语言、ABI、Runtime 或 UI”。本路线因此把冻结对象从公共 JGraph/共享实现改为 **JCL 的外部可观察语义、Profile 版本与 conformance fixtures**；JGraph 继续是 Host 内部实现。自然语言只能产生无权限 Proposal；Pinyin Frontend 0.1 已于 2026-08-02 冻结归档，只保留兼容与复现，不再扩展语法或别名。依据见[历史镜鉴与路线护栏](06-history-lessons-and-route-guardrails-zh.md)。
 
 路线顺序调整为：
 
@@ -47,6 +47,7 @@ C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者�
 6. 做五组负向测试：无设备、多个设备、权限拒绝、函数不存在、畸形/超大参数。
 7. 对每个目标包先执行语义面探测：`AppFunctions > RemoteInput > person-bound shortcut > blocked`；OCR/坐标不得成为收件人身份依据。
 8. 用同一份 `message.compose` Profile 生成 Android、iOS、Web 数据计划；上层调用不得包含平台字段，自然语言/拼音字段不得进入能力 Schema，Web 计划不得冒充原生 UI 已打开。
+9. 用 Nine Lights 作为离线一致性尖峰：Python Host 走完整 Runtime/Receipt，独立 Web JavaScript Host 重放同一组向量；只据此陈述“共享语义”，不得宣传为共享 Runtime 或移动端通用游戏。
 
 ### 第 14 天 Go / No-Go 门槛
 
@@ -55,6 +56,7 @@ C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者�
 - shell 适配器没有通用命令入口，只允许 `app_function` 的固定参数化子命令。
 - 日志可证明实际调用了哪个设备、包、函数和参数摘要。
 - `message.compose` 的 Profile、Runtime 导出和 conformance vector 完全一致；三个计划 Binding 对公共结果状态的解释一致。
+- Nine Lights 的 Python 与 JavaScript 实现通过同一组 start、press 和解法向量；任一端特判向量或共享规则实现均不算独立证据。
 - 若直接 ADB 没跑通，不进入 Shizuku 集成；先修清真实平台问题。
 
 ### Shizuku 实验的进入条件
@@ -79,6 +81,7 @@ C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者�
 - HMAC 开发密钥替换为 Android Keystore；有 StrongBox 时记录硬件保证等级。
 - 所有公开 Demo 必须经过 TaskPlan、Grant、Confirmation、Runtime 和 Receipt；直接 Registry 调用只允许出现在明确标注的 Adapter conformance test 中。
 - 至少让一名非核心开发者在不修改 Runtime 的前提下完成一个计划型 Binding 并跑过一致性测试。
+- Pinyin Frontend 保持冻结：兼容性修复和安全回归可以合入，不新增语法、别名、模糊匹配或新的活跃入口。
 
 ### AOSP
 

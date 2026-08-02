@@ -19,9 +19,14 @@ Localized READMEs are maintained as welcoming entry points. The English README a
 1. **Unicode transport:** memo text in any writing system can pass through JSON, the task graph, ADB, AppFunctions, storage, readback, and the UI without transliteration or implicit normalization.
 2. **Localized UI:** Android strings use resource qualifiers and BCP 47 locale configuration. Unknown locales fall back to the complete English resource set.
 3. **Semantic understanding:** the bundled `memo: <content>` prefix is language-neutral. The offline Chinese rule parser is one optional adapter. Free-form understanding in another language requires a reviewed parser or constrained multilingual-model adapter; it must still emit the same stable semantic action.
-4. **Compile-only input frontends:** the optional [`zh-Latn-pinyin` profile](../../profiles/frontends/zh-Latn-pinyin.frontend.json) resolves reviewed Pinyin control aliases to existing capability IDs. It preserves payloads verbatim, has no execution authority, and rejects unknown or ambiguous aliases. A frontend profile is not a UI locale or a new machine protocol.
+4. **Frozen input-frontend compatibility:** the [`zh-Latn-pinyin` profile](../../profiles/frontends/zh-Latn-pinyin.frontend.json) was frozen on 2026-08-02. Its code and tests remain for compatibility and reproducibility, but it is not an active language route; new syntax, aliases, fuzzy matching, and capability mappings are not accepted. A frontend profile is not a UI locale or a machine protocol.
 
 These guarantees are deliberately not conflated. Shipping an interface translation does not mean a language has a safe natural-language parser, and accepting Unicode does not mean every phrase is understood.
+
+The Nine Lights spike follows the same separation. Human-facing game labels may
+be localized by each Host, while capability IDs, JSON fields, state values, and
+conformance vectors remain stable. The Python and Web Hosts share those
+semantics, not UI strings or Runtime code.
 
 ## Seed UI language packs
 
