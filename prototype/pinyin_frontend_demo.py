@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from pathlib import Path
+import argparse
 from dataclasses import asdict
 import json
+from pathlib import Path
 
 from jidan.message_compose import planned_message_compose_binding
 from jidan.models import Effect, Step, TaskPlan
@@ -11,6 +12,19 @@ from jidan.policy import PolicyEngine, issue_grant
 from jidan.registry import CapabilityRegistry
 from jidan.runtime import JidanRuntime
 
+
+parser = argparse.ArgumentParser(
+    description="Compile a Pinyin alias, then stop at the normal confirmation gate."
+)
+parser.add_argument(
+    "--simulate-approval",
+    action="store_true",
+    help=(
+        "issue a demo-only approved Grant and execute the data plan; this is not "
+        "evidence of a real user's confirmation"
+    ),
+)
+args = parser.parse_args()
 
 repository_root = Path(__file__).resolve().parent.parent
 profile_path = (
@@ -31,7 +45,7 @@ registry = CapabilityRegistry()
 capability = planned_message_compose_binding("web").register(registry)
 plan = TaskPlan(
     id="pinyin-compose-demo",
-    goal="compile Pinyin control source into a reviewed message draft",
+    goal="compile a Pinyin control alias into a reviewed message draft",
     steps=(
         Step(
             id="compose",
@@ -53,22 +67,29 @@ unapproved = issue_grant(
 )
 stopped = runtime.execute(plan, unapproved)
 
-approved = issue_grant(
-    secret,
-    plan,
-    capabilities={capability.id},
-    scopes=capability.scopes,
-    max_effect=Effect.WRITE,
-    approved_steps={"compose"},
-)
-completed = runtime.execute(plan, approved)
+simulated_result = None
+if args.simulate_approval:
+    approved = issue_grant(
+        secret,
+        plan,
+        capabilities={capability.id},
+        scopes=capability.scopes,
+        max_effect=Effect.WRITE,
+        approved_steps={"compose"},
+    )
+    simulated_result = asdict(runtime.execute(plan, approved))
 
 print(
     json.dumps(
         {
             "compiled": proposal.to_dict(),
             "unapprovedRun": asdict(stopped),
-            "approvedRun": asdict(completed),
+            "afterSimulatedApproval": simulated_result,
+            "approvalNotice": (
+                "demo_only_not_user_confirmation"
+                if args.simulate_approval
+                else "not_approved_use_--simulate-approval_to_demo_remaining_stages"
+            ),
         },
         ensure_ascii=False,
         indent=2,

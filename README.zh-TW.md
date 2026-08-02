@@ -34,24 +34,32 @@
 
 ```text
 人的目標 → 語意動作 → 能力契約 → 策略閘門
-         → Host 選擇的 Binding → 原生交接 → 人類提交 → 可驗證回執
+         → Host 選擇的 Binding → 可驗證交接回執 → 人類提交
+                                                    （目前不驗證最終傳送）
 ```
 
 長期目標不是再做一個「超級 App」，而是形成薄而開放的相容層，讓 Android、Apple、Web、HarmonyOS、Windows 與未來平台實作相同且穩定的意圖語意。
 
+> **統一語意，不統一實作。** 自然語言與拼音是可替換的 Frontend；JCL 是機器契約；Kotlin、Swift、JavaScript、C/C++ 只是 Host 或 Adapter 的實作選擇；Web Binding 仍受瀏覽器沙箱限制。參見[歷史鏡鑑與路線護欄](docs/06-history-lessons-and-route-guardrails-zh.md)。
+
 ## 🔌 `message.compose`：一份契約，多端實作
 
-[`message.compose`](profiles/message.compose.tool.json) 是第一份 Jidan Capability Layer（JCL）Profile。JCL 是 MCP Tool 的能力剖面，不是新的程式語言或傳輸協定。
+[`message.compose`](profiles/message.compose.tool.json) 是第一份 Jidan Capability Layer（JCL）Profile。JCL 0.1 的首個公開序列化採用與 MCP 相容的 Tool Profile；JCL 本身不是新的程式語言，也不綁定單一傳輸或工作階段模型。
 
 ```python
-from jidan.message_compose import planned_message_compose_binding
-from jidan.registry import CapabilityRegistry
+from jidan.models import Step, TaskPlan
 
-registry = CapabilityRegistry()
-planned_message_compose_binding("ios").register(registry)  # 由 Host 設定平台
-
-# 上層只認識能力，不需要知道平台。
-result = registry.invoke("message.compose", {"content": "下午三點見。"})
+# 上層只提出能力，不選擇平台，也不直接呼叫 Adapter。
+plan = TaskPlan(
+    id="compose-demo",
+    goal="準備一份訊息草稿",
+    steps=(Step(
+        id="compose",
+        capability="message.compose",
+        arguments={"content": "下午三點見。"},
+    ),),
+)
+# 可信 Host 繼續完成驗證、授權、確認、Binding 選擇、執行與回執。
 ```
 
 | 穩定契約 | 可替換 Binding | 目前證據 |
@@ -92,9 +100,11 @@ AI 規劃器（不受信任）
   ↓ schema · scope · grant · 確認
 確定性安全閘門
   ↓ Host 在本機選擇並信任 Binding
-Android / Apple / Web / 新平台
-  ↓ 原生審閱介面
-人類完成最後動作 → 回執
+Android / Apple → 行動端原生審閱介面
+Web → 可編輯 Web 審閱介面
+新平台 → Binding 自有審閱介面
+  ├→ 可驗證交接回執（sent=false）
+  └→ 人類完成最後動作（目前不在 Jidan 的傳送驗證範圍內）
 ```
 
 | 新增層級 | 狀態 | 目前證據 |
@@ -123,8 +133,11 @@ Android / Apple / Web / 新平台
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
+python pinyin_frontend_demo.py
 python appfunctions_smoke.py
 ```
+
+兩個訊息示範預設都停在 `awaiting_confirmation`。`--simulate-approval` 只用於繼續示範本機資料計畫的後續階段，會明確標示為模擬批准，不能視為使用者真的確認。
 
 檢查全部 Android 語言資源：
 

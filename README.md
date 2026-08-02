@@ -34,24 +34,33 @@ Mobile software is still organized around app silos. A simple goal crosses pages
 
 ```text
 human goal → semantic action → capability contract → policy gate
-           → selected adapter → native handoff → human commit → receipt
+           → selected adapter → observed handoff receipt → human commit
+                                                        (outside current send verification)
 ```
 
 The long-term target is not “one more super app.” It is a thin, open compatibility layer where Android, Apple, Web, HarmonyOS, Windows, and future hosts can implement the same stable intent semantics.
 
+> **Share semantics, not implementations.** Natural language and Pinyin are replaceable frontends; JCL is the machine contract; Kotlin, Swift, JavaScript, and C/C++ remain Host or adapter choices. Web bindings still live inside the browser sandbox. See the [historical design lessons and route guardrails](docs/06-history-lessons-and-route-guardrails-zh.md) (Chinese).
+
 ## 🔌 One contract, many bindings
 
-[`message.compose`](profiles/message.compose.tool.json) is the first Jidan Capability Layer (JCL) profile. JCL is an MCP Tool profile—not a new programming language or transport.
+[`message.compose`](profiles/message.compose.tool.json) is the first Jidan Capability Layer (JCL) profile. JCL 0.1's first public serialization uses an MCP-compatible Tool profile; JCL itself is neither a new programming language nor tied to one transport or session model.
 
 ```python
-from jidan.message_compose import planned_message_compose_binding
-from jidan.registry import CapabilityRegistry
+from jidan.models import Step, TaskPlan
 
-registry = CapabilityRegistry()
-planned_message_compose_binding("ios").register(registry)  # host configuration
-
-# The caller knows the capability, not the platform.
-result = registry.invoke("message.compose", {"content": "See you at three."})
+# The caller proposes a capability, not a platform or an adapter call.
+plan = TaskPlan(
+    id="compose-demo",
+    goal="prepare a message draft",
+    steps=(Step(
+        id="compose",
+        capability="message.compose",
+        arguments={"content": "See you at three."},
+    ),),
+)
+# A trusted Host validates, grants, confirms, selects a binding, executes,
+# and writes the receipt. See prototype/message_compose_demo.py.
 ```
 
 | Stable contract | Replaceable binding | Current proof |
@@ -85,7 +94,7 @@ Every result is explicit about reality:
 chuàng-jiàn.cǎo-gǎo  →  chuang4-jian4.cao3-gao3  →  message.compose
 ```
 
-Pinyin is source, not bytecode or a new DSL: the frontend has no authority and emits only an untrusted invocation proposal. Payload text is preserved verbatim, tones and syllable boundaries are explicit, toneless input is accepted only when exactly one reviewed alias matches, and ambiguity fails closed. See the [design and safety rules](docs/05-jcl-pinyin-frontend-zh.md).
+Pinyin is an optional input spelling—not JCL source, bytecode, a machine substrate, or a new DSL. The frontend has no authority and emits only an untrusted invocation proposal. Payload text is preserved verbatim, tones and syllable boundaries are explicit, toneless input is accepted only when exactly one reviewed alias matches, and ambiguity fails closed. See the [design and safety rules](docs/05-jcl-pinyin-frontend-zh.md).
 
 ## 🧭 Architecture
 
@@ -99,17 +108,21 @@ flowchart LR
     R --> I["Apple"]
     R --> W["Web"]
     R --> N["New platform"]
-    A --> U["Native review surface"]
-    I --> U
-    W --> U
-    N --> U
-    U --> X["Human final action"]
+    A --> M["Native mobile review surface"]
+    I --> M
+    W --> E["Editable Web review surface"]
+    N --> S["Binding-specific review surface"]
+    M --> Q["Observed handoff receipt<br/>sent = false"]
+    E --> Q
+    S --> Q
+    M --> X["Human final action<br/>outside current send verification"]
+    E --> X
+    S --> X
     G --> L["Grant ledger"]
-    U --> Q["Verifiable receipt"]
 
     classDef core fill:#195A41,color:#F2F8F5,stroke:#2F8F68,stroke-width:2px;
     classDef human fill:#F5E7BF,color:#3B2A00,stroke:#D9A441;
-    class C,G,R core;
+    class C,G,R,Q core;
     class H,X human;
 ```
 
@@ -151,6 +164,8 @@ python message_compose_demo.py
 python pinyin_frontend_demo.py
 python appfunctions_smoke.py
 ```
+
+Both message demos stop at `awaiting_confirmation` by default. `--simulate-approval` exercises the remaining local data-plan stages, but is labeled as a simulation and is not evidence of a user's confirmation.
 
 Validate all Android language packs:
 

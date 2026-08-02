@@ -58,8 +58,8 @@ For `message.compose` bindings:
 
 1. Keep the public capability ID, input schema, and output schema unchanged.
 2. Treat `recipient` only as a display hint; the runtime intentionally does not pass it to adapter code.
-3. Return a platform binding plan only. Do not author `delivery`, `sent`, `state`, `riskLevel`, `executionMode`, or other host-owned outcome fields.
-4. Report a data-only integration as `handoff_planned`. Use `handoff_opened` only when the binding verifies the expected native review surface.
+3. Return a platform binding plan only. Do not author `delivery`, `sent`, `state`, `riskLevel`, `executionMode`, or other host-owned outcome fields at any nesting depth.
+4. Report a data-only integration as `handoff_planned`. Use `handoff_opened` only through a verifier-backed wrapper that proves the expected user-controlled review surface is actually open; the generic/community binding API cannot select this state.
 5. Never select a recipient or issue the final Send action.
 6. Add regression tests for malformed input, false-success output, and exception handling.
 

@@ -658,7 +658,7 @@ def _normalize_discovery(document: Any) -> tuple[AppFunctionCapabilityRecord, ..
 
 
 def _compile_parameters_schema(parameters: Any) -> dict[str, Any] | None:
-    """Compile Android GenericDocument parameter metadata into JCC v0 schema."""
+    """Compile Android metadata into JCL's dependency-free JSON Schema subset."""
 
     if parameters is None:
         return {"type": "object", "properties": {}, "additionalProperties": False}
@@ -804,7 +804,7 @@ def _compile_android_data_type(raw: Any) -> dict[str, Any] | None:
         return schema
 
     # Unit, reference, all-of, and PendingIntent require semantics that this
-    # dependency-free JCC compiler cannot safely infer.
+    # dependency-free JCL schema compiler cannot safely infer.
     return None
 
 

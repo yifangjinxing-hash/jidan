@@ -107,7 +107,7 @@ def _validate_schema(
     path: str,
     allow_refs: bool = False,
 ) -> None:
-    """Validate the small JSON Schema subset used by JCC v0 manifests."""
+    """Validate the small JSON Schema subset used by JCL v0 profiles."""
 
     if not schema:
         return

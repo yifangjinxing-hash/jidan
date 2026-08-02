@@ -45,9 +45,11 @@ CPU、GPU、NPU、显示、相机、音频、基带等硬件
 
 AppFunctions 把 App 的数据和动作注册成可发现、带类型和自然语言描述的端侧工具，Google 称其为 Android 里的 MCP 等价物。平台能力从 Android 16 起存在，Android 17 扩展了能力；Jetpack 库目前仍为 alpha，Gemini 的完整接入仍是 private preview。[官方概览](https://developer.android.com/ai/appfunctions)、[Android 17 的 AppFunctions](https://developer.android.com/blog/posts/android-17-is-here)。
 
+自然语言描述只用于发现和模型理解，不能成为授权依据；Host 仍必须绑定稳定函数 ID、类型 Schema、Provider 身份、用户批准与本机策略。
+
 关键限制不是 API 写法，而是 Agent 准入。Android 17 AOSP 已出现一条受 feature flag 控制的新路径：`EXECUTE_APP_FUNCTIONS` 可变为普通权限，但调用方还必须以“包名 + 签名证书”进入设备 allowlist，并由用户逐个目标 App 授权；框架源码也包含 `getAccessRequestState()` 和 `createRequestAccessIntent()`。不过当前公共 SDK 尚未公开这组 access API，公开权限文档仍显示 `internal|privileged|knownSigner`，官方端到端能力仍处于 EAP/private preview。[AOSP Manifest](https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-17.0.0_r1/core/res/AndroidManifest.xml#9489)、[AppFunctionManager 源码](https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-17.0.0_r1/core/java/android/app/appfunctions/AppFunctionManager.java#1080)、[设备 allowlist 源码](https://android.googlesource.com/platform/frameworks/base/+/refs/tags/android-17.0.0_r1/services/appfunctions/java/com/android/server/appfunctions/allowlist/SystemAppFunctionAllowlistReader.java#130)、[官方概览与 EAP](https://developer.android.com/ai/appfunctions)。
 
-结论：Google 已经把“第三方 Agent + 逐 App 用户同意”的门写进系统，但门卫仍是构建开关与 Google/OEM 签名白名单。Jidan 现在不能自行穿过它，却也不必只剩 Root 或自制 ROM：实验室继续用官方 ADB 验证能力契约；产品准备稳定包名、长期签名、授权 UI 和隐私材料，申请 AppFunctions EAP/OEM allowlist。一旦获准，现有 JGraph/JCC 上层无需重写。
+结论：Google 已经把“第三方 Agent + 逐 App 用户同意”的门写进系统，但门卫仍是构建开关与 Google/OEM 签名白名单。Jidan 现在不能自行穿过它，却也不必只剩 Root 或自制 ROM：实验室继续用官方 ADB 验证能力契约；产品准备稳定包名、长期签名、授权 UI 和隐私材料，申请 AppFunctions EAP/OEM allowlist。一旦获准，现有内部 JGraph 与外部 JCL 契约无需重写。
 
 ### Android Computer Control：GUI 降级入口
 
@@ -81,6 +83,12 @@ AIOS 是真实且有价值的研究项目，其 kernel 管理 Agent 的 LLM 请�
 这条研究线成立：AutoDroid、DroidBot-GPT 等把 UI 状态转成模型可理解表示，再生成操作。[AutoDroid](https://github.com/MobileLLM/AutoDroid)、[DroidBot-GPT](https://arxiv.org/abs/2304.07061)。2026 年的 MobileExplorer 进一步研究端侧 GUI Agent，报告端到端延迟下降 23%。[MobileExplorer](https://arxiv.org/abs/2605.26546)。
 
 但 GUI 自动化还远非“已解决”：2026 年 AndroidDaily 在 94 个真实闭源 App、350 个任务上评测，最强模型成功率仅 62%。[AndroidDaily](https://arxiv.org/abs/2605.27761)。这足够作为覆盖缺口的 fallback，不足以充当系统的稳定 ABI。
+
+### 共享 C++ / 万能 ABI
+
+Dropbox 曾把跨端 C++ 作为移动端共享代码战略，后来发现自定义框架、构建链、调试、人才和平台分歧的成本超过“写一次”的收益，因此主要转向 Swift/Kotlin，同时保留个别确实合适的 C++ 资产；其 Android 相机上传重写还直接利用 WorkManager 等本机约束改善了可靠性。[2019 复盘](https://dropbox.tech/mobile/the-not-so-hidden-cost-of-sharing-code-between-ios-and-android)、[Android 构建系统复盘](https://dropbox.tech/mobile/modernizing-our-android-build-system-part-i-the-planning)、[2022 Android 重写](https://dropbox.tech/mobile/making-camera-uploads-for-android-faster-and-more-reliable)。
+
+Jidan 因此共享 JCL Profile、结果语义和 conformance fixtures，不强制共享 Runtime、UI、源代码或 C ABI。完整历史校准见[历史镜鉴与路线护栏](06-history-lessons-and-route-guardrails-zh.md)。
 
 ### “0.6B–3B 模型几百毫秒完成任务图”
 

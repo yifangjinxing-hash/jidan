@@ -34,24 +34,33 @@ El software móvil todavía se organiza en silos de aplicaciones. Un objetivo se
 
 ```text
 objetivo humano → acción semántica → contrato de capacidad → control de política
-                → adaptador elegido → traspaso nativo → acción humana → recibo
+                → adaptador elegido → recibo del traspaso → acción humana
+                                                       (el envío final no se verifica aún)
 ```
 
 El objetivo a largo plazo no es crear «otra superaplicación», sino una capa de compatibilidad fina y abierta en la que Android, Apple, Web, HarmonyOS, Windows y futuros hosts puedan implementar la misma semántica estable de intención.
 
+> **Se comparte la semántica, no la implementación.** El lenguaje natural y el pinyin son frontends reemplazables; JCL es el contrato de máquina; Kotlin, Swift, JavaScript y C/C++ son decisiones internas del host o adaptador. Un binding web sigue limitado por el sandbox del navegador. Consulta las [lecciones históricas y límites de la ruta](docs/06-history-lessons-and-route-guardrails-zh.md) (en chino).
+
 ## 🔌 Un contrato, múltiples adaptadores
 
-[`message.compose`](profiles/message.compose.tool.json) es el primer perfil de Jidan Capability Layer (JCL). JCL es un perfil de MCP Tool, no un lenguaje de programación ni un transporte nuevo.
+[`message.compose`](profiles/message.compose.tool.json) es el primer perfil de Jidan Capability Layer (JCL). La primera serialización pública de JCL 0.1 utiliza un perfil Tool compatible con MCP; JCL no es un lenguaje nuevo ni queda ligado a un único transporte o modelo de sesión.
 
 ```python
-from jidan.message_compose import planned_message_compose_binding
-from jidan.registry import CapabilityRegistry
+from jidan.models import Step, TaskPlan
 
-registry = CapabilityRegistry()
-planned_message_compose_binding("ios").register(registry)  # configuración del host
-
-# El llamador conoce la capacidad, no la plataforma.
-result = registry.invoke("message.compose", {"content": "Nos vemos a las tres."})
+# El llamador propone una capacidad; no elige plataforma ni llama al adaptador.
+plan = TaskPlan(
+    id="compose-demo",
+    goal="preparar un borrador de mensaje",
+    steps=(Step(
+        id="compose",
+        capability="message.compose",
+        arguments={"content": "Nos vemos a las tres."},
+    ),),
+)
+# El host confiable valida, autoriza, confirma, elige el binding, ejecuta
+# y registra el recibo.
 ```
 
 | Contrato estable | Adaptador reemplazable | Evidencia actual |
@@ -82,6 +91,36 @@ Cada resultado expresa con precisión lo que ocurrió:
 El [perfil de frontend `zh-Latn-pinyin` 0.1](profiles/frontends/zh-Latn-pinyin.frontend.json) solo compila alias de control restringidos a la capacidad existente `message.compose`. Conserva literalmente el valor del payload: no lo traduce, translitera ni normaliza. Resolver un alias no concede autoridad, no confirma una acción y no ejecuta nada.
 
 Se permiten alias sin tonos únicamente cuando identifican una sola entrada. Si falta una coincidencia o existe más de una, la compilación se rechaza sin adivinar. Este frontend no es bytecode, un lenguaje de programación ni un DSL nuevo; es una tabla determinista y versionada de alias hacia un contrato ya definido. Consulta el documento de [diseño, normalización y límites de seguridad](docs/05-jcl-pinyin-frontend-zh.md).
+
+## 🧭 Arquitectura
+
+```mermaid
+flowchart LR
+    H["Objetivo humano"] --> P["Propuesta no confiable<br/>planificador IA · frontend pinyin"]
+    P --> C["Capacidad estable<br/>message.compose"]
+    C --> G{"Puerta determinista<br/>schema · scope · grant · confirmación"}
+    G --> R["Binding elegido por el Host"]
+    R --> A["Android"]
+    R --> I["Apple"]
+    R --> W["Web"]
+    R --> N["Nueva plataforma"]
+    A --> M["Revisión móvil nativa"]
+    I --> M
+    W --> E["Revisión Web editable"]
+    N --> S["Revisión propia del Binding"]
+    M --> Q["Recibo observado del traspaso<br/>sent = false"]
+    E --> Q
+    S --> Q
+    M --> X["Acción humana final<br/>envío aún fuera de verificación"]
+    E --> X
+    S --> X
+    G --> L["Libro mayor de Grants"]
+
+    classDef core fill:#195A41,color:#F2F8F5,stroke:#2F8F68,stroke-width:2px;
+    classDef human fill:#F5E7BF,color:#3B2A00,stroke:#D9A441;
+    class C,G,R,Q core;
+    class H,X human;
+```
 
 ## ✅ Estado actual
 
@@ -119,8 +158,11 @@ Ejecuta con Python 3.11 o posterior el conjunto completo de pruebas del prototip
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
+python pinyin_frontend_demo.py
 python appfunctions_smoke.py
 ```
+
+Las dos demostraciones de mensajes se detienen por defecto en `awaiting_confirmation`. `--simulate-approval` solo permite recorrer las etapas restantes del plan de datos local; queda marcado como simulación y no demuestra una confirmación real de la persona usuaria.
 
 Desde la raíz del repositorio, valida los paquetes de idioma de Android:
 

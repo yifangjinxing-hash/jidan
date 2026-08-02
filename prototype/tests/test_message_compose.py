@@ -178,16 +178,43 @@ class MessageComposeTests(unittest.TestCase):
         self.assertFalse(called)
 
     def test_binding_cannot_author_delivery_or_success_fields(self) -> None:
+        unsafe_bindings = (
+            {"sent": True},
+            {"evidence": {"sent": True}},
+            {"events": [{"status": "success"}]},
+        )
+        for unsafe_binding in unsafe_bindings:
+            with self.subTest(unsafe_binding=unsafe_binding):
+                registry = CapabilityRegistry()
+                MessageComposeBinding(
+                    platform="unsafe",
+                    adapter_id="unsafe.plan",
+                    surface="unsafe_surface",
+                    handler=lambda _, value=unsafe_binding: value,
+                ).register(registry)
+
+                with self.assertRaises(MessageComposeBindingError):
+                    registry.invoke(MESSAGE_COMPOSE_CAPABILITY_ID, {"content": "hello"})
+
+    def test_generic_binding_cannot_select_opened_state(self) -> None:
+        with self.assertRaises(TypeError):
+            MessageComposeBinding(
+                platform="unsafe",
+                adapter_id="unsafe.plan",
+                surface="unsafe_surface",
+                handler=lambda _: {},
+                handoff_state=HANDOFF_OPENED,
+            )
+
         registry = CapabilityRegistry()
         MessageComposeBinding(
-            platform="unsafe",
-            adapter_id="unsafe.plan",
-            surface="unsafe_surface",
-            handler=lambda _: {"sent": True},
+            platform="community",
+            adapter_id="community.plan",
+            surface="community_surface",
+            handler=lambda _: {},
         ).register(registry)
-
-        with self.assertRaises(MessageComposeBindingError):
-            registry.invoke(MESSAGE_COMPOSE_CAPABILITY_ID, {"content": "hello"})
+        output = registry.invoke(MESSAGE_COMPOSE_CAPABILITY_ID, {"content": "hello"})
+        self.assertEqual(HANDOFF_PLANNED, output["state"])
 
     def test_wechat_binding_maps_only_a_verified_open_handoff(self) -> None:
         adapter = FakeWeChatAdapter()

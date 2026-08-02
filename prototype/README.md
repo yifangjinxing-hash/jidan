@@ -22,23 +22,40 @@ without creating a second runtime or transport. The machine-readable
 one stable input and output contract to host-selected Android, iOS, Web, or
 community bindings.
 
-The caller invokes only the capability ID. The host chooses a binding during
-trusted startup configuration:
+The caller proposes only the capability ID. The trusted host validates the
+plan, applies policy, obtains approval, chooses a binding, executes it, and
+writes the receipt:
 
 ```python
-from jidan.message_compose import planned_message_compose_binding
-from jidan.registry import CapabilityRegistry
+from jidan.models import Step, TaskPlan
 
-registry = CapabilityRegistry()
-planned_message_compose_binding("web").register(registry)
-result = registry.invoke("message.compose", {"content": "hello"})
+plan = TaskPlan(
+    id="compose-demo",
+    goal="prepare a message draft",
+    steps=(Step(
+        id="compose",
+        capability="message.compose",
+        arguments={"content": "hello"},
+    ),),
+)
+# See message_compose_demo.py for Grant, confirmation, Runtime, and Receipt.
 ```
 
-Run all three built-in plans:
+Run all three built-in plans. The default stops at the confirmation gate:
 
 ```powershell
 python message_compose_demo.py
 ```
+
+To exercise the remaining local data-plan stages, explicitly request a simulated
+approval:
+
+```powershell
+python message_compose_demo.py --simulate-approval
+```
+
+The output labels this `demo_only_not_user_confirmation`. It is a deterministic
+test of the Grant and Runtime path, not evidence that a person approved anything.
 
 Built-in iOS, Web, and generic Android adapters are data-only plans and report
 `handoff_planned`; they do not claim a system UI was opened. The verified WeChat
@@ -49,9 +66,11 @@ a recipient or issues Send.
 
 The optional `recipient` input is display-only and is never passed to an adapter.
 Adapters cannot author core outcome fields such as `delivery`, `sent`,
-`riskLevel`, or `executionMode`. Publishing a binding needs no central Jidan
-whitelist, but installing and executing third-party code remains a local trust
-and isolation decision.
+`riskLevel`, or `executionMode`, even when those keys are nested. A generic or
+community `MessageComposeBinding` can report only `handoff_planned`;
+`handoff_opened` is reserved for a dedicated verifier-backed wrapper. Publishing
+a binding needs no central Jidan whitelist, but installing and executing
+third-party code remains a local trust and isolation decision.
 
 ## Optional Pinyin compiler frontend
 
@@ -73,11 +92,14 @@ assert proposal.capability == "message.compose"
 # stages remain mandatory; see pinyin_frontend_demo.py for the full flow.
 ```
 
-Run the end-to-end data-only example:
+Compile the alias and stop at the normal confirmation gate:
 
 ```powershell
 python pinyin_frontend_demo.py
 ```
+
+Use `python pinyin_frontend_demo.py --simulate-approval` only to exercise the
+remaining data-plan stages; it carries the same explicit demo-only notice.
 
 The frontend performs NFC normalization, explicit word/syllable boundary
 parsing, marked-tone to ASCII numeric-tone conversion, versioned exact alias
@@ -104,7 +126,7 @@ The Android 17 platform image has two observed compatibility details covered by 
 
 Every subprocess receives an argv list with `shell=False`. Dynamic device-shell values are individually POSIX-quoted because `adb shell` joins its tail into a command interpreted on the device. JSON is generated with the standard library, rejects non-finite values and mixed-type arrays, and rejects null/empty-array fields that Android's GenericDocument converter cannot represent. It never silently changes already approved parameters or interpolates user data into a command string.
 
-The prototype caps encoded parameters at 16 KiB and the final quoted device command at 24 KiB, so the documented path stays below the practical Windows process-command boundary. It compiles supported Android primitive, array, and object parameter metadata into the dependency-free JCC schema subset, enforces it during preflight, and refuses to register input contracts it cannot compile safely. When response metadata is compilable it also validates the Android 17 `androidAppfunctionsReturnValue` shell envelope. A post-invocation output mismatch is recorded as `committed_unverified` and the task becomes `unknown`, never an ordinary retryable failure.
+The prototype caps encoded parameters at 16 KiB and the final quoted device command at 24 KiB, so the documented path stays below the practical Windows process-command boundary. It compiles supported Android primitive, array, and object parameter metadata into JCL's dependency-free JSON Schema subset, enforces it during preflight, and refuses to register input contracts it cannot compile safely. When response metadata is compilable it also validates the Android 17 `androidAppfunctionsReturnValue` shell envelope. A post-invocation output mismatch is recorded as `committed_unverified` and the task becomes `unknown`, never an ordinary retryable failure.
 
 Run the complete no-device smoke—fake ADB discovery, dynamic capability registration, JGraph confirmation stop, approved execution, and receipt verification—with one command:
 

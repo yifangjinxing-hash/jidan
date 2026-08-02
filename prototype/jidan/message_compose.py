@@ -22,15 +22,24 @@ HANDOFF_OPENED = "handoff_opened"
 _ID_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_.-]{0,127}$")
 _RESERVED_BINDING_KEYS = frozenset(
     {
+        "attempted",
         "capability",
+        "committed",
+        "completed",
+        "delivered",
         "delivery",
-        "executionMode",
-        "finalStatus",
+        "deliverystate",
+        "executionmode",
+        "finalstatus",
+        "jidanissuedsend",
         "outcome",
         "profile",
-        "riskLevel",
+        "risklevel",
         "sent",
         "state",
+        "status",
+        "success",
+        "succeeded",
         "verified",
     }
 )
@@ -40,6 +49,23 @@ MessageComposeHandler = Callable[[Mapping[str, Any]], Mapping[str, Any]]
 
 class MessageComposeBindingError(RuntimeError):
     """A platform binding failed or crossed the profile trust boundary."""
+
+
+def _reserved_binding_paths(value: Any, path: str = "binding") -> tuple[str, ...]:
+    """Find outcome-like keys anywhere in untrusted adapter-authored data."""
+
+    found: list[str] = []
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            key_text = str(key)
+            nested_path = f"{path}.{key_text}"
+            if isinstance(key, str) and key.casefold() in _RESERVED_BINDING_KEYS:
+                found.append(nested_path)
+            found.extend(_reserved_binding_paths(nested, nested_path))
+    elif isinstance(value, (list, tuple)):
+        for index, nested in enumerate(value):
+            found.extend(_reserved_binding_paths(nested, f"{path}[{index}]"))
+    return tuple(found)
 
 
 class WeChatHandoffAdapter(Protocol):
@@ -182,7 +208,6 @@ class MessageComposeBinding:
     adapter_id: str
     surface: str
     handler: MessageComposeHandler = field(repr=False, compare=False)
-    handoff_state: str = HANDOFF_PLANNED
     app: str = "jidan.host"
     scopes: frozenset[str] = field(default_factory=frozenset)
     reversible: bool = False
@@ -196,10 +221,13 @@ class MessageComposeBinding:
         ):
             if not _ID_PATTERN.fullmatch(value):
                 raise ValueError(f"invalid {label}: {value!r}")
-        if self.handoff_state not in {HANDOFF_PLANNED, HANDOFF_OPENED}:
-            raise ValueError(f"invalid handoff state: {self.handoff_state!r}")
         if not callable(self.handler):
             raise TypeError("handler must be callable")
+
+    def _result_state(self) -> str:
+        """Generic/community bindings can only author a data-only plan."""
+
+        return HANDOFF_PLANNED
 
     def capability(self) -> Capability:
         return message_compose_capability(
@@ -231,7 +259,7 @@ class MessageComposeBinding:
 
         if not isinstance(binding, Mapping):
             raise MessageComposeBindingError("binding handler must return an object")
-        forbidden = _RESERVED_BINDING_KEYS.intersection(binding)
+        forbidden = _reserved_binding_paths(binding)
         if forbidden:
             fields = ", ".join(sorted(forbidden))
             raise MessageComposeBindingError(
@@ -247,7 +275,7 @@ class MessageComposeBinding:
             artifact["recipientHint"] = recipient
 
         return {
-            "state": self.handoff_state,
+            "state": self._result_state(),
             "artifact": artifact,
             "delivery": {
                 "attempted": False,
@@ -262,6 +290,13 @@ class MessageComposeBinding:
             },
             "nextAction": "user_review_and_send",
         }
+
+
+class _VerifiedOpenedMessageComposeBinding(MessageComposeBinding):
+    """Internal binding type available only after a dedicated verifier succeeds."""
+
+    def _result_state(self) -> str:
+        return HANDOFF_OPENED
 
 
 def _android_plan(arguments: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -310,7 +345,6 @@ def planned_message_compose_binding(platform: str) -> MessageComposeBinding:
         adapter_id=adapter_id,
         surface=surface,
         handler=handler,
-        handoff_state=HANDOFF_PLANNED,
     )
 
 
@@ -348,12 +382,11 @@ def wechat_message_compose_binding(
             "textSha256": output["textSha256"],
         }
 
-    return MessageComposeBinding(
+    return _VerifiedOpenedMessageComposeBinding(
         platform="android",
         adapter_id="android.intent.wechat.message-compose",
         surface="wechat_recipient_picker",
         handler=open_verified,
-        handoff_state=HANDOFF_OPENED,
         app=underlying.app,
         scopes=underlying.scopes,
         reversible=False,

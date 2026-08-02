@@ -2,9 +2,9 @@
 
 ## 一句话定位
 
-> **拼音可以成为 JCL 的人类友好源码，但不能成为 JCL 的字节码、权限标识或唯一机器语言。**
+> **拼音可以成为 JCL Frontend 的人类友好输入拼写，但不能成为 JCL 源码、字节码、权限标识、机器底层或唯一机器语言。**
 
-JCL 的跨端公共表示仍然是稳定的 capability ID、JSON Schema 与 MCP Tool Profile。拼音前端只是位于信任边界之外的可选编译器：它把经过审查的拼音控制别名转换成一份尚未授权的 JCL 调用提案。
+JCL 的跨端公共表示仍然是稳定的 capability ID、JSON Schema 与结果语义；JCL 0.1 的首个公开序列化采用与 MCP 兼容的 Tool Profile。拼音前端只是位于信任边界之外的可选编译器：它把经过审查的拼音控制别名转换成一份尚未授权的 JCL 调用提案。
 
 ```text
 拼音控制别名 + 原样参数
@@ -130,7 +130,7 @@ profiles/
   schemas/jcl.input-frontend-v0.1.schema.json
 
 prototype/jidan/pinyin_frontend.py           # 确定性、无网络编译器
-prototype/pinyin_frontend_demo.py             # 编译后走完整确认、Runtime 与回执链
+prototype/pinyin_frontend_demo.py             # 默认止于确认门；可显式模拟后续 Runtime 链
 prototype/tests/test_pinyin_frontend.py       # 归一化、冲突和权限边界测试
 ```
 
@@ -142,6 +142,8 @@ JSON Schema 负责可表达的结构约束；alias 是否落在 allowlist、规�
 cd prototype
 python pinyin_frontend_demo.py
 ```
+
+默认输出停在 `awaiting_confirmation`。`--simulate-approval` 只用于本地演示后续 Grant、Runtime 与回执阶段，输出会明确标记为模拟批准，不能当作真实用户确认。
 
 ## 扩展新别名
 

@@ -2,6 +2,17 @@
 
 > 决策日期：2026-08-01。目标不是做一段“能点手机”的演示，而是证明一种可迁移的系统原语：目标 → 受约束任务图 → 最小授权 → 确定性执行 → 可验证回执。
 
+## 2026-08-02 历史镜鉴修正
+
+C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者吸收差异”，不是“所有平台最终共用同一种语言、ABI、Runtime 或 UI”。本路线因此把冻结对象从公共 JGraph/共享实现改为 **JCL 的外部可观察语义、Profile 版本与 conformance fixtures**；JGraph 继续是 Host 内部实现。自然语言和拼音只产生无权限 Proposal，不能成为公共协议或执行入口。依据见[历史镜鉴与路线护栏](06-history-lessons-and-route-guardrails-zh.md)。
+
+路线顺序调整为：
+
+```text
+薄 JCL 契约与一致性 → 可替换 Frontend → Host 权力边界
+                     → 平台原生 Binding → 人类 Commit 与真实用户验证
+```
+
 ## 路线裁决
 
 ### Phase 1 执行锁（2026-08-01）
@@ -16,7 +27,7 @@
 | Stock APK / Agent Access | 新增的官方第三路 | 固定包名与长期签名；实现逐目标授权状态机草案；准备 AppFunctions EAP/OEM allowlist 申请材料 | 不宣称当前公共 SDK 已开放，不绕过设备 allowlist |
 | AOSP / OEM Core | 长期系统级产品线 | Cuttlefish 上的平台签名 broker、AppFunctions、受限 GUI 控制、SELinux、系统确认与回执 | 首版不改 Linux、GKI、HAL、驱动，不把 planner 放进 `system_server` |
 
-这三条不是三个产品。它们共用 JGraph、JCC、授权策略、适配器接口和回执格式，只有执行后端不同。
+这三条不是三个产品。它们对外共用 JCL Profile、结果语义和一致性夹具；内部可以复用当前 JGraph、授权策略与回执实现，但第三方 Host 不必采用同一 Runtime 或源代码，执行后端也保持平台原生。
 
 ## 第 0–14 天：证明 Shell 闭环
 
@@ -35,6 +46,7 @@
 5. 把适配器接入现有 JGraph runtime；模型仍只能输出计划，不能拼接或执行任意 shell 字符串。
 6. 做五组负向测试：无设备、多个设备、权限拒绝、函数不存在、畸形/超大参数。
 7. 对每个目标包先执行语义面探测：`AppFunctions > RemoteInput > person-bound shortcut > blocked`；OCR/坐标不得成为收件人身份依据。
+8. 用同一份 `message.compose` Profile 生成 Android、iOS、Web 数据计划；上层调用不得包含平台字段，自然语言/拼音字段不得进入能力 Schema，Web 计划不得冒充原生 UI 已打开。
 
 ### 第 14 天 Go / No-Go 门槛
 
@@ -42,6 +54,7 @@
 - 未确认前零副作用；重试不产生重复写入。
 - shell 适配器没有通用命令入口，只允许 `app_function` 的固定参数化子命令。
 - 日志可证明实际调用了哪个设备、包、函数和参数摘要。
+- `message.compose` 的 Profile、Runtime 导出和 conformance vector 完全一致；三个计划 Binding 对公共结果状态的解释一致。
 - 若直接 ADB 没跑通，不进入 Shizuku 集成；先修清真实平台问题。
 
 ### Shizuku 实验的进入条件
@@ -54,18 +67,22 @@
 - 失败时自动退回“连接电脑运行官方 ADB”，不静默换 fork。
 - 不捆绑、重签或要求用户卸载官方 Shizuku，除非经过单独安全评审和明确同意。
 
-## 第 15–42 天：冻结 Jidan 的新系统原语
+## 第 15–42 天：冻结薄腰与一致性，不冻结统一 Runtime
 
-### Runtime
+### JCL 与 Runtime
 
-- 冻结 JGraph v0：`Read / Transform / Branch / Call / Confirm / Wait / Verify / Compensate / Emit / Handoff`。
-- 每个节点强制声明 effect、输入输出 schema、幂等键、超时、重试、验证和补偿。
+- 冻结 JCL 0.1 的 capability ID、输入/输出 Schema、风险与公共结果语义；发布 conformance vectors 和最小 Adapter Kit。
+- JGraph 保持 Host 内部、可演进、可替换；当前 Runtime 仍可使用 `Read / Transform / Branch / Call / Confirm / Wait / Verify / Compensate / Emit / Handoff`，但不把它变成生态必学 DSL。
+- 内部节点继续强制声明 effect、输入输出 schema、幂等键、超时、重试、验证和补偿。
 - planner 与执行器完全分权；执行器拒绝任意 shell、任意 Intent、任意包名和未注册 URI。
 - SQLite/Proto 持久化检查点；杀进程、断网和重启后继续，已提交节点不重复执行。
 - HMAC 开发密钥替换为 Android Keystore；有 StrongBox 时记录硬件保证等级。
+- 所有公开 Demo 必须经过 TaskPlan、Grant、Confirmation、Runtime 和 Receipt；直接 Registry 调用只允许出现在明确标注的 Adapter conformance test 中。
+- 至少让一名非核心开发者在不修改 Runtime 的前提下完成一个计划型 Binding 并跑过一致性测试。
 
 ### AOSP
 
+- AOSP 是条件性并行轨：第 14 天的 JCL 契约 Gate 未通过，或外部 Binding 仍必须修改 Runtime 时，不扩大系统集成投入。
 - 基于固定 AOSP 17 tag 构建 Cuttlefish。
 - broker 先做成 `system_ext` 的平台签名 privileged app，通过自定义 signature AIDL 暴露窄接口。
 - planner 是另一个普通 UID；负向测试证明它不能直接调用 AppFunctions 或 Computer Control。
@@ -92,6 +109,9 @@
 
 - 30 个截图/语音 golden case，所有时间、时区、联系人歧义都可编辑。
 - 先展示完整计划和影响，再进行一次计划级授权；外部通信仍在最终提交点单独确认。
+- 为各端实现信息结构一致、UI 原生的 Action Card：显示能力、资源、风险、可编辑参数、保证等级和当前现实状态；不强制 Android、Apple、Web 共用 UI Runtime。
+- 至少验证一个非 Android 的真实可编辑 Binding；若 Apple/Web 尚只有数据计划，必须继续标为 `handoff_planned`。
+- 做至少 10 次目标用户测试，用户必须能分清 UI 概念“已规划、已打开、已提交与结果未知”；机器接口继续使用各层已经定义的精确 token。
 - 每一步独立读回验证，显示部分成功、失败、可撤销期限和补偿结果。
 - 对屏幕、邮件和 AppFunction 描述中的 prompt injection 做测试；不可信文本不能增加权限或改变策略。
 - 一个自有 fixture app 用受限 GUI 路径完成表单填写；验证码、支付、密码、`FLAG_SECURE` 和安全设置立即交给用户。
@@ -111,7 +131,7 @@
 ### 发布物
 
 - 可重复构建的 Jidan runtime 与 AOSP 集成说明。
-- JCC/JGraph v0 schema、SDK 和四个 reference app。
+- JCL 0.1 Profile、conformance runner、最小 Adapter Kit 和四个 reference app；Host 内部 JGraph schema 作为参考实现而非公共必选 DSL。
 - 公开的能力/设备兼容矩阵，区分 AppFunctions、Intent、确定性 skill、GUI 和用户接管。
 - 威胁模型、权限清单、回执示例、失败案例和已知限制。
 - 3 分钟演示只展示真实路径，并在界面标出当前执行后端与保证等级。
@@ -122,7 +142,11 @@
 - 零错误收件人、零静默发送、零重复写入。
 - 取消后不再启动新节点；崩溃恢复不重复提交。
 - 1,000 个畸形或越权 JGraph 全部被拒绝且零副作用。
+- 一名非核心贡献者能在一个工作日内完成新 Binding，并在不修改 Runtime 的情况下通过一致性测试。
+- 至少 8/10 名目标用户无需培训即可完成黄金流程，并正确判断最终动作是否真的提交。
+- 至少一个非 Android Binding 具有真实可复验证据；否则跨平台能力只能标为数据计划。
 - AOSP 冷启动后无需 `adb root` 或手工补丁。
+- 若开发者接入或目标式交互 Gate 未通过，AOSP/OEM 保持实验轨，不升级为主产品路线。
 - 如果 GUI 路径未跑通官方 Computer Control，只能称为“语义执行原型”，不能宣称通用 App 接管。
 
 ## 立即砍掉的范围
@@ -131,6 +155,10 @@
 - 普通商店 APK 的自主 Accessibility Agent。
 - 自动发送、支付、删除、安装和系统安全设置。
 - 全天候运行的大模型、自训练端侧模型和自造网络协议。
+- 把自然语言或拼音定义成公共协议、字节码或机器底层。
+- 强制所有 Host 使用同一 JGraph Runtime、UI 框架或共享 C++ Core。
+- 把 C ABI 作为万能跨平台能力层，或另造必须降维到 C/汇编的新编译塔。
+- 用 WebView、浏览器桥或容器宣称已经获得原生 OS、联系人或跨 App 权限。
 - `sharedUserId="android.uid.system"` 捷径。系统权限应使用平台签名、privapp allowlist、角色、窄 AIDL 和 SELinux 明确配置。
 
 ## 北极星与护城河

@@ -34,24 +34,32 @@
 
 ```text
 人の目的 → セマンティック・アクション → 能力契約 → ポリシーゲート
-         → Host が選んだ Binding → ネイティブ handoff → 人による確定 → 検証可能な receipt
+         → Host が選んだ Binding → 検証可能な handoff receipt → 人による確定
+                                                            （最終送信は現在の検証範囲外）
 ```
 
 長期的な目標は「もう1つのスーパーアプリ」ではありません。Android、Apple、Web、HarmonyOS、Windows、そして将来の Host が、同じ安定したインテント意味論を実装できる薄く開かれた互換レイヤーです。
 
+> **共有するのは意味論であり、実装ではありません。** 自然言語と Pinyin は交換可能な Frontend、JCL は機械契約です。Kotlin、Swift、JavaScript、C/C++ は Host または Adapter の実装選択であり、Web Binding は引き続きブラウザー Sandbox の制約を受けます。[歴史から得た設計上の教訓](docs/06-history-lessons-and-route-guardrails-zh.md)（中国語）も参照してください。
+
 ## 🔌 `message.compose`：1つの契約、複数の Binding
 
-[`message.compose`](profiles/message.compose.tool.json) は最初の Jidan Capability Layer（JCL）Profile です。JCL は MCP Tool の能力 Profile であり、新しいプログラミング言語や転送プロトコルではありません。
+[`message.compose`](profiles/message.compose.tool.json) は最初の Jidan Capability Layer（JCL）Profile です。JCL 0.1 の最初の公開シリアライズ形式は MCP 互換の Tool Profile を使いますが、JCL 自体は新しいプログラミング言語でも、特定の転送・セッション方式に固定されたものでもありません。
 
 ```python
-from jidan.message_compose import planned_message_compose_binding
-from jidan.registry import CapabilityRegistry
+from jidan.models import Step, TaskPlan
 
-registry = CapabilityRegistry()
-planned_message_compose_binding("ios").register(registry)  # Host 側の設定
-
-# 呼び出し側が知るのは能力だけで、プラットフォームではありません。
-result = registry.invoke("message.compose", {"content": "3時に会いましょう。"})
+# 呼び出し側は能力を提案するだけで、Platform や Adapter を選びません。
+plan = TaskPlan(
+    id="compose-demo",
+    goal="メッセージの下書きを準備する",
+    steps=(Step(
+        id="compose",
+        capability="message.compose",
+        arguments={"content": "3時に会いましょう。"},
+    ),),
+)
+# 信頼された Host が検証、Grant、確認、Binding 選択、実行、Receipt を行います。
 ```
 
 | 安定した契約 | 交換可能な Binding | 現在の実証範囲 |
@@ -93,9 +101,11 @@ AI プランナー（信頼しない）
   ↓ schema · scope · grant · confirmation
 決定論的なセキュリティゲート
   ↓ Host がローカルで Binding を選択し信頼
-Android / Apple / Web / 新しいプラットフォーム
-  ↓ ネイティブの確認画面
-人が最後の操作を行う → receipt
+Android / Apple → モバイルのネイティブ確認画面
+Web → 編集可能な Web 確認画面
+新しいプラットフォーム → Binding 固有の確認画面
+  ├→ 検証可能な handoff receipt（sent=false）
+  └→ 人が最後の操作を行う（最終送信は現在の Jidan 検証範囲外）
 ```
 
 現在のプロトタイプには、外部依存のない能力 Registry と Schema 検証、タスクグラフ、権限を絞った Grant、確認ゲート、SQLite によるリプレイ拒否、ハッシュチェーン化された Receipt、Android 17 AppFunctions の管理下テスト、セマンティック・サーフェス探索、さらに宛先選択も送信もしない検証済み WeChat handoff が含まれます。Android、iOS、Web 向けの `message.compose` データプランはありますが、本番品質のモバイル Agent OS が完成したという意味ではありません。
@@ -120,8 +130,11 @@ Python 3.11+ で、外部依存のないテストスイートとクロスプラ�
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
+python pinyin_frontend_demo.py
 python appfunctions_smoke.py
 ```
+
+2つのメッセージデモは既定で `awaiting_confirmation` で停止します。`--simulate-approval` はローカルなデータプランの残りを試すためだけの明示的なシミュレーションで、実際のユーザー確認を示すものではありません。
 
 Android の全言語リソースを検証します。
 

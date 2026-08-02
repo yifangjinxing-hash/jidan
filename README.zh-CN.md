@@ -34,24 +34,33 @@
 
 ```text
 人的目标 → 语义动作 → 能力契约 → 策略门
-         → 已选择的适配器 → 原生交接 → 人类提交 → 可验证回执
+         → 已选择的适配器 → 可验证交接回执 → 人类提交
+                                              （当前不验证最终发送）
 ```
 
 长期目标不是再造一个“超级 App”，而是形成一层薄而开放的兼容腰部，让 Android、Apple、Web、HarmonyOS、Windows 以及未来平台实现同一套稳定意图语义。
 
+> **统一语义，不统一实现。** 自然语言与拼音是可替换 Frontend；JCL 是机器契约；Kotlin、Swift、JavaScript、C/C++ 只是 Host 或 Adapter 的实现选择；Web Binding 仍受浏览器沙箱限制。参见[历史镜鉴与路线护栏](docs/06-history-lessons-and-route-guardrails-zh.md)。
+
 ## 🔌 一份契约，多端实现
 
-[`message.compose`](profiles/message.compose.tool.json) 是第一份 Jidan Capability Layer（JCL）Profile。JCL 是 MCP Tool 的能力剖面，不是新编程语言，也不另造传输协议。
+[`message.compose`](profiles/message.compose.tool.json) 是第一份 Jidan Capability Layer（JCL）Profile。JCL 0.1 的首个公开序列化采用与 MCP 兼容的 Tool Profile；JCL 本身不是新编程语言，也不绑定某一种传输或会话模型。
 
 ```python
-from jidan.message_compose import planned_message_compose_binding
-from jidan.registry import CapabilityRegistry
+from jidan.models import Step, TaskPlan
 
-registry = CapabilityRegistry()
-planned_message_compose_binding("ios").register(registry)  # 由 Host 配置平台
-
-# 上层只认识能力，不需要知道平台。
-result = registry.invoke("message.compose", {"content": "下午三点见。"})
+# 上层只提出能力，不选择平台，也不直接调用 Adapter。
+plan = TaskPlan(
+    id="compose-demo",
+    goal="准备一份消息草稿",
+    steps=(Step(
+        id="compose",
+        capability="message.compose",
+        arguments={"content": "下午三点见。"},
+    ),),
+)
+# 可信 Host 继续完成校验、授权、确认、Binding 选择、执行和回执。
+# 完整流程见 prototype/message_compose_demo.py。
 ```
 
 | 稳定契约 | 可替换 Binding | 当前证据 |
@@ -85,7 +94,7 @@ result = registry.invoke("message.compose", {"content": "下午三点见。"})
 chuàng-jiàn.cǎo-gǎo  →  chuang4-jian4.cao3-gao3  →  message.compose
 ```
 
-拼音是源码，不是字节码，也不是新 DSL：Frontend 没有任何授权或执行能力，只能产生一份仍不可信的调用提案。正文逐字符保留；声调和音节边界显式；无声调输入仅在全表恰好命中一个审查过的别名时接受；同音歧义直接拒绝。完整规则见[拼音编译前端设计](docs/05-jcl-pinyin-frontend-zh.md)。
+拼音只是可选输入拼写，不是 JCL 源码、字节码、机器底层或新 DSL：Frontend 没有任何授权或执行能力，只能产生一份仍不可信的调用提案。正文逐字符保留；声调和音节边界显式；无声调输入仅在全表恰好命中一个审查过的别名时接受；同音歧义直接拒绝。完整规则见[拼音编译前端设计](docs/05-jcl-pinyin-frontend-zh.md)。
 
 ## 🧭 架构
 
@@ -99,17 +108,21 @@ flowchart LR
     R --> I["Apple"]
     R --> W["Web"]
     R --> N["新平台"]
-    A --> U["平台原生审阅界面"]
-    I --> U
-    W --> U
-    N --> U
-    U --> X["人类完成最后动作"]
+    A --> M["移动端原生审阅界面"]
+    I --> M
+    W --> E["Web 可编辑审阅界面"]
+    N --> S["Binding 自有审阅界面"]
+    M --> Q["可验证交接回执<br/>sent = false"]
+    E --> Q
+    S --> Q
+    M --> X["人类完成最后动作<br/>当前不验证最终发送"]
+    E --> X
+    S --> X
     G --> L["授权账本"]
-    U --> Q["可验证回执"]
 
     classDef core fill:#195A41,color:#F2F8F5,stroke:#2F8F68,stroke-width:2px;
     classDef human fill:#F5E7BF,color:#3B2A00,stroke:#D9A441;
-    class C,G,R core;
+    class C,G,R,Q core;
     class H,X human;
 ```
 
@@ -151,6 +164,8 @@ python message_compose_demo.py
 python pinyin_frontend_demo.py
 python appfunctions_smoke.py
 ```
+
+两个消息演示默认都停在 `awaiting_confirmation`。`--simulate-approval` 只用于继续演示本地数据计划的后续阶段，输出会明确标成模拟批准，不能当作用户真的确认过。
 
 检查全部 Android 语言包：
 
