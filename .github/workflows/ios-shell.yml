@@ -102,7 +102,7 @@ jobs:
             --wifiBars 3 --cellularBars 4 || true
           xcrun simctl list devices | tee "$ARTIFACT_DIR/simulators.txt"
 
-      - name: Build and run tests
+      - name: Build and run unit tests
         shell: bash
         run: |
           set -euo pipefail
@@ -115,9 +115,34 @@ jobs:
             -resultBundlePath "$ARTIFACT_DIR/JidanIOS.xcresult" \
             -enableCodeCoverage YES \
             -parallel-testing-enabled NO \
+            -only-testing:JidanIOSTests \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
             COMPILER_INDEX_STORE_ENABLE=NO \
             | tee "$ARTIFACT_DIR/xcodebuild-test.log"
+
+      - name: Click the real iOS controls
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -project "$IOS_DIR/$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath "$DERIVED_DATA" \
+            -resultBundlePath "$ARTIFACT_DIR/JidanIOS-UI.xcresult" \
+            -parallel-testing-enabled NO \
+            -maximum-concurrent-test-simulator-destinations 1 \
+            -only-testing:JidanIOSUITests/ObservableFlowsUITests \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            | tee "$ARTIFACT_DIR/xcodebuild-ui-test.log"
+
+          mkdir -p "$ARTIFACT_DIR/ui-screenshots"
+          xcrun xcresulttool export attachments \
+            --path "$ARTIFACT_DIR/JidanIOS-UI.xcresult" \
+            --output-path "$ARTIFACT_DIR/ui-screenshots"
+          find "$ARTIFACT_DIR/ui-screenshots" -type f -print \
+            | sort | tee "$ARTIFACT_DIR/ui-screenshot-files.txt"
 
       - name: Install, launch and capture observable evidence
         shell: bash
@@ -133,19 +158,68 @@ jobs:
           xcrun simctl io "$SIMULATOR_UDID" screenshot --type=png \
             "$ARTIFACT_DIR/JidanIOS-home-iPhone16.png"
 
-          xcrun simctl launch --terminate-running-process \
-            "$SIMULATOR_UDID" "$BUNDLE_ID" \
-            --jidan-demo-settings -AppleLanguages '(zh-Hans)' -AppleLocale zh_CN
-          sleep 8
+          data_container="$(xcrun simctl get_app_container \
+            "$SIMULATOR_UDID" "$BUNDLE_ID" data)"
+          marker="$data_container/Library/Caches/jidan-observable-state.txt"
+          observations="$ARTIFACT_DIR/observable-states.txt"
+
+          wait_for_observation() {
+            local expected="$1"
+            for _ in {1..30}; do
+              if [[ -f "$marker" ]] && grep -Fqx "$expected" "$marker"; then
+                printf '%s\n' "$expected" | tee -a "$observations"
+                return 0
+              fi
+              sleep 0.5
+            done
+            echo "Expected observable state was not written: $expected" >&2
+            if [[ -f "$marker" ]]; then
+              echo "Actual marker: $(cat "$marker")" >&2
+            fi
+            return 1
+          }
+
+          settings_token="settings-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          rm -f "$marker"
+          SIMCTL_CHILD_JIDAN_DEMO=settings \
+          SIMCTL_CHILD_JIDAN_OBSERVATION_TOKEN="$settings_token" \
+            xcrun simctl launch --terminate-running-process \
+              "$SIMULATOR_UDID" "$BUNDLE_ID" \
+              -AppleLanguages '(zh-Hans)' -AppleLocale zh_CN
+          wait_for_observation "$settings_token:settings_dispatched"
+          sleep 3
           xcrun simctl io "$SIMULATOR_UDID" screenshot --type=png \
             "$ARTIFACT_DIR/JidanIOS-direct-settings-iPhone16.png"
 
-          xcrun simctl launch --terminate-running-process \
-            "$SIMULATOR_UDID" "$BUNDLE_ID" \
-            --jidan-demo-alipay -AppleLanguages '(zh-Hans)' -AppleLocale zh_CN
-          sleep 3
+          alipay_token="alipay-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          rm -f "$marker"
+          SIMCTL_CHILD_JIDAN_DEMO=alipay \
+          SIMCTL_CHILD_JIDAN_OBSERVATION_TOKEN="$alipay_token" \
+            xcrun simctl launch --terminate-running-process \
+              "$SIMULATOR_UDID" "$BUNDLE_ID" \
+              -AppleLanguages '(zh-Hans)' -AppleLocale zh_CN
+          wait_for_observation "$alipay_token:alipay_target_unavailable"
+          sleep 1
           xcrun simctl io "$SIMULATOR_UDID" screenshot --type=png \
             "$ARTIFACT_DIR/JidanIOS-alipay-unavailable-iPhone16.png"
+
+          assert_not_identical() {
+            if cmp -s "$1" "$2"; then
+              echo "::error::$1 and $2 are pixel-identical" >&2
+              return 1
+            fi
+          }
+
+          home="$ARTIFACT_DIR/JidanIOS-home-iPhone16.png"
+          settings="$ARTIFACT_DIR/JidanIOS-direct-settings-iPhone16.png"
+          alipay="$ARTIFACT_DIR/JidanIOS-alipay-unavailable-iPhone16.png"
+          assert_not_identical "$home" "$settings"
+          assert_not_identical "$home" "$alipay"
+          assert_not_identical "$settings" "$alipay"
+
+          xcrun swift "$IOS_DIR/CI/verify_screenshots.swift" \
+            "$home" "$settings" "$alipay" \
+            | tee "$ARTIFACT_DIR/screenshot-diff.txt"
 
           ditto -c -k --sequesterRsrc --keepParent "$app" \
             "$ARTIFACT_DIR/JidanIOS-simulator.app.zip"

@@ -46,6 +46,18 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: dev.jidan.iosshell.tests
         GENERATE_INFOPLIST_FILE: YES
 
+  JidanIOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: JidanIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.jidan.iosshell.uitests
+        GENERATE_INFOPLIST_FILE: YES
+
 schemes:
   JidanIOS:
     build:
@@ -55,3 +67,4 @@ schemes:
       gatherCoverageData: true
       targets:
         - JidanIOSTests
+        - JidanIOSUITests

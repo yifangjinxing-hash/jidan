@@ -28,7 +28,9 @@
 2. 生成 Xcode 工程并运行 Swift 单元测试；
 3. 创建并启动一台 iPhone 16 Simulator；
 4. 安装、启动 Jidan，截取全屏主页、真正的鸡蛋设置页，以及“支付宝转接头未接上”的诚实状态；
-5. 上传截图、测试结果和一个 **仅供 iOS Simulator 使用** 的 `.app.zip`。
+5. 用 XCUITest 像人一样点击两个真实按钮，检查支付宝文案，并确认苹果设置进入前台且显示 `JCL 0.1` 和 `NAVIGATION / DIRECT`；
+6. 要求每次演示写出对应的可观察状态，并比较画面像素；截图仍像主页，流水线直接失败；
+7. 上传截图、测试结果和一个 **仅供 iOS Simulator 使用** 的 `.app.zip`。
 
 在 GitHub 的 Actions 页面打开最近一次 `iOS Shell CI`，下载 `jidan-ios-...` Artifact 就能看到全部证据。Windows 不能本机运行 Apple Simulator；压缩包也不能直接安装到真实 iPhone，真机安装仍需要 Xcode 与 Apple 签名。
 

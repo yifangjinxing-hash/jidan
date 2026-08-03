@@ -57,10 +57,11 @@ struct ContentView: View {
         .task {
             guard !didRunDemo else { return }
             let arguments = ProcessInfo.processInfo.arguments
+            let demoMode = ProcessInfo.processInfo.environment["JIDAN_DEMO"]
             let demoCommand: String?
-            if arguments.contains("--jidan-demo-settings") {
+            if demoMode == "settings" || arguments.contains("--jidan-demo-settings") {
                 demoCommand = "打开鸡蛋设置"
-            } else if arguments.contains("--jidan-demo-alipay") {
+            } else if demoMode == "alipay" || arguments.contains("--jidan-demo-alipay") {
                 demoCommand = "打开支付宝"
             } else {
                 demoCommand = nil
@@ -100,6 +101,7 @@ struct ContentView: View {
                     .overlay(Circle().stroke(.white.opacity(0.22), lineWidth: 1))
             }
             .accessibilityLabel("打开鸡蛋设置")
+            .accessibilityIdentifier("jidan.quick.settings.top")
         }
         .foregroundStyle(.white)
     }
@@ -110,12 +112,14 @@ struct ContentView: View {
                 .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .lineLimit(1)
+                .accessibilityIdentifier("jidan.status.title")
             Text(statusSubtitle)
                 .font(.subheadline)
                 .foregroundStyle(.white.opacity(0.72))
                 .multilineTextAlignment(.center)
                 .lineLimit(3)
                 .frame(minHeight: 42)
+                .accessibilityIdentifier("jidan.status.subtitle")
         }
         .padding(.top, 7)
         .animation(.easeOut(duration: 0.2), value: statusTitle)
@@ -158,13 +162,13 @@ struct ContentView: View {
 
     private var quickActions: some View {
         HStack(spacing: 9) {
-            quickButton("打开支付宝", icon: "arrow.up.forward.app")
-            quickButton("打开鸡蛋设置", icon: "gearshape")
+            quickButton("打开支付宝", icon: "arrow.up.forward.app", identifier: "jidan.quick.alipay")
+            quickButton("打开鸡蛋设置", icon: "gearshape", identifier: "jidan.quick.settings")
         }
         .padding(.top, 10)
     }
 
-    private func quickButton(_ command: String, icon: String) -> some View {
+    private func quickButton(_ command: String, icon: String, identifier: String) -> some View {
         Button {
             input = command
             submit(command)
@@ -176,6 +180,7 @@ struct ContentView: View {
                 .overlay(Capsule().stroke(.white.opacity(0.18), lineWidth: 1))
         }
         .foregroundStyle(.white.opacity(0.88))
+        .accessibilityIdentifier(identifier)
     }
 
     private var footer: some View {
@@ -236,14 +241,17 @@ struct ContentView: View {
             orbMode = .success
             statusTitle = title
             statusSubtitle = message
+            ObservableEvidence.record("settings_dispatched")
         case let .targetUnavailable(title, message):
             orbMode = .failure
             statusTitle = title
             statusSubtitle = message
+            ObservableEvidence.record("alipay_target_unavailable")
         case let .blocked(title, message):
             orbMode = .failure
             statusTitle = title
             statusSubtitle = message
+            ObservableEvidence.record("blocked")
         }
         appendReceipt()
     }
