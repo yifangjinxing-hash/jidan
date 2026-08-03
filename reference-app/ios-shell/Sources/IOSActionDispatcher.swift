@@ -1,7 +1,5 @@
-import UIKit
-
 enum DispatchOutcome: Equatable {
-    case dispatched(title: String, message: String)
+    case presentJidanSettings
     case targetUnavailable(title: String, message: String)
     case blocked(title: String, message: String)
 }
@@ -20,16 +18,7 @@ struct IOSActionDispatcher {
 
         switch proposal.target {
         case .jidanSettings:
-            guard let url = URL(string: UIApplication.openSettingsURLString) else {
-                return .blocked(title: "没有打开", message: "iOS 没有提供可用的鸡蛋设置入口。")
-            }
-            let opened = await UIApplication.shared.open(url)
-            return opened
-                ? .dispatched(
-                    title: "已经交给 iOS",
-                    message: "iOS 已接收打开鸡蛋设置的请求；鸡蛋没有修改任何开关。"
-                )
-                : .blocked(title: "没有打开", message: "iOS 拒绝了设置入口，鸡蛋没有自动重试。")
+            return .presentJidanSettings
 
         case .alipayFrontDoor:
             return .targetUnavailable(
@@ -39,4 +28,3 @@ struct IOSActionDispatcher {
         }
     }
 }
-

@@ -39,25 +39,18 @@ final class ObservableFlowsUITests: XCTestCase {
     }
 
     func testSettingsButtonOpensJidanSettingsPage() {
-        let settings = XCUIApplication(bundleIdentifier: "com.apple.Preferences")
         let button = app.buttons["jidan.quick.settings"]
         XCTAssertTrue(button.waitForExistence(timeout: 5))
         XCTAssertTrue(button.isHittable)
         button.tap()
 
-        XCTAssertTrue(
-            settings.wait(for: .runningForeground, timeout: 8),
-            "点击后，苹果设置没有进入前台"
-        )
-
-        let protocolValue = settings.staticTexts["JCL 0.1"]
-        let policyValue = settings.staticTexts["NAVIGATION / DIRECT"]
-        if !protocolValue.waitForExistence(timeout: 3) || !policyValue.exists {
-            settings.swipeUp()
-        }
-        XCTAssertTrue(protocolValue.waitForExistence(timeout: 5))
-        XCTAssertTrue(policyValue.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.state, .runningForeground)
+        XCTAssertTrue(app.staticTexts["jidan.settings.title"].waitForExistence(timeout: 5))
         attachScreenshot(named: "JidanIOS-direct-settings")
+        XCTAssertEqual(app.staticTexts["jidan.settings.title"].label, "鸡蛋设置")
+        XCTAssertEqual(app.staticTexts["jidan.settings.protocol"].label, "JCL 0.1")
+        XCTAssertEqual(app.staticTexts["jidan.settings.policy"].label, "NAVIGATION / DIRECT")
+        XCTAssertTrue(app.buttons["jidan.settings.close"].isHittable)
     }
 
     private func waitForLabel(_ expected: String, on element: XCUIElement, timeout: TimeInterval) -> Bool {

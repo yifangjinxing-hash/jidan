@@ -3,7 +3,7 @@ import XCTest
 
 final class CommandPolicyTests: XCTestCase {
     func testSettingsNavigationIsDirectWithoutSecondConfirmation() {
-        guard case let .direct(proposal) = CommandPolicy.parse("  请帮我打开 系统设置一下。 ") else {
+        guard case let .direct(proposal) = CommandPolicy.parse("  请帮我打开 鸡蛋设置一下。 ") else {
             return XCTFail("expected direct navigation")
         }
 
@@ -12,6 +12,12 @@ final class CommandPolicyTests: XCTestCase {
         XCTAssertEqual(proposal.executionMode, .direct)
         XCTAssertFalse(proposal.requiresConfirmation)
         XCTAssertEqual(proposal.compactContract, "app.open.jidan_settings · NAVIGATION / DIRECT")
+    }
+
+    func testSystemSettingsIsNotMislabeledAsJidanSettings() {
+        guard case .unsupported = CommandPolicy.parse("打开系统设置") else {
+            return XCTFail("system settings must not be mislabeled as Jidan settings")
+        }
     }
 
     func testAlipayFrontDoorRequestIsNarrowAndDirect() {

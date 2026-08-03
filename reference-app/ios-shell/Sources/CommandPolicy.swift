@@ -58,7 +58,7 @@ enum CommandPolicy {
             )
         }
 
-        if ["打开系统设置", "打开设置", "系统设置", "打开鸡蛋设置", "鸡蛋设置"].contains(compact) {
+        if ["打开设置", "打开鸡蛋设置", "鸡蛋设置"].contains(compact) {
             return .direct(
                 ActionProposal(
                     capabilityID: "app.open.jidan_settings",

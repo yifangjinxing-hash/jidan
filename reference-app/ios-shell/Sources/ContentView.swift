@@ -26,6 +26,7 @@ struct ContentView: View {
     @State private var statusSubtitle = "说一句，或写一句。安全的打开动作会直接执行。"
     @State private var orbMode: OrbMode = .idle
     @State private var didRunDemo = false
+    @State private var isSettingsPresented = false
     @AppStorage("receiptSequence") private var receiptSequence = 1
 
     var body: some View {
@@ -78,6 +79,10 @@ struct ContentView: View {
             orbMode = .idle
             statusTitle = "已经停止听写"
             statusSubtitle = "鸡蛋进入后台后不会继续听。"
+        }
+        .fullScreenCover(isPresented: $isSettingsPresented) {
+            JidanSettingsView()
+                .preferredColorScheme(.dark)
         }
     }
 
@@ -237,10 +242,11 @@ struct ContentView: View {
     @MainActor
     private func apply(_ outcome: DispatchOutcome) {
         switch outcome {
-        case let .dispatched(title, message):
+        case .presentJidanSettings:
             orbMode = .success
-            statusTitle = title
-            statusSubtitle = message
+            statusTitle = "鸡蛋设置已经打开"
+            statusSubtitle = "这是动作结果，不是第二遍确认。"
+            isSettingsPresented = true
             ObservableEvidence.record("settings_dispatched")
         case let .targetUnavailable(title, message):
             orbMode = .failure
@@ -294,6 +300,133 @@ struct ContentView: View {
 
     private func appendReceipt() {
         receiptSequence = receiptSequence >= 9_999 ? 1 : receiptSequence + 1
+    }
+}
+
+private struct JidanSettingsView: View {
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack {
+            CosmicBackground()
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack(alignment: .center) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("鸡蛋设置")
+                                .font(.system(size: 29, weight: .bold, design: .rounded))
+                                .accessibilityIdentifier("jidan.settings.title")
+                            Text("看得见的动作驾驶舱")
+                                .font(.subheadline)
+                                .foregroundStyle(.white.opacity(0.62))
+                        }
+                        Spacer()
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "xmark")
+                                .font(.system(size: 16, weight: .bold))
+                                .frame(width: 46, height: 46)
+                                .background(.white.opacity(0.09), in: Circle())
+                                .overlay(Circle().stroke(.white.opacity(0.22), lineWidth: 1))
+                        }
+                        .accessibilityLabel("关闭鸡蛋设置")
+                        .accessibilityIdentifier("jidan.settings.close")
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Label("一点就到这里", systemImage: "checkmark.circle.fill")
+                            .font(.headline)
+                            .foregroundStyle(Color(red: 0.49, green: 0.92, blue: 0.75))
+                        Text("没有“请再确认一次”。你刚才点的是设置，这里就是设置。")
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.76))
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(18)
+                    .background(.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 22))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 22)
+                            .stroke(Color(red: 0.49, green: 0.92, blue: 0.75).opacity(0.38), lineWidth: 1)
+                    )
+
+                    Text("JCL 动作契约")
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(.white.opacity(0.52))
+                        .textCase(.uppercase)
+
+                    VStack(spacing: 0) {
+                        settingsRow(
+                            title: "协议",
+                            value: "JCL 0.1",
+                            icon: "curlybraces",
+                            identifier: "jidan.settings.protocol"
+                        )
+                        Divider().overlay(.white.opacity(0.12))
+                        settingsRow(
+                            title: "打开动作",
+                            value: "NAVIGATION / DIRECT",
+                            icon: "arrow.up.forward.app",
+                            identifier: "jidan.settings.policy"
+                        )
+                        Divider().overlay(.white.opacity(0.12))
+                        settingsRow(
+                            title: "涉及钱和密码",
+                            value: "停下，不自动执行",
+                            icon: "hand.raised.fill",
+                            identifier: "jidan.settings.money"
+                        )
+                        Divider().overlay(.white.opacity(0.12))
+                        settingsRow(
+                            title: "语音",
+                            value: "只在你点麦克风后听",
+                            icon: "mic.fill",
+                            identifier: "jidan.settings.speech"
+                        )
+                    }
+                    .background(.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 22))
+                    .overlay(RoundedRectangle(cornerRadius: 22).stroke(.white.opacity(0.14), lineWidth: 1))
+
+                    Text("鸡蛋现在还是运行在 iOS 里的驾驶舱 App，不是替换苹果内核的独立操作系统。")
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.56))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 2)
+                }
+                .padding(.horizontal, 22)
+                .padding(.top, 18)
+                .padding(.bottom, 28)
+            }
+        }
+    }
+
+    private func settingsRow(
+        title: String,
+        value: String,
+        icon: String,
+        identifier: String
+    ) -> some View {
+        HStack(spacing: 13) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Color(red: 0.77, green: 0.69, blue: 0.98))
+                .frame(width: 32, height: 32)
+                .background(Color.purple.opacity(0.16), in: RoundedRectangle(cornerRadius: 9))
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.white)
+                Text(value)
+                    .font(.caption.monospaced())
+                    .foregroundStyle(.white.opacity(0.62))
+                    .accessibilityIdentifier(identifier)
+            }
+            Spacer(minLength: 4)
+        }
+        .padding(.horizontal, 16)
+        .frame(minHeight: 68)
     }
 }
 
