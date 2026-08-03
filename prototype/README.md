@@ -279,9 +279,13 @@ the final send.
 
 `jidan/android_handoff.py` verifies one Host-pinned Android installation and
 launcher surface. `jidan/alipay_handoff.py` binds that evidence to the empty-input
-`android.alipay.open_user_handoff` capability. Its effect is `external`, it always
-requires confirmation, and its schema cannot carry an account, recipient, amount,
-currency, QR payload, URL, order token, password, or payment instruction.
+`android.alipay.open_user_handoff` capability. Its effect is the low-risk
+`navigation` class, it does not require a second confirmation after an explicit
+foreground submit, and its schema cannot carry an account, recipient, amount,
+currency, QR payload, URL, order token, password, or payment instruction. Pressing
+Back reverses the UI navigation; no user data is written by this capability. The
+matching Shell-facing contract is
+[`app.open.alipay_frontdoor.tool.json`](../profiles/app.open.alipay_frontdoor.tool.json).
 
 Before launch, the adapter checks the exact `versionCode`, current Android user
 and device SDK, pulls the installed base APK, and runs the reviewed `apksigner`
@@ -294,9 +298,10 @@ allowlisted component for two consecutive samples, then rechecks the installed
 APK identity to close the launch-time replacement window. Raw ADB output is not
 returned.
 
-Run a zero-execution preflight first. Every value in the pin below must come
-from an independent trusted review; copying values from the installation being
-tested is not identity verification.
+Every value in the pin below must come from an independent trusted review;
+copying values from the installation being tested is not identity verification.
+The command itself is the explicit request to open the app and therefore
+dispatches directly. Add `--dry-run` to validate the policy without opening it.
 
 ```powershell
 python alipay_handoff_live.py `
@@ -313,10 +318,10 @@ python alipay_handoff_live.py `
   --initialize-grant-ledger
 ```
 
-The default run stops at `awaiting_confirmation` without invoking ADB, Java, or
-`apksigner`. After reviewing the exact pin, rerun against the established ledger,
-omit `--initialize-grant-ledger`, and add `--approve-open-ui`. That approval means
-only “open this pinned front door.” Every successful output still fixes
+There is no `--approve-open-ui` flag and no second “open this app?” gate. A dry
+run reports `preflight=ready` and `effect=navigation` without invoking ADB, Java,
+or `apksigner`; remove `--dry-run` to issue the direct navigation command. Every
+successful output still fixes
 `amountSetByJidan=false`, `recipientSelectedByJidan=false`,
 `paymentAttemptedByJidan=false`, `paid=false`, `committed=false`, and
 `verified=false`. The person performs every recipient, amount, identity, and

@@ -51,7 +51,7 @@
 
 **限制。** 这是静态 GitHub 开源样本和 LLM 辅助分类形成的时点快照，不能直接外推所有商业产品。作者另行抽样复核并报告 96.5% 的总体分类准确率。
 
-**JCL 推断。** `riskLevel` 或 Tool annotation 不能代替真实确认。WRITE、SEND、DELETE、PAY 和安全设置应在 Host 中形成结构性 Commit Gate。
+**JCL 推断。** `riskLevel` 或 Tool annotation 不能代替真实确认。WRITE、SEND、DELETE、PAY 和安全设置应在 Host 中形成结构性 Commit Gate；只打开受信 front door 的 `NAVIGATION` 不属于这些提交动作，用户在前台提交命令后应直接分派，避免确认疲劳。
 
 ## 仍是提案，不是规范
 
@@ -126,7 +126,7 @@ Apple Developer Forums 在本窗口内还给出了三组更接近实际开发的
 
 在 [46 个云控制工具的 HITL 讨论](https://www.reddit.com/r/mcp/comments/1v9wqi5/our_mcp_server_exposes_a_whole_cloud_platform_46/)中，一方主张每个高后果操作暂停并生成 Receipt；楼中楼反驳“所有写操作都一键确认”会产生确认疲劳，也可能与 Client/HITL Gateway 重复确认。实践者补充：Receipt 不能只有 `200 OK`，还应包含资源 ID、名称和位置。
 
-**JCL 路线修正。** 确认按爆炸半径、不可逆性和数据敏感度分层；一次操作只保留一个 Host 所有的明确 Commit Gate。Receipt 记录具体资源和验证阶段，无法证明现实资源时使用 `committed_unverified` 或 `unknown`。
+**JCL 路线修正。** 确认按爆炸半径、不可逆性和数据敏感度分层；`NAVIGATION` 的提交动作本身就是决定，不出现第二张卡；需要确认的高风险操作只保留一个 Host 所有的明确 Commit Gate。Receipt 记录具体资源和验证阶段，无法证明现实资源时使用 `committed_unverified` 或 `unknown`。
 
 在 [同名 Capability 发生变化后的授权讨论](https://www.reddit.com/r/mcp/comments/1va0pv4/when_an_mcp_server_changes_do_the_users_existing/)中，主帖与回复指出只绑定工具名、稳定 ID 或 Hash 任一单项都不完整；可操作的最小改进是把规范化定义摘要与授权一起保存，并在每次调用前校验。Jidan 已据此把 Capability 定义指纹纳入 Grant 和 Receipt，但发布者来源与 Adapter 二进制信任仍是待补边界。
 

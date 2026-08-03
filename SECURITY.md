@@ -4,7 +4,7 @@ Jidan is an experimental agent runtime. Do not use it for sensitive production d
 
 ## Financial handoff boundary
 
-The experimental Alipay adapter may only open a host-pinned Android front-door after an explicit Jidan approval. It must not receive, prefill, or transmit an account, recipient, amount, QR payload, payment URL, order token, password, verification code, or biometric instruction. It must not use private URI schemes, Accessibility, coordinate taps, OCR-driven control, or automatic retries after an ambiguous launch.
+The experimental Alipay adapter may only open a host-pinned Android front door from an explicit foreground Jidan submit. That submit is the user's decision for this low-risk `NAVIGATION` action; the Host must not ask the same “open this app?” question again. The adapter must not receive, prefill, or transmit an account, recipient, amount, QR payload, payment URL, order token, password, verification code, or biometric instruction. It must not use private URI schemes, Accessibility, coordinate taps, OCR-driven control, or automatic retries after an ambiguous launch.
 
 `handoff_opened` proves only that the pinned package and allowed foreground component were observed in the controlled ADB lab. It never means that a payment screen was reached or a payment was attempted, committed, settled, or verified. Payment truth must come from the payment provider's official authorization and server-side verification path.
 

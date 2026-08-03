@@ -16,3 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "JidanReferenceMemo"
 include(":app")
+include(":shell")

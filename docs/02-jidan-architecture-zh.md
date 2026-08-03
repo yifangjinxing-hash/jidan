@@ -73,7 +73,7 @@ JGraph 不是新的生态编程语言、传输协议或开发者必学 DSL。它
 每个节点必须声明：
 
 - 输入/输出类型和数据来源；
-- effect：`read / write / send / delete / pay / security_change`；
+- effect：`read / navigation / write / send / delete / pay / security_change`；其中 `navigation` 只允许打开受信入口，不携带业务参数或修改数据；
 - 所需 authority 与资源范围；
 - 超时、重试上限和幂等键；
 - 网络目的地、费用、延迟和能耗预算；
@@ -93,7 +93,7 @@ DRAFT → SIMULATED → AUTHORIZED → RUNNING → WAITING
 执行规则：
 
 1. 默认 DAG；循环必须有显式次数上限。
-2. 先模拟完整图，再请求授权；确认前不得产生部分副作用。
+2. 先模拟完整图，再请求授权；需要 Commit Gate 的动作在确认前不得产生部分副作用；明确的低风险 `navigation` 命令可由提交动作直接授权。
 3. 不可逆动作尽量放在最终提交边界。
 4. 跨 App 不虚构 ACID 事务，采用 Saga 补偿。
 5. 每个节点持久化检查点；杀进程、重启或网络中断后可恢复。
@@ -191,6 +191,7 @@ Jidan v0 的 Grant 还强制绑定每个能力的规范化定义指纹：Capabil
 | 行为 | 默认策略 |
 |---|---|
 | 非敏感纯读取 | 可按用户规则自动执行 |
+| 前台明确提交、仅打开受信 App front door 的 `NAVIGATION` | 直接分派，不再弹同义确认卡 |
 | 可撤销本地写入 | 计划级一次确认 |
 | 敏感读取、外部通信 | 调用前确认 |
 | 发送、删除、支付、安装、账户/安全设置 | 最终提交点确认，必要时生物认证 |
@@ -206,7 +207,7 @@ Jidan v0 的 Grant 还强制绑定每个能力的规范化定义指纹：Capabil
 - B：系统 API 结果 + 读回验证；
 - C：GUI 语义树或截图验证。
 
-Jidan v0 原型已实现 Schema 子集校验、HMAC 计划与能力定义指纹绑定授权、执行前确认、授权前零副作用、SQLite 持久 nonce 消费和哈希链一致性校验。当前哈希链尚不能抵抗有权限重写整份日志的攻击者，SQLite 文件也不能抵抗被整体回滚到旧的有效版本；系统版仍需 Android Keystore/StrongBox 认证锚点、受保护的持久任务状态机与 Provider 身份校验。
+Jidan v0 原型已实现 Schema 子集校验、HMAC 计划与能力定义指纹绑定授权、按 Effect 分级的确认策略、授权前零副作用、SQLite 持久 nonce 消费和哈希链一致性校验。`NAVIGATION` 在前台明确提交后不进入二次确认；`WRITE / EXTERNAL / IRREVERSIBLE` 仍按策略进入 Commit Gate。当前哈希链尚不能抵抗有权限重写整份日志的攻击者，SQLite 文件也不能抵抗被整体回滚到旧的有效版本；系统版仍需 Android Keystore/StrongBox 认证锚点、受保护的持久任务状态机与 Provider 身份校验。
 
 执行器采用保守失败语义：写入或外部调用一旦进入 Provider，随后发生超时、断线或输出契约失败，就标记为 `outcome_unknown` / `committed_unverified` 并禁止自动重试；只有能证明尚未开始副作用的错误才是普通 `failed`。
 

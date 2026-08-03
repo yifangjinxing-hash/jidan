@@ -113,7 +113,9 @@ class AdbAlipayHandoffAdapter:
                 "Open a host-pinned Alipay launcher surface, then hand recipient, "
                 "amount, and final payment confirmation entirely to the user."
             ),
-            effect=Effect.EXTERNAL,
+            # Opening a launcher surface changes no user data. Treat it as
+            # low-risk navigation, distinct from a WRITE or payment action.
+            effect=Effect.NAVIGATION,
             scopes=frozenset(
                 {
                     ACTION_MAIN,
@@ -121,8 +123,8 @@ class AdbAlipayHandoffAdapter:
                     "alipay.user_handoff.open",
                 }
             ),
-            requires_confirmation=True,
-            reversible=False,
+            requires_confirmation=False,
+            reversible=True,
             input_schema={
                 "type": "object",
                 "properties": {},

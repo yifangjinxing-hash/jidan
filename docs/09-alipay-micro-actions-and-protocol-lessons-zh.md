@@ -43,7 +43,7 @@ Android 10 起限制后台 Activity 拉起，并定义了若干例外条件。
 
 - `front door` 只代表目标 App 的启动入口，不代表其中某个业务页面。
 - v1 的目标包名属于 adapter 的已审计实现细节，不进入自然语言或 JCL Core 的自由输入。
-- Jidan 采用比平台最低要求更严格的规则：操作必须发生在前台，且由用户点击或一次明确确认触发，不利用后台启动例外制造突然跳转。
+- Jidan 采用比平台最低要求更严格的规则：操作必须发生在前台，且由用户明确点击或提交命令触发；这个提交动作已经是决定，不能随后再追问“是否打开”。Jidan 不利用后台启动例外制造突然跳转。
 
 ### 1.2 稳定深链需要目标方公开并验证
 
@@ -117,24 +117,40 @@ Android 普通第三方若只是需要识别二维码，可以在自己的 App �
 | `intent.parse` | 从自然语言识别“打开某受信 App” | 无外部副作用 | `parsed` / `rejected` | 已启动 App |
 | `adapter.resolve` | 只在本地受信注册表中解析 adapter | 无外部副作用 | `adapter_resolved` / `target_untrusted` | adapter 官方 |
 | `policy.kill_gate` | 用闭合 schema、证据和前台条件做硬拒绝 | 无外部副作用 | `validated` / `rejected_*` | 已获得用户授权 |
-| `host.confirm_once` | 展示一次语义明确的 Host 确认卡 | 用户决策 | `approved` / `denied` | 目标 App 内后续授权 |
-| `app.open.frontdoor` | 请求 Android 打开目标 App 启动器入口 | 导航/交接 | `handoff_requested` → `handoff_dispatched`，或 `target_unavailable` / `blocked_by_os` | 已到扫一扫、已打开小程序、已付款 |
+| `host.accept_explicit_submit` | 接受前台用户已经点下的提交动作；不再弹卡 | 用户直接操作 | `accepted` | 目标 App 内后续授权 |
+| `app.open.frontdoor` | 请求 Android 打开目标 App 启动器入口 | `NAVIGATION`（低风险） | `handoff_requested` → `handoff_dispatched`，或 `target_unavailable` / `blocked_by_os` | 已到扫一扫、已打开小程序、已付款 |
 | `handoff.instruct` | 告诉用户下一步需在目标 App 内手动完成 | 仅展示 | `instruction_shown` | Jidan 控制了目标 App |
+
+最小机器契约必须把它与写入/付款明确分开：
+
+```json
+{
+  "action": "app.open.alipay_frontdoor",
+  "arguments": {},
+  "riskLevel": "NAVIGATION",
+  "executionMode": "DIRECT",
+  "requiresConfirmation": false
+}
+```
+
+`DIRECT` 只表示用户提交后不再二次确认，不表示绕过前台限制、目标身份校验或
+Android 自己的权限边界。
 
 ### 2.2 v1 契约约束
 
 - Core 使用闭合 schema（`additionalProperties: false`）；未知字段不是“先忽略”，而是拒绝。
 - Core 不接收任意 `packageName`、`componentName`、`scheme`、`url` 或 `intentUri`；这些只能来自已审计 adapter。
 - v1 schema 不存在 `amount`、`currency`、`payee`、`recipient`、`merchantId`、`orderId`、`paymentCredential`、`orderStr` 等支付字段。
+- 只有空参数的 `NAVIGATION / DIRECT` 可直接分派；解析出金额、收款人、扫码、付款或任意 URI 时，不得降级为“先打开再说”，而是在 adapter 前拒绝。
 - adapter 返回的是 OS 请求结果，不得返回通用的 `success: true`。
 - `handoff_requested` 表示 Host 已把本次获批动作提交给 adapter；`handoff_dispatched` 表示 OS 接受了启动请求。二者都不是目标 App 内的业务成功。
 - 当前支付宝 Lab 回执必须保持 `paymentAttemptedByJidan=false`、`paid=false`、`committed=false`、`verified=false`；未来若抽象 provider-neutral Profile，字段名应另行版本化，不能悄悄复用概念性的 `payment.attempted`。
 
 ### 2.3 当前仓库落地的是受控 Lab Adapter，不是公共支付 Profile
 
-当前代码先落地 provider-specific 的 `android.alipay.open_user_handoff`，而没有抢先发布 `app.open.frontdoor` 或通用支付 Profile。它只有在 Host 配置了确切包名、`versionCode`、APK 签名证书 SHA-256、launcher component 与允许的前台 component 后才可注册；执行时会读取当前 Android 用户与设备 SDK，通过 Java 直接运行 `apksigner` JAR，并在 APK Signature Scheme v3.1 的 SDK 分段签名结果中要求当前 SDK 恰好对应一个、且证书 SHA-256 与 Host pin 相符的 signer。随后要求 Android 的 resumed Activity 与 focused Window 连续两次给出一致证据，并在打开后再次复核包身份，降低检查与使用之间被替换的风险。
+当前代码先落地 provider-specific 的 `android.alipay.open_user_handoff`，而没有抢先发布通用 `app.open.frontdoor` 或支付 Profile；Shell 侧的机器契约为 [`app.open.alipay_frontdoor`](../profiles/app.open.alipay_frontdoor.tool.json)。Lab Adapter 只有在 Host 配置了确切包名、`versionCode`、APK 签名证书 SHA-256、launcher component 与允许的前台 component 后才可注册；执行时会读取当前 Android 用户与设备 SDK，通过 Java 直接运行 `apksigner` JAR，并在 APK Signature Scheme v3.1 的 SDK 分段签名结果中要求当前 SDK 恰好对应一个、且证书 SHA-256 与 Host pin 相符的 signer。随后要求 Android 的 resumed Activity 与 focused Window 连续两次给出一致证据，并在打开后再次复核包身份，降低检查与使用之间被替换的风险。
 
-该能力的 JCL 输入是空对象。README 所讨论的本地“转账小抄”只是未来消费者 Host 的产品假设，当前并未实现；即使以后实现，它也必须是独立的本地 Action Card/敏感数据边界，不能把账号、金额或备注传给这个 Handoff Capability 或 Adapter。
+该能力的 JCL 输入是空对象，Effect 为 `NAVIGATION`，`requires_confirmation=false`；用户已经提交“打开支付宝”后，Runtime 直接分派，不制造第二个确认步骤。README 所讨论的本地“转账小抄”只是未来消费者 Host 的产品假设，当前并未实现；即使以后实现，它也必须是独立的本地 Action Card/敏感数据边界，不能把账号、金额或备注传给这个 Handoff Capability 或 Adapter。
 
 因此，受控 ADB Lab 可以在这些证据都成立后报告 `handoff_opened`；它仍固定 `amountSetByJidan=false`、`recipientSelectedByJidan=false`、`paymentAttemptedByJidan=false`、`paid=false`、`committed=false`、`verified=false`。原始 ADB 输出不进入公共结果，只保留摘要。
 
@@ -171,7 +187,7 @@ Android 普通第三方若只是需要识别二维码，可以在自己的 App �
 4. 原始请求或结构化契约包含金额、币种、收款人、订单、支付凭证、支付签名等支付语义；
 5. 出现自定义 Scheme、`intent://`、内部 Activity/Component、任意外部包名注入；
 6. adapter 缺少来源、验证日期、scope，或来源与 action 不匹配；
-7. App 不在前台，或本次启动不是由直接用户操作/一次 Host gate 触发；
+7. App 不在前台，或本次启动不是由用户直接提交命令触发；
 8. allowlist 为空、字段未披露、证据丢失或状态未知。
 
 ### 4.2 拒绝必须可解释
@@ -196,16 +212,13 @@ stateDiagram-v2
     [*] --> Draft
     Draft --> RejectedScope: 闭合 schema / 支付语义不通过
     Draft --> Validated: target、binding、前台条件通过
-    Validated --> AwaitingHostGate: 需要一次明确确认
-    AwaitingHostGate --> Denied: 用户拒绝
-    AwaitingHostGate --> HandoffRequested: 用户批准并提交 adapter
+    Validated --> HandoffRequested: 前台提交已是决定，直接交给 adapter
     HandoffRequested --> Dispatching: 请求 Android front door
     Dispatching --> TargetUnavailable: 无 launcher / 无 handler
     Dispatching --> BlockedByOS: 系统阻止
     Dispatching --> HandoffDispatched: OS 接受启动请求
     HandoffDispatched --> ManualControl: 控制权属于用户与目标 App
     RejectedScope --> [*]
-    Denied --> [*]
     TargetUnavailable --> [*]
     BlockedByOS --> [*]
     ManualControl --> [*]
@@ -219,16 +232,17 @@ stateDiagram-v2
 - v1 不定义 `scan_succeeded`、`order_created`、`payment_pending` 或 `payment_succeeded`。
 - 将来若做支付，至少应另建 `prepared → authorization_pending → settlement_pending → committed_verified / failed / reconciliation_required`，不能复用本状态机的 `handoff_dispatched`。
 
-## 6. 一次 Host gate：安全不能演变成确认疲劳
+## 6. 导航零额外 gate：安全不能演变成确认疲劳
 
 ### 6.1 规则
 
-- 一次“打开目标 App front door”是一个 semantic action，只允许一个 Host-owned gate。
-- 用户在 Jidan UI 中直接点击“打开支付宝（仅主页）”时，这次点击本身可视为 Host gate；不要再弹一张同义确认卡。
-- 从自然语言自动规划出该动作时，Host 只展示一次清楚的预览：目标 App、仅主页、将离开 Jidan、没有支付。
-- adapter、协议层和插件不能各自再叠一层相同确认。
+- 一次“打开目标 App front door”是低风险 `NAVIGATION`，不是 `WRITE`、支付或安全设置变更。
+- 用户在 Jidan UI 中点建议按钮、麦克风提交或箭头提交“打开支付宝（仅主页）”时，这次提交本身就是决定；立即分派，不再显示同义确认卡。
+- 可以在输入框附近提前写清“将离开 Jidan、只打开主页、没有支付”，但这只是说明，不能阻断流程要求再点一次。
+- adapter、协议层和插件不能把 `NAVIGATION` 偷换成 `HANDOFF + requiresConfirmation`，也不能各自叠确认。
 - 目标 App 自己的登录、扫码、支付核身属于其外部授权阶段，不是 JCL 可以省略或替代的确认。
-- gate 决策必须和规范化后的 action hash 绑定；若 target、binding 或参数变化，旧批准立即失效。
+- 非前台、非用户直接提交的自动计划不得借这个低风险标签突然拉起 App；应拒绝或等待新的前台提交。
+- 未来写入、外发、转账、付款等动作仍需独立契约和 Commit Gate；`NAVIGATION` 的批准不得沿用或升级为它们的批准。
 
 ### 6.2 为什么这样设计
 
@@ -243,7 +257,7 @@ stateDiagram-v2
 
 **Jidan 推断**
 
-安全强度应按 blast radius，而不是按工具调用次数累计。对 v1 的低风险导航动作，一次语义明确的 Host gate 足够；未来不可逆动作才升级 gate、回执和验证要求。
+安全强度应按 blast radius，而不是按工具调用次数累计。对 v1 的低风险导航动作，前台提交就是完整决定，额外 gate 为零；未来写入或不可逆动作才升级 gate、回执和验证要求。
 
 ## 7. 近 7 天协议/Agent 负面反馈：只当测试信号，不当官方裁决
 
@@ -318,12 +332,12 @@ AP2 是支付授权协议，JCL v1 不实现 AP2。这里引用其公开 issue�
 | AP2 #299 字段丢失/裸 ID | 闭合 schema、限定 ID、字段端到端保真 | 注入未知安全字段必须验证失败，不能被静默删除 |
 | AP2 #309 缺证据继续 | 缺 binding evidence 立即 kill | 删除 source/verifiedAt 后不得调用 adapter |
 | AP2 #308 状态混写 | 请求、handoff、外部最终性分别建模 | OS dispatch 只能得到 `handoff_dispatched` |
-| MCP/Agent 重复提示 | 每个 semantic action 只有一个 Host gate | 同一 action hash 不出现第二张 JCL 确认卡 |
+| MCP/Agent 重复提示 | `NAVIGATION` 的前台提交后零额外 gate；高风险动作才有一个 Commit Gate | 提交 `app.open.frontdoor` 后不出现 JCL 确认卡 |
 | 移动端依赖与连接竞态 | 可选依赖 lazy-load；状态显式、错误可重试 | 无可选 native 依赖仍能显示 manual handoff；连接中不报 unknown |
 
 ### v1 发布前待落地并通过的 kill tests
 
-1. “打开支付宝” → 一次 Host gate → 只请求 front door；
+1. “打开支付宝” → 提交后直接请求 front door，零二次确认；
 2. “打开支付宝扫一扫” → 拒绝直达，提供 manual handoff；
 3. “打开支付宝给张三付 10 元” → `rejected_payment_semantics`，不打开 App；
 4. 输入任意 `alipays://...` → `rejected_private_binding`；
@@ -332,7 +346,7 @@ AP2 是支付授权协议，JCL v1 不实现 AP2。这里引用其公开 issue�
 7. 后台任务试图拉起 App → `rejected_background_launch`；
 8. Android 接受启动请求 → 只记录 `handoff_dispatched`，不得记录业务成功；
 9. 目标未安装/无 launcher → `target_unavailable`，不得改走未知 Scheme；
-10. 同一规范化 action 在一次执行中只能出现一个 Host gate。
+10. `NAVIGATION` 必须是 `DIRECT + requiresConfirmation=false`；同一次执行不得出现确认卡。
 
 ## 10. 后续扩展顺序
 
@@ -344,4 +358,4 @@ AP2 是支付授权协议，JCL v1 不实现 AP2。这里引用其公开 issue�
 4. `official_sdk`：独立设计支付 `prepare / authorize / verify / reconcile` 状态机；
 5. AP2 等支付授权协议：只有在身份、mandate、最终性、幂等与对账全链路存在时评估，绝不把它缩减成“多几个 JSON 字段”。
 
-每一步都必须保持同一原则：**自然语言负责表达意图，JCL 负责收窄权限，adapter 负责经审计的平台绑定并声明 `bindingAuthority`，Host 负责一次明确的人类决策，外部系统负责自己的最终确认。**
+每一步都必须保持同一原则：**自然语言负责表达意图，JCL 负责收窄权限，adapter 负责经审计的平台绑定并声明 `bindingAuthority`；Host 对前台 `NAVIGATION` 接受用户提交后直接分派，对高风险动作才设置 Commit Gate；外部系统负责自己的最终确认。**

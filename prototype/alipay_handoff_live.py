@@ -120,12 +120,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--initialize-grant-ledger", action="store_true")
     parser.add_argument("--summary")
     parser.add_argument(
-        "--approve-open-ui",
+        "--dry-run",
         action="store_true",
-        help=(
-            "approve only opening the pinned Alipay front door; this never "
-            "approves a recipient, an amount, or a payment"
-        ),
+        help="validate the pinned navigation policy without opening Alipay",
     )
     return parser
 
@@ -223,22 +220,22 @@ def main(*, runner: CommandRunner | None = None) -> int:
         ),
     )
     digests = registry.definition_digests({capability.id})
-    preview_grant = issue_grant(
+    grant = issue_grant(
         secret,
         plan,
         {capability.id},
         capability.scopes,
-        Effect.EXTERNAL,
+        Effect.NAVIGATION,
         capability_digests=digests,
     )
-    preflight = runtime.execute(plan, preview_grant)
-    if preflight.status != "awaiting_confirmation":
+    preflight = runtime.preflight(plan, grant)
+    if any(decision.outcome != "allowed" for decision in preflight):
         _emit(
             {
                 "ok": False,
                 "executed": False,
                 "stage": "preflight",
-                "status": preflight.status,
+                "status": [decision.outcome for decision in preflight],
             },
             summary_path,
         )
@@ -252,34 +249,25 @@ def main(*, runner: CommandRunner | None = None) -> int:
         "committed": False,
         "verified": False,
     }
-    if not args.approve_open_ui:
+    if args.dry_run:
         _emit(
             {
                 "ok": True,
                 "executed": False,
-                "preflight": preflight.status,
+                "preflight": "ready",
                 "capability": capability.id,
                 "effect": capability.effect.label(),
                 "targetPackage": ALIPAY_PACKAGE,
                 "payment": zero_payment,
                 "notice": (
-                    "Add --approve-open-ui only after reviewing the pinned "
-                    "version, certificate, launcher, and foreground components."
+                    "Dry run only. Remove --dry-run to issue the explicit "
+                    "low-risk navigation command."
                 ),
             },
             summary_path,
         )
         return 0
 
-    grant = issue_grant(
-        secret,
-        plan,
-        {capability.id},
-        capability.scopes,
-        Effect.EXTERNAL,
-        approved_steps={"open_alipay_handoff"},
-        capability_digests=digests,
-    )
     result = runtime.execute(plan, grant)
     ledger.checkpoint()
     output = result.outputs.get("open_alipay_handoff")
@@ -308,7 +296,7 @@ def main(*, runner: CommandRunner | None = None) -> int:
         "ok": ok,
         "taskId": task_id,
         "execution": result.status,
-        "preflight": preflight.status,
+        "preflight": "ready",
         "handoffOpened": output_is_safe,
         "payment": zero_payment,
         "nextAction": (

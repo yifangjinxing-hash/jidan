@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_Shell-0.1-7B61A8?style=for-the-badge" alt="Jidan Shell 0.1" /></a>
   <a href="#-developer-quick-start"><img src="https://img.shields.io/badge/Developer_Start-195A41?style=for-the-badge" alt="Developer quick start" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
   <a href="docs/09-alipay-micro-actions-and-protocol-lessons-zh.md"><img src="https://img.shields.io/badge/Micro_Actions-Product_Direction-6E5AA8?style=for-the-badge" alt="Real micro-actions first" /></a>
@@ -26,7 +27,13 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan is an experimental prototype, not a replacement Android distribution, a privilege-escalation tool, or a production assistant. Current cross-app evidence uses controlled Android devices and ADB harnesses. The ordinary-user mobile product described below is not built yet. Use controlled apps, test devices, and disposable data.
+> Jidan is an experimental prototype, not a replacement Android distribution, a privilege-escalation tool, or a production assistant. The repository now builds an installable Jidan Shell 0.1 APK and has passed an Android-emulator end-to-end run. It is still not a store-signed product, a default launcher, or an independent ROM. Use controlled apps, test devices, and disposable data.
+
+<p align="center">
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.1.png" alt="Jidan Shell 0.1 cosmic home screen" width="360" /></a>
+</p>
+
+<p align="center"><strong>Do not question the doorway; stop before money moves.</strong></p>
 
 ## ✨ Why Jidan
 
@@ -47,15 +54,20 @@ The roadmap begins with one useful micro-action, not a catalogue of apps. A thin
 The implementation in this repository is intentionally smaller than a transfer assistant:
 
 ```text
-request Alipay → review one pinned target → confirm once
-               → open the allowlisted front-door component
-               → the person selects, verifies, authenticates, and pays in Alipay
+say or tap “open Alipay” → Host validates one pinned target
+                         → dispatch the allowlisted front door directly
+                         → the person selects, verifies, authenticates, and pays in Alipay
 ```
+
+The submit tap for this exact foreground command is the decision. Jidan classifies
+it as `NAVIGATION`, not `WRITE`, and must not show a second card asking whether to
+open the app. Any amount, recipient, QR, transfer, or payment wording is a
+different high-risk action and is rejected before dispatch.
 
 The current capability has an empty input object. It cannot receive a payee, account hint, amount, QR payload, URL, or order token. A future consumer Host may test a local, editable “transfer note,” but that artifact is not implemented here and must never enter this handoff's JCL arguments or adapter. Jidan must not inject an amount through an undocumented deep link, enter a password, press **Pay**, read a payment result, or retry an ambiguous outcome.
 
 > [!WARNING]
-> This is **not automatic payment**. No ordinary-user Alipay Binding ships in this repository today. The repository now contains a Host-pinned Alipay ADB Lab adapter and adversarial tests, but no accepted real-device run is claimed. A consumer Android Host, an independently reviewed Alipay identity manifest, and a multi-device evidence matrix are still required.
+> This is **not automatic payment**. The Shell only asks Android to open a package-scoped Alipay entry point and does not yet ship an independently reviewed Alipay signature manifest, so it is not a consumer-trusted Binding. The repository also contains a Host-pinned ADB Lab adapter and adversarial tests, but no accepted real-Alipay-device run is claimed. An independent identity review and a multi-device evidence matrix are still required.
 
 The status words must remain literal:
 
@@ -68,7 +80,7 @@ The status words must remain literal:
 | Current Alipay Lab handoff | `paymentAttemptedByJidan=false`, `paid=false`, `committed=false`, `verified=false` |
 
 See the Chinese product and protocol note, [Alipay micro-actions, protocol boundaries, and JCL corrections](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md).
-The controlled implementation lives in [`android_handoff.py`](prototype/jidan/android_handoff.py), [`alipay_handoff.py`](prototype/jidan/alipay_handoff.py), and the [explicit-confirmation Lab harness](prototype/alipay_handoff_live.py); usage and trust requirements are in the [prototype guide](prototype/README.md#alipay-fixed-front-door-handoff-controlled-lab-only).
+The controlled implementation lives in [`android_handoff.py`](prototype/jidan/android_handoff.py), [`alipay_handoff.py`](prototype/jidan/alipay_handoff.py), and the [direct-navigation Lab harness](prototype/alipay_handoff_live.py); usage and trust requirements are in the [prototype guide](prototype/README.md#alipay-fixed-front-door-handoff-controlled-lab-only).
 
 ## 🔌 One contract, many bindings
 
@@ -162,11 +174,11 @@ flowchart LR
 | Android 17 AppFunctions | ✅ | Controlled reference provider and live harness |
 | Semantic-surface discovery | ✅ | AppFunctions → RemoteInput → shortcut → public share |
 | Controlled WeChat native handoff | 🧪 | ADB/device harness verifies the exact picker; no recipient selection or Send |
-| Pinned Alipay front-door handoff | 🧪 Lab | Empty-input ADB adapter + adversarial tests; real-device acceptance pending; no payment automation |
+| [Direct Alipay front-door navigation](profiles/app.open.alipay_frontdoor.tool.json) | 🧪 Lab | Empty-input `NAVIGATION / DIRECT` Profile + adversarial tests; real-device acceptance pending; no payment automation |
 | Cross-platform `message.compose` profile | 🧪 | Android / iOS / Web plans; Android verified binding |
 | Conformance Lab: Nine Lights | 🧪 Lab | Python Runtime/Receipts + independent JS Host; not a user product |
 | Pinyin Frontend 0.1 | ⏸️ | Frozen compatibility experiment; no new syntax or aliases |
-| Ordinary-user Android product | 🗺️ | Not built; controlled ADB evidence is not consumer onboarding |
+| [Jidan Shell 0.1 Android experience](reference-app/shell/README.md) | 🧪 | APK built and exercised on an Android 17 emulator; not store-signed, a default launcher, or a ROM |
 | Production-grade mobile agent OS | 🗺️ | Not claimed yet |
 
 ## 🛡️ Safety by construction
@@ -213,16 +225,26 @@ cd reference-app
 
 On Windows, use `gradlew.bat`. For PowerShell 5.1 Unicode caveats, see the [prototype guide](prototype/README.md#windows-unicode-arguments).
 
+Build and install the Jidan Shell experience:
+
+```bash
+cd reference-app
+./gradlew :shell:testDebugUnitTest :shell:assembleDebug :shell:lintDebug
+adb install -r -t shell/build/outputs/apk/debug/shell-debug.apk
+```
+
+In **Jidan Shell**, “Open Alipay” and “Open system settings” navigate directly—there is no duplicate confirmation card. Speech-to-text uses the phone's current recognition service. See the [Shell guide](reference-app/shell/README.md) for installation and honest limits.
+
 ## 🗂️ Repository map
 
 ```text
 profiles/       MCP-compatible JCL capabilities and conformance vectors
 prototype/      capability kernel, adapters, policy, grants, receipts, demos
-reference-app/  controlled Android 17 AppFunctions provider
+reference-app/  Android 17 AppFunctions provider + Jidan Shell APK
 docs/           architecture, research, roadmap, internationalization
 ```
 
-Generated APKs, emulator images, raw device logs, screenshots, receipts, and SQLite ledgers are deliberately excluded from Git.
+Generated APKs, emulator images, raw device logs, runtime receipts, and SQLite ledgers are excluded from Git; documentation keeps only curated UI screenshots.
 
 ## 🧪 Conformance Lab
 

@@ -263,7 +263,7 @@ class PolicyEngine:
         if missing_scopes:
             missing = ", ".join(sorted(missing_scopes))
             return Decision(step.id, capability.id, "denied", f"missing scopes: {missing}")
-        if capability.effect > grant.max_effect:
+        if not grant.max_effect.covers(capability.effect):
             return Decision(
                 step.id,
                 capability.id,
@@ -272,7 +272,7 @@ class PolicyEngine:
             )
         confirmation_required = (
             capability.requires_confirmation
-            or capability.effect >= Effect.EXTERNAL
+            or capability.effect.at_least(Effect.EXTERNAL)
             or not capability.reversible
         )
         if confirmation_required and step.id not in grant.approved_steps:

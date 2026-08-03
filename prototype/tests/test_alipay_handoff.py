@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import inspect
+import json
 import sys
 import unittest
 
@@ -35,6 +36,9 @@ CERTIFICATE = "12" * 32
 LAUNCHER = f"{ALIPAY_PACKAGE}/.AlipayLogin"
 FOREGROUND = f"{ALIPAY_PACKAGE}/.AlipayHome"
 BASE_APK = "/data/app/alipay/base.apk"
+PROFILE_PATH = (
+    PROTOTYPE_ROOT.parent / "profiles" / "app.open.alipay_frontdoor.tool.json"
+)
 
 
 class FakeRunner:
@@ -114,7 +118,7 @@ class AlipayHandoffTests(unittest.TestCase):
         runner = FakeRunner(*responses)
         return AdbAlipayHandoffAdapter(front_door(), runner), runner
 
-    def test_capability_is_empty_input_confirmed_external_handoff(self):
+    def test_capability_is_empty_input_low_risk_navigation(self):
         adapter, _ = self.adapter()
         capability = adapter.capability()
 
@@ -127,9 +131,9 @@ class AlipayHandoffTests(unittest.TestCase):
             AdbFixedAndroidFrontDoor,
         )
         self.assertEqual(ALIPAY_HANDOFF_CAPABILITY_ID, capability.id)
-        self.assertEqual(Effect.EXTERNAL, capability.effect)
-        self.assertTrue(capability.requires_confirmation)
-        self.assertFalse(capability.reversible)
+        self.assertEqual(Effect.NAVIGATION, capability.effect)
+        self.assertFalse(capability.requires_confirmation)
+        self.assertTrue(capability.reversible)
         self.assertEqual({}, capability.input_schema["properties"])
         self.assertFalse(capability.input_schema["additionalProperties"])
         properties = capability.output_schema["properties"]
@@ -190,7 +194,7 @@ class AlipayHandoffTests(unittest.TestCase):
                     registry.invoke(ALIPAY_HANDOFF_CAPABILITY_ID, arguments)
         self.assertEqual([], runner.calls)
 
-    def test_confirmation_gate_prevents_runner_until_step_is_approved(self):
+    def test_explicit_open_command_dispatches_without_a_second_confirmation(self):
         adapter, runner = self.adapter(*success_responses())
         registry = CapabilityRegistry()
         capability = adapter.register(registry)
@@ -206,23 +210,10 @@ class AlipayHandoffTests(unittest.TestCase):
             plan,
             {capability.id},
             capability.scopes,
-            Effect.EXTERNAL,
+            Effect.NAVIGATION,
             capability_digests=registry.definition_digests({capability.id}),
         )
-        pending = runtime.execute(plan, grant)
-        self.assertEqual("awaiting_confirmation", pending.status)
-        self.assertEqual([], runner.calls)
-
-        approved_grant = issue_grant(
-            b"alipay-test-secret",
-            plan,
-            {capability.id},
-            capability.scopes,
-            Effect.EXTERNAL,
-            approved_steps={"handoff"},
-            capability_digests=registry.definition_digests({capability.id}),
-        )
-        completed = runtime.execute(plan, approved_grant)
+        completed = runtime.execute(plan, grant)
         self.assertEqual("completed", completed.status)
         self.assertEqual([], runner.responses)
 
@@ -245,8 +236,7 @@ class AlipayHandoffTests(unittest.TestCase):
             plan,
             {capability.id},
             capability.scopes,
-            Effect.EXTERNAL,
-            approved_steps={"handoff"},
+            Effect.NAVIGATION,
             capability_digests=registry.definition_digests({capability.id}),
         )
 
@@ -255,6 +245,27 @@ class AlipayHandoffTests(unittest.TestCase):
         self.assertEqual("unknown", result.status)
         self.assertEqual("outcome_unknown", result.receipts[0]["status"])
         self.assertEqual(11, len(runner.calls))
+
+    def test_navigation_has_a_distinct_policy_rank_and_stable_wire_value(self):
+        self.assertEqual(4, int(Effect.NAVIGATION))
+        self.assertIs(Effect.NAVIGATION, Effect.parse("navigation"))
+        self.assertTrue(Effect.WRITE.covers(Effect.NAVIGATION))
+        self.assertFalse(Effect.NAVIGATION.covers(Effect.WRITE))
+        self.assertTrue(Effect.NAVIGATION.at_least(Effect.READ))
+
+    def test_shell_profile_exposes_direct_navigation_not_write_or_payment(self):
+        profile = json.loads(PROFILE_PATH.read_text(encoding="utf-8"))
+        meta = profile["_meta"]["dev.jidan/capability-v0.1"]
+
+        self.assertEqual("app.open.alipay_frontdoor", profile["name"])
+        self.assertEqual({}, profile["inputSchema"]["properties"])
+        self.assertFalse(profile["inputSchema"]["additionalProperties"])
+        self.assertEqual("NAVIGATION", meta["riskLevel"])
+        self.assertEqual("DIRECT", meta["executionMode"])
+        self.assertFalse(meta["requiresConfirmation"])
+        output = profile["outputSchema"]["properties"]
+        for field in ("paymentAttemptedByJidan", "paid", "committed", "verified"):
+            self.assertIs(False, output[field]["const"])
 
     def test_provider_cannot_fake_paid_true_against_constant_output_contract(self):
         adapter, _ = self.adapter(*success_responses())

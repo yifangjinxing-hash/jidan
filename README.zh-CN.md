@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_体验壳-0.1-7B61A8?style=for-the-badge" alt="Jidan Shell 0.1" /></a>
   <a href="#-开发者快速开始"><img src="https://img.shields.io/badge/开发者上手-195A41?style=for-the-badge" alt="开发者快速开始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
   <a href="docs/09-alipay-micro-actions-and-protocol-lessons-zh.md"><img src="https://img.shields.io/badge/微动作优先-产品方向-6E5AA8?style=for-the-badge" alt="真实微动作优先" /></a>
@@ -26,7 +27,13 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan 仍是实验原型，不是完整 Android 发行版、提权工具或可托管重要事务的生产助手。当前跨 App 证据来自受控 Android 设备与 ADB Harness；下文描述的普通用户移动产品尚未完成。请只连接受控 App、测试设备和可丢弃数据。
+> Jidan 仍是实验原型，不是完整 Android 发行版、提权工具或可托管重要事务的生产助手。仓库现在已有可安装的 Jidan Shell 0.1 APK，并完成安卓模拟器端到端验证；它仍不是应用商店签名产品、默认桌面或独立 ROM。请只连接受控 App、测试设备和可丢弃数据。
+
+<p align="center">
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.1.png" alt="Jidan Shell 0.1 星空主页" width="360" /></a>
+</p>
+
+<p align="center"><strong>进门不盘问，动钱要停下。</strong></p>
 
 ## ✨ 为什么做 Jidan
 
@@ -47,15 +54,19 @@
 当前仓库实现的动作，刻意比“转账助手”更小：
 
 ```text
-请求打开支付宝 → 核对一个 Host 固定的目标 → 明确确认一次
-               → 打开 allowlist 中的 front-door component
-               → 用户在支付宝里选人、核名、认证并付款
+说出或点选“打开支付宝” → Host 校验一个固定目标
+                       → 直接分派 allowlist 中的 front door
+                       → 用户在支付宝里选人、核名、认证并付款
 ```
+
+提交这条明确的前台命令，本身就是用户决定。Jidan 将它标为 `NAVIGATION`，而不是
+`WRITE`，不能再弹一张“是否打开”的同义确认卡。只要句子出现收款人、金额、二维码、
+转账或付款，它就变成另一类高风险动作，必须在分派前拒绝。
 
 当前 Capability 的输入是空对象，不能接收收款人、账号线索、金额、二维码、URL 或订单令牌。未来消费者 Host 可以另行验证本地、可编辑的“转账小抄”，但该功能尚未实现，而且它的数据绝不能进入本 Handoff 的 JCL 参数或 Adapter。Jidan 不能通过未公开深链注入金额，不能输入密码、点击**付款**、读取支付结果，也不能在结果不明时自动重试。
 
 > [!WARNING]
-> 这**不是自动付款**。当前仓库没有可供普通用户使用的支付宝 Binding。仓库已经加入 Host 固定身份的支付宝 ADB Lab Adapter 与对抗测试，但没有宣称真机验收已通过。面向消费者的 Android Host、独立审查过的支付宝身份清单与多设备证据矩阵仍未完成。
+> 这**不是自动付款**。Shell 只会向 Android 请求打开包名固定的支付宝入口，尚未内置经独立审查的支付宝签名身份清单，因此不能把它当作消费者级可信 Binding。仓库另有 Host 固定身份的支付宝 ADB Lab Adapter 与对抗测试，但没有宣称真实支付宝设备验收已通过。独立审查清单与多设备证据矩阵仍未完成。
 
 状态词必须按字面表达现实：
 
@@ -68,7 +79,7 @@
 | 当前支付宝 Lab Handoff | `paymentAttemptedByJidan=false`、`paid=false`、`committed=false`、`verified=false` |
 
 产品流程、不可自动化边界与协议修正规则见[《支付宝微动作、协议边界与 JCL 修正规则》](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md)。
-受控实现见 [`android_handoff.py`](prototype/jidan/android_handoff.py)、[`alipay_handoff.py`](prototype/jidan/alipay_handoff.py) 与[显式确认的 Lab Harness](prototype/alipay_handoff_live.py)；运行方法和本地信任要求见[原型说明](prototype/README.md#alipay-fixed-front-door-handoff-controlled-lab-only)。
+受控实现见 [`android_handoff.py`](prototype/jidan/android_handoff.py)、[`alipay_handoff.py`](prototype/jidan/alipay_handoff.py) 与[直接导航 Lab Harness](prototype/alipay_handoff_live.py)；运行方法和本地信任要求见[原型说明](prototype/README.md#alipay-fixed-front-door-handoff-controlled-lab-only)。
 
 ## 🔌 一份契约，多端实现
 
@@ -160,11 +171,11 @@ flowchart LR
 | Android 17 AppFunctions | ✅ | 受控 Provider 与真机 Harness |
 | 语义表面发现 | ✅ | AppFunctions → RemoteInput → Shortcut → 公开分享 |
 | 受控微信原生交接 | 🧪 | ADB/真机 Harness 验证准确 Picker；不选人、不发送 |
-| 支付宝固定 front-door Handoff | 🧪 Lab | 空输入 ADB Adapter + 对抗测试；真机验收待完成；没有自动付款 |
+| [支付宝 front-door 直接导航](profiles/app.open.alipay_frontdoor.tool.json) | 🧪 Lab | 空输入 `NAVIGATION / DIRECT` Profile + 对抗测试；真机验收待完成；没有自动付款 |
 | 跨端 `message.compose` Profile | 🧪 | Android / iOS / Web 计划；Android 已验证 Binding |
 | Conformance Lab：Nine Lights | 🧪 Lab | Python Runtime/Receipt + 独立 JS Host；不是用户产品 |
 | Pinyin Frontend 0.1 | ⏸️ | 冻结兼容实验；不新增语法或别名 |
-| 普通用户 Android 产品 | 🗺️ | 尚未完成；受控 ADB 证据不等于消费者上手流程 |
+| [Jidan Shell 0.1 Android 体验包](reference-app/shell/README.md) | 🧪 | APK 已构建并在 Android 17 模拟器验收；不是商店签名产品、默认桌面或 ROM |
 | 生产级移动 Agent OS | 🗺️ | 尚未宣称完成 |
 
 ## 🛡️ 把安全写进结构
@@ -208,16 +219,26 @@ cd reference-app
 
 Windows 请用 `gradlew.bat`。PowerShell 5.1 的 Unicode 注意事项见[原型说明](prototype/README.md#windows-unicode-arguments)。
 
+构建并安装 Jidan Shell 体验包：
+
+```bash
+cd reference-app
+./gradlew :shell:testDebugUnitTest :shell:assembleDebug :shell:lintDebug
+adb install -r -t shell/build/outputs/apk/debug/shell-debug.apk
+```
+
+打开 **Jidan Shell** 后，点“打开支付宝”或“打开系统设置”会直接导航，不会再弹同义确认卡。语音转文字由手机的语音服务提供。安装说明与诚实边界见 [Shell 说明](reference-app/shell/README.md)。
+
 ## 🗂️ 仓库地图
 
 ```text
 profiles/       与 MCP 兼容的 JCL 能力及一致性向量
 prototype/      能力内核、Adapter、策略、授权、回执与演示
-reference-app/  受控 Android 17 AppFunctions Provider
+reference-app/  Android 17 AppFunctions Provider + Jidan Shell 体验 APK
 docs/           架构、调研、路线图与国际化说明
 ```
 
-APK、模拟器镜像、原始设备日志、截图、回执和 SQLite 账本不会提交到 Git。
+APK、模拟器镜像、原始设备日志、运行回执和 SQLite 账本不会提交到 Git；文档只保留人工挑选的界面截图。
 
 ## 🧪 Conformance Lab（一致性实验室）
 

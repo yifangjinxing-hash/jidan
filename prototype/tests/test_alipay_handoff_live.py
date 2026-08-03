@@ -117,9 +117,9 @@ class AlipayHandoffLiveTests(unittest.TestCase):
             "--initialize-grant-ledger",
         ]
 
-    def test_default_run_stops_before_any_adb_or_apksigner_command(self) -> None:
+    def test_dry_run_stops_before_any_adb_or_apksigner_command(self) -> None:
         with TemporaryDirectory() as directory_name:
-            arguments = self._arguments(Path(directory_name))
+            arguments = self._arguments(Path(directory_name)) + ["--dry-run"]
             output = StringIO()
             runner = FakeRunner()
 
@@ -130,8 +130,8 @@ class AlipayHandoffLiveTests(unittest.TestCase):
             self.assertEqual(0, exit_code)
             self.assertTrue(payload["ok"])
             self.assertFalse(payload["executed"])
-            self.assertEqual("awaiting_confirmation", payload["preflight"])
-            self.assertEqual("external", payload["effect"])
+            self.assertEqual("ready", payload["preflight"])
+            self.assertEqual("navigation", payload["effect"])
             self.assertEqual(
                 {
                     "amountSetByJidan": False,
@@ -145,10 +145,9 @@ class AlipayHandoffLiveTests(unittest.TestCase):
             )
             self.assertEqual([], runner.calls)
 
-    def test_approved_run_reports_only_verified_handoff_summary(self) -> None:
+    def test_explicit_command_dispatches_without_an_approval_flag(self) -> None:
         with TemporaryDirectory() as directory_name:
             arguments = self._arguments(Path(directory_name))
-            arguments.append("--approve-open-ui")
             runner = FakeRunner(*success_responses())
             output = StringIO()
 
@@ -269,6 +268,7 @@ class AlipayHandoffLiveTests(unittest.TestCase):
                 "--url",
                 "--scheme",
                 "--apksigner-path",
+                "--approve-open-ui",
             ):
                 with self.subTest(forbidden=forbidden):
                     with redirect_stderr(StringIO()):

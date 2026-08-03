@@ -218,8 +218,8 @@ def _trusted_record(
     capability = replace(
         record.capability,
         effect=effect,
-        requires_confirmation=effect >= Effect.WRITE,
-        reversible=effect < Effect.WRITE,
+        requires_confirmation=effect.at_least(Effect.WRITE),
+        reversible=not effect.at_least(Effect.WRITE),
         scopes=frozenset((*record.capability.scopes, signer_scope)),
     )
     return replace(record, capability=capability)

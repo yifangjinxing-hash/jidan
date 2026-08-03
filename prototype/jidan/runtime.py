@@ -94,7 +94,8 @@ class JidanRuntime:
                 output = {"error": f"{type(exc).__name__}: {exc}"}
                 status = (
                     "outcome_unknown"
-                    if invocation_started and capability.effect >= Effect.WRITE
+                    if invocation_started
+                    and capability.effect.at_least(Effect.NAVIGATION)
                     else "failed"
                 )
             receipt = self.receipts.append(
