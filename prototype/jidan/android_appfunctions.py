@@ -631,9 +631,10 @@ def _normalize_discovery(document: Any) -> tuple[AppFunctionCapabilityRecord, ..
             app=_app_id(package_name),
             description=description,
             # Android metadata does not carry a Jidan-verifiable effect or
-            # compensation contract. Unknown platform functions are therefore
-            # gated as external, non-reversible actions.
-            effect=Effect.EXTERNAL,
+            # compensation contract. Unknown platform functions must therefore
+            # fail closed at the highest effect ceiling until a reviewed adapter
+            # narrows the contract.
+            effect=Effect.IRREVERSIBLE,
             scopes=frozenset(
                 {
                     _EXECUTE_SCOPE,

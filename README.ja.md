@@ -5,15 +5,13 @@
 <h1 align="center">Jidan</h1>
 
 <p align="center">
-  <strong>アプリやデバイスを横断する、Capability-first のオープンな AI アクション・ランタイム。</strong><br />
-  1つのインテント契約、交換可能なプラットフォーム Binding、現実世界へ確定する最後の操作は人が行います。
+  <strong>実際のマイクロアクションを優先し、1つの手間を小さく、観測可能で安全にします。</strong><br />
+  ローカルで準備し、事実どおりに引き渡し、不可逆な確定は人に残します。
 </p>
 
 <p align="center">
-  <a href="#-クイックスタート"><img src="https://img.shields.io/badge/クイックスタート-195A41?style=for-the-badge" alt="クイックスタート" /></a>
+  <a href="#-開発者向けクイックスタート"><img src="https://img.shields.io/badge/開発者向けスタート-195A41?style=for-the-badge" alt="開発者向けクイックスタート" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
-  <a href="docs/07-universal-game-spike-zh.md"><img src="https://img.shields.io/badge/Nine_Lights-Conformance_Spike-6D5BD0?style=for-the-badge" alt="Nine Lights conformance spike" /></a>
-  <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/UI_Locale-23-D9A441?style=for-the-badge" alt="23個のシード UI ロケール" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contributions-Welcome-3978C6?style=for-the-badge" alt="コントリビューション歓迎" /></a>
 </p>
 
@@ -26,7 +24,7 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan は実験段階のプロトタイプです。完成した Android ディストリビューション、権限昇格ツール、または重要な処理を任せられる本番用アシスタントではありません。管理下のアプリ、テスト端末、破棄可能なデータだけを使用してください。
+> Jidan は実験段階のプロトタイプです。完成した Android ディストリビューション、権限昇格ツール、または重要な処理を任せられる本番用アシスタントではありません。一般利用者向けモバイル製品はまだ完成していません。管理下のアプリ、テスト端末、破棄可能なデータだけを使用してください。
 
 ## ✨ 位置づけ
 
@@ -41,6 +39,10 @@
 長期的な目標は「もう1つのスーパーアプリ」ではありません。Android、Apple、Web、HarmonyOS、Windows、そして将来の Host が、同じ安定したインテント意味論を実装できる薄く開かれた互換レイヤーです。
 
 > **共有するのは意味論であり、実装ではありません。** 自然言語と UI 入力は JCL の機械契約の外側にあり、Kotlin、Swift、JavaScript、C/C++ は Host または Adapter の実装選択です。Web Binding は引き続きブラウザー Sandbox の制約を受けます。Pinyin 0.1 は凍結済みの実験で、プロジェクトの基盤ではありません。[歴史から得た設計上の教訓](docs/06-history-lessons-and-route-guardrails-zh.md)（中国語）も参照してください。
+
+## 🧭 実際の小さな行動を優先
+
+Jidan は、日常の小さな面倒を先に検証し、そこからプロトコルを逆算します。最初の金融実験は、管理下の Android/ADB Lab で Host が固定した Alipay バージョン、署名、前面コンポーネントを確認し、その信頼済み front door を開くだけです。宛先、アカウント、金額を受け取らず、非公開 Scheme を使わず、支払い完了も主張しません。これは Adapter の実証であり、一般向け製品や「AI 自動送金」ではありません。[Alipay micro-action とプロトコル上の教訓](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md)（中国語）を参照してください。
 
 ## 🔌 `message.compose`：1つの契約、複数の Binding
 
@@ -85,29 +87,10 @@ plan = TaskPlan(
 
 `handoff_planned` は呼び出しプランが準備できたことだけを表し、UI が開いたとは主張しません。実際に Android Picker が前面に表示されたことを検証した場合に限り `handoff_opened` を返します。それでも Jidan は宛先を選ばず、送信ボタンも押さないため、`sent` は `false` のままです。
 
-## 🎮 Nine Lights：小さな相互運用性チェック
+## 🧪 Conformance Lab：Nine Lights
 
-<p align="center">
-  <img src="docs/assets/ninelights-icon.png" alt="Nine Lights 3 × 3 パズルのアイコン" width="180" />
-</p>
-
-[`game.ninelights.start`](profiles/game.ninelights.start.tool.json) と
-[`game.ninelights.press`](profiles/game.ninelights.press.tool.json) は、決定論的な 3 × 3 ライトパズルを記述します。Python CLI の各操作は TaskPlan、最小 READ Grant、`JidanRuntime`、ハッシュチェーン Receipt を通ります。独立した JavaScript Web Host は同じ Profile を実装し、同じ[適合性ベクトル](profiles/conformance/game.ninelights.vectors.json)を再生します。
-
-リポジトリを clone した後、依存関係のない [Nine Lights Web UI](prototype/web/ninelights.html) をブラウザーで直接開けます。ビルドは不要です。
-
-Windows では中国語デスクトップ UI を起動するか、専用アイコン付きの単一 EXE を作成できます。
-
-```powershell
-cd prototype
-python -m pip install PyInstaller==6.21.0
-python ninelights_gui.py
-powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
-```
-
-出力先は `prototype/build/pyinstaller/dist/JidanNineLights.exe` です。ローカル開発ビルドは未署名です。Windows SmartScreen を回避せず、信頼できるチェックアウトから自分でビルドした EXE だけを実行し、SHA-256 をビルドスクリプトの出力と照合してください。ローカルポリシーがスクリプトを拒否する場合は、内容を確認して組織で承認された実行方法を使ってください。
-
-これは観測可能な意味論の共有を示すだけで、Runtime の共有、汎用ゲーム言語、Android/iOS 対応を示すものではありません。[範囲と証拠の説明](docs/07-universal-game-spike-zh.md)（中国語）を参照してください。
+Nine Lights は共有意味論を検査するための fixture としてのみ残します。Jidan のユーザー機能でも、クロスプラットフォーム App 自動化の証明でもありません。
+Python Host と独立した JavaScript Host は同じ[適合性ベクトル](profiles/conformance/game.ninelights.vectors.json)を再生します。実験コードとビルド方法は[プロトタイプガイド](prototype/README.md#nine-lights-conformance-spike)に残し、範囲は[証拠ノート](docs/07-universal-game-spike-zh.md)（中国語）で限定します。
 
 > [!NOTE]
 > Pinyin Frontend 0.1 実験は 2026-08-02 に凍結されました。コード、Profile、デモ、テストは互換性と再現のために残しますが、アクティブなルートやクイックスタートではありません。新しい構文やエイリアスは受け付けません。
@@ -128,7 +111,7 @@ Web → 編集可能な Web 確認画面
   └→ 人が最後の操作を行う（最終送信は現在の Jidan 検証範囲外）
 ```
 
-現在のプロトタイプには、外部依存のない能力 Registry と Schema 検証、タスクグラフ、権限を絞った Grant、確認ゲート、SQLite によるリプレイ拒否、ハッシュチェーン化された Receipt、Android 17 AppFunctions の管理下テスト、セマンティック・サーフェス探索、さらに宛先選択も送信もしない検証済み WeChat handoff が含まれます。Android、iOS、Web 向けの `message.compose` データプランはありますが、本番品質のモバイル Agent OS が完成したという意味ではありません。
+現在のプロトタイプには、外部依存のない能力 Registry と Schema 検証、タスクグラフ、権限を絞った Grant、確認ゲート、SQLite によるリプレイ拒否、ハッシュチェーン化された Receipt、Android 17 AppFunctions の管理下テスト、セマンティック・サーフェス探索、さらに宛先選択も送信もしない管理下の WeChat handoff が含まれます。Alipay は空入力の ADB Lab に限られ、実機受け入れ試験と一般利用者向け Host は未完成です。Android、iOS、Web 向けの `message.compose` データプランはありますが、本番品質のモバイル Agent OS が完成したという意味ではありません。
 
 ## 🛡️ セキュリティ境界
 
@@ -143,7 +126,7 @@ Web → 編集可能な Web 確認画面
 
 実機を接続する前に [SECURITY.md](SECURITY.md) をお読みください。
 
-## 🚀 クイックスタート
+## 🚀 開発者向けクイックスタート
 
 Python 3.11+ で、外部依存のないテストスイートとクロスプラットフォーム・デモを実行します。
 
@@ -151,13 +134,10 @@ Python 3.11+ で、外部依存のないテストスイートとクロスプラ�
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
-python ninelights_gui.py --self-test
-python ninelights_demo.py --level cross --moves 5
-node tools/check_ninelights_web.js
 python appfunctions_smoke.py
 ```
 
-メッセージデモは既定で `awaiting_confirmation` で停止します。`--simulate-approval` は明示的なシミュレーションで、実際のユーザー確認を示しません。Nine Lights はローカルな READ/COMPUTE デモなので確認は不要ですが、Python 経路は完全な Runtime と Receipt チェーンを使用します。
+メッセージデモは既定で `awaiting_confirmation` で停止します。`--simulate-approval` は明示的なシミュレーションで、実際のユーザー確認を示しません。これは開発者向けの経路で、一般利用者向けの導入手順ではありません。Nine Lights は Conformance Lab の索引に残りますが、この経路には含めません。
 
 Android の全言語リソースを検証します。
 
@@ -184,9 +164,9 @@ Jidan は人間の言語を機械プロトコルから分離します。任意�
 
 ## 🤝 コントリビューション
 
-新しい `message.compose` プラットフォーム Binding、偽の成功を検出する適合性テスト、23個の Locale の母語レビュー、Python Runtime をインポートせず共有ベクトルに合格する独立 Nine Lights Host、既存のセマンティック ID だけを出力する制約付き言語 Adapter、管理下のアプリや端末で再現できるテストを歓迎します。
+新しい `message.compose` プラットフォーム Binding、偽の成功を検出する適合性テスト、23個の Locale の母語レビュー、既存のセマンティック ID だけを出力する制約付き言語 Adapter、管理下のアプリや端末で再現できるテストを歓迎します。
 
-[CONTRIBUTING.md](CONTRIBUTING.md)、[90日ロードマップ](docs/04-90-day-execution-roadmap-zh.md)、[直近7日間のプロトコルレビュー](docs/08-seven-day-protocol-review-zh.md)（簡体字中国語）から始めてください。
+[CONTRIBUTING.md](CONTRIBUTING.md)、[マイクロアクションと Alipay の境界](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md)、[90日ロードマップ](docs/04-90-day-execution-roadmap-zh.md)、[直近7日間のプロトコルレビュー](docs/08-seven-day-protocol-review-zh.md)（簡体字中国語）から始めてください。
 
 ## ライセンス
 

@@ -5,15 +5,13 @@
 <h1 align="center">Jidan</h1>
 
 <p align="center">
-  <strong>Un entorno de ejecución abierto y centrado en capacidades para acciones de IA entre aplicaciones y dispositivos.</strong><br />
-  Un contrato de intención. Adaptadores de plataforma reemplazables. Control humano en el punto de confirmación final.
+  <strong>Primero las microacciones reales: un paso menos, observable y seguro.</strong><br />
+  Preparación local, traspaso honesto y confirmación irreversible en manos de la persona.
 </p>
 
 <p align="center">
-  <a href="#-inicio-rápido"><img src="https://img.shields.io/badge/Inicio_rápido-195A41?style=for-the-badge" alt="Inicio rápido" /></a>
+  <a href="#-inicio-rápido-para-desarrolladores"><img src="https://img.shields.io/badge/Inicio_para_desarrolladores-195A41?style=for-the-badge" alt="Inicio rápido para desarrolladores" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/Perfil_JCL-0.1-2F8F68?style=for-the-badge" alt="Perfil JCL 0.1" /></a>
-  <a href="docs/07-universal-game-spike-zh.md"><img src="https://img.shields.io/badge/Nine_Lights-Prueba_de_conformidad-7A5AF8?style=for-the-badge" alt="Prueba de conformidad Nine Lights" /></a>
-  <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/Locales_UI-23-D9A441?style=for-the-badge" alt="23 locales semilla de interfaz" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contribuciones-Bienvenidas-3978C6?style=for-the-badge" alt="Contribuciones bienvenidas" /></a>
 </p>
 
@@ -26,7 +24,7 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan es un prototipo experimental: no es una distribución alternativa de Android, una herramienta para elevar privilegios ni un asistente listo para producción. Utilízalo con aplicaciones controladas, dispositivos de prueba y datos desechables.
+> Jidan es un prototipo experimental: no es una distribución alternativa de Android, una herramienta para elevar privilegios ni un asistente listo para producción. El producto móvil para usuarios comunes todavía no existe. Utilízalo con aplicaciones controladas, dispositivos de prueba y datos desechables.
 
 ## ✨ Por qué Jidan
 
@@ -41,6 +39,10 @@ objetivo humano → acción semántica → contrato de capacidad → control de 
 El objetivo a largo plazo no es crear «otra superaplicación», sino una capa de compatibilidad fina y abierta en la que Android, Apple, Web, HarmonyOS, Windows y futuros hosts puedan implementar la misma semántica estable de intención.
 
 > **Se comparte la semántica, no la implementación.** El lenguaje natural y la interfaz quedan fuera del contrato de máquina JCL; Kotlin, Swift, JavaScript y C/C++ son decisiones internas del host o adaptador. Un binding web sigue limitado por el sandbox del navegador. El experimento Pinyin 0.1 está congelado y no es la base del proyecto. Consulta las [lecciones históricas y límites de la ruta](docs/06-history-lessons-and-route-guardrails-zh.md) (en chino).
+
+## 🧭 Primero, pequeñas acciones reales
+
+Jidan valida primero molestias cotidianas y deriva el protocolo desde esa evidencia. El primer experimento financiero solo verifica, en un laboratorio Android/ADB controlado, la versión, firma y componente frontal de Alipay fijados por el Host, y abre esa puerta de entrada confiada. No recibe destinatario, cuenta ni importe, no usa esquemas privados y nunca afirma que se pagó. Es evidencia de un adaptador, no un producto para usuarios ni una «transferencia automática por IA». Consulta [microacciones de Alipay y lecciones para el protocolo](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md) (en chino).
 
 ## 🔌 Un contrato, múltiples adaptadores
 
@@ -86,41 +88,10 @@ Cada resultado expresa con precisión lo que ocurrió:
 
 `handoff_planned` significa que existe un plan de traspaso; nunca se presenta como una interfaz ya abierta. Un selector de Android abierto y comprobado informa `handoff_opened`, pero la entrega sigue con `sent: false`: Jidan no elige al destinatario ni pulsa **Enviar**.
 
-## 🎮 Nine Lights: una comprobación pequeña de interoperabilidad
+## 🧪 Laboratorio de conformidad: Nine Lights
 
-<p align="center">
-  <img src="docs/assets/ninelights-icon.png" alt="Icono del rompecabezas Nine Lights 3 por 3" width="180" />
-</p>
-
-[`game.ninelights.start`](profiles/game.ninelights.start.tool.json) y
-[`game.ninelights.press`](profiles/game.ninelights.press.tool.json) describen un
-rompecabezas determinista de luces 3 × 3. La CLI de Python envía cada acción por
-TaskPlan, un Grant READ mínimo, `JidanRuntime` y recibos encadenados por hash. Un
-Host web JavaScript independiente implementa los mismos perfiles y reproduce
-los mismos [vectores de conformidad](profiles/conformance/game.ninelights.vectors.json).
-Después de clonar el repositorio, abre directamente en el navegador la
-[interfaz web de Nine Lights](prototype/web/ninelights.html); no requiere
-compilación.
-
-En Windows también puedes abrir la interfaz de escritorio en chino o crear un
-EXE de un solo archivo con su propio icono:
-
-```powershell
-cd prototype
-python -m pip install PyInstaller==6.21.0
-python ninelights_gui.py
-powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
-```
-
-El resultado queda en `prototype/build/pyinstaller/dist/JidanNineLights.exe`.
-La compilación local no está firmada. No omitas Windows SmartScreen: ejecuta solo
-un EXE creado por ti desde una copia de confianza y compara su SHA-256 con el
-valor que imprime el script. Si la política local bloquea scripts, revísalo y
-usa el proceso de ejecución aprobado por tu organización.
-
-Esto demuestra semántica observable compartida, no un Runtime compartido, un
-lenguaje general para juegos ni soporte Android/iOS. Consulta la
-[nota de alcance y evidencia](docs/07-universal-game-spike-zh.md) (en chino).
+Nine Lights se conserva únicamente como fixture de semántica compartida. No es una función para usuarios ni demuestra automatización de apps multiplataforma.
+El Host Python y un Host JavaScript independiente reproducen los mismos [vectores de conformidad](profiles/conformance/game.ninelights.vectors.json). El código y la compilación permanecen en la [guía del prototipo](prototype/README.md#nine-lights-conformance-spike), con su alcance limitado por la [nota de evidencia](docs/07-universal-game-spike-zh.md) (en chino).
 
 > [!NOTE]
 > El experimento Pinyin Frontend 0.1 quedó congelado el 2026-08-02. Su código,
@@ -168,10 +139,12 @@ flowchart LR
 | Recibos de ejecución encadenados por hash | ✅ | Registro de recibos del runtime |
 | Android 17 AppFunctions | ✅ | Proveedor controlado de referencia y harness en vivo |
 | Descubrimiento de superficies semánticas | ✅ | AppFunctions → RemoteInput → atajo → compartir público |
-| Traspaso nativo verificado a WeChat | ✅ | Actividad exacta del selector; no elige destinatario ni pulsa Enviar |
+| Traspaso nativo controlado a WeChat | 🧪 | El laboratorio ADB comprueba el selector exacto; no elige destinatario ni pulsa Enviar |
+| Traspaso fijado a la puerta de Alipay | 🧪 Lab | Adaptador ADB sin datos de pago; faltan pruebas de aceptación en dispositivos reales |
 | Perfil multiplataforma `message.compose` | 🧪 | Planes Android, iOS y Web; binding de Android verificado |
-| Prueba semántica Nine Lights | 🧪 | Runtime/recibos Python + Host JS independiente; vectores compartidos |
+| Conformance Lab: Nine Lights | 🧪 Lab | Runtime/recibos Python + Host JS independiente; no es un producto para usuarios |
 | Pinyin Frontend 0.1 | ⏸️ | Experimento de compatibilidad congelado; sin sintaxis ni alias nuevos |
+| Producto Android para usuarios comunes | 🗺️ | Aún no construido; un laboratorio ADB no es onboarding de consumo |
 | Sistema operativo móvil de agentes listo para producción | 🗺️ | Todavía no se afirma |
 
 El perfil multiplataforma `message.compose` sigue siendo experimental: Android, iOS y Web tienen planes de adaptador, mientras que la evidencia de apertura verificada disponible actualmente corresponde al binding de Android. Jidan todavía no afirma ser un sistema operativo de agentes móvil listo para producción.
@@ -188,7 +161,7 @@ El perfil multiplataforma `message.compose` sigue siendo experimental: Android, 
 
 Lee [SECURITY.md](SECURITY.md) antes de conectar un dispositivo real.
 
-## 🚀 Inicio rápido
+## 🚀 Inicio rápido para desarrolladores
 
 Ejecuta con Python 3.11 o posterior el conjunto completo de pruebas del prototipo, que no requiere dependencias externas:
 
@@ -196,13 +169,10 @@ Ejecuta con Python 3.11 o posterior el conjunto completo de pruebas del prototip
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
-python ninelights_gui.py --self-test
-python ninelights_demo.py --level cross --moves 5
-node tools/check_ninelights_web.js
 python appfunctions_smoke.py
 ```
 
-La demostración de mensajes se detiene por defecto en `awaiting_confirmation`; `--simulate-approval` queda marcado como simulación y no demuestra una confirmación real. Nine Lights es una demostración local READ/COMPUTE que no requiere confirmación, aunque su ruta Python sí utiliza el Runtime y la cadena de recibos completos.
+La demostración de mensajes se detiene por defecto en `awaiting_confirmation`; `--simulate-approval` queda marcado como simulación y no demuestra una confirmación real. Este bloque es una ruta para desarrolladores, no onboarding para usuarios comunes. Nine Lights permanece indexado en el Conformance Lab y no forma parte de esta ruta.
 
 Desde la raíz del repositorio, valida los paquetes de idioma de Android:
 
@@ -252,11 +222,10 @@ Son especialmente útiles:
 - un nuevo adaptador de plataforma para `message.compose`;
 - una prueba de conformidad que detecte falsos estados de éxito;
 - la revisión por una persona hablante nativa de uno de los 23 paquetes semilla;
-- un Host Nine Lights independiente que supere los vectores compartidos sin importar el Runtime Python;
 - un adaptador lingüístico restringido que emita identificadores semánticos existentes;
 - pruebas reproducibles con una aplicación o un dispositivo controlados.
 
-Empieza por [CONTRIBUTING.md](CONTRIBUTING.md), la [hoja de ruta de 90 días](docs/04-90-day-execution-roadmap-zh.md) y la [revisión de protocolos de los últimos siete días](docs/08-seven-day-protocol-review-zh.md) (en chino simplificado).
+Empieza por [CONTRIBUTING.md](CONTRIBUTING.md), el [límite de microacciones y Alipay](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md), la [hoja de ruta de 90 días](docs/04-90-day-execution-roadmap-zh.md) y la [revisión de protocolos de los últimos siete días](docs/08-seven-day-protocol-review-zh.md) (en chino simplificado).
 
 > [!NOTE]
 > Este README es una traducción inicial asistida por máquina y no afirma haber sido revisada por una persona hablante nativa. Si una traducción difiere, el [README en inglés](README.md) y los perfiles de capacidad legibles por máquina son las referencias técnicas canónicas.

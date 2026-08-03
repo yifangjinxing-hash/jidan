@@ -22,6 +22,7 @@ evidence/
 *.aab
 *.zip
 *.jsonl
+*.jsonl.lock
 *.sqlite
 *.sqlite3
 *.sqlite-wal

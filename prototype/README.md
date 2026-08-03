@@ -211,7 +211,7 @@ python appfunctions_live.py --adb-path C:\path\to\adb.exe --serial SERIAL --pack
 
 `--initialize-grant-ledger` is a one-time explicit provisioning action. After reviewing the preflight, rerun with the same `--grant-ledger`, omit `--initialize-grant-ledger`, and add `--approve`. A missing established ledger fails closed and is never silently recreated. Receipt and ledger paths must be distinct from the SQLite main file and its `-wal`, `-shm`, and `-journal` sidecars.
 
-The harness is fail-fast and never automatically retries an ambiguous external action.
+The harness is fail-fast and never automatically retries an ambiguous discovered action.
 
 Programmatic JGraph binding is similarly small:
 
@@ -224,7 +224,7 @@ registry = CapabilityRegistry()
 records = adapter.register_discovered(registry, package_name="com.example.notes")
 ```
 
-Dynamic registration requires an explicit package filter, and every supplied discovery record is checked against that package. Discovered AppFunctions default to `external`, non-reversible, confirmation-required capabilities. Android metadata does not prove effect, reversibility, or compensation, so a trusted policy must explicitly refine those defaults.
+Dynamic registration requires an explicit package filter, and every supplied discovery record is checked against that package. Discovered AppFunctions default to `irreversible`, non-reversible, confirmation-required capabilities. Android metadata does not prove effect, reversibility, compensation, or that a financial-looking function is harmless, so an unknown function receives the highest ceiling until a separately reviewed fixed adapter narrows the contract.
 
 This is a developer/extreme-user shell route, not a claim that an ordinary APK owns cross-app privileges. It does not integrate Shizuku or any community fork, does not use a pending-intent execution path, and does not provide a GUI/Accessibility fallback. The command contract follows the official [AppFunctions ADB testing reference](https://developer.android.com/agents/skills/device-ai/appfunctions/references/adb-interaction-testing).
 
@@ -275,6 +275,59 @@ handoff. A successful approved run leaves WeChat at its exact recipient picker
 with `jidanIssuedSend=false`; the user still chooses the contact and confirms
 the final send.
 
+## Alipay fixed front-door handoff (controlled lab only)
+
+`jidan/android_handoff.py` verifies one Host-pinned Android installation and
+launcher surface. `jidan/alipay_handoff.py` binds that evidence to the empty-input
+`android.alipay.open_user_handoff` capability. Its effect is `external`, it always
+requires confirmation, and its schema cannot carry an account, recipient, amount,
+currency, QR payload, URL, order token, password, or payment instruction.
+
+Before launch, the adapter checks the exact `versionCode`, current Android user
+and device SDK, pulls the installed base APK, and runs the reviewed `apksigner`
+JAR through a Java executable without a batch shell. SDK-ranged signer output
+(including APK Signature Scheme v3.1 rotation) must resolve to exactly one signer
+whose certificate SHA-256 matches the Host pin. It then resolves a package-scoped
+launcher and starts an explicit allowlisted component. It reports
+`handoff_opened` only after the resumed Activity and focused Window agree on an
+allowlisted component for two consecutive samples, then rechecks the installed
+APK identity to close the launch-time replacement window. Raw ADB output is not
+returned.
+
+Run a zero-execution preflight first. Every value in the pin below must come
+from an independent trusted review; copying values from the installation being
+tested is not identity verification.
+
+```powershell
+python alipay_handoff_live.py `
+  --adb-path C:\path\to\adb.exe `
+  --java-path C:\path\to\java.exe `
+  --apksigner-jar C:\path\to\lib\apksigner.jar `
+  --serial SERIAL `
+  --version-code <REVIEWED_VERSION_CODE> `
+  --certificate-sha256 <REVIEWED_CERTIFICATE_SHA256> `
+  --launcher-component <REVIEWED_PACKAGE/ACTIVITY> `
+  --foreground-component <REVIEWED_PACKAGE/ACTIVITY> `
+  --receipt-log .\alipay-handoff-receipts.jsonl `
+  --grant-ledger .\alipay-handoff-grants.sqlite3 `
+  --initialize-grant-ledger
+```
+
+The default run stops at `awaiting_confirmation` without invoking ADB, Java, or
+`apksigner`. After reviewing the exact pin, rerun against the established ledger,
+omit `--initialize-grant-ledger`, and add `--approve-open-ui`. That approval means
+only “open this pinned front door.” Every successful output still fixes
+`amountSetByJidan=false`, `recipientSelectedByJidan=false`,
+`paymentAttemptedByJidan=false`, `paid=false`, `committed=false`, and
+`verified=false`. The person performs every recipient, amount, identity, and
+payment decision inside Alipay. Ambiguous post-dispatch failures become
+`outcome_unknown` and are never retried automatically.
+
+This is an ADB developer harness, not an ordinary-user Android product, an
+official Alipay integration, or automatic payment. It uses no private Alipay
+scheme, internal payment Activity, Accessibility, OCR, coordinate tap, or
+payment-result inference. See the [micro-action and protocol boundary](../docs/09-alipay-micro-actions-and-protocol-lessons-zh.md).
+
 ## Language-neutral memo input
 
 `parse_memo_command()` accepts `memo: <content>` in any Unicode writing system and maps it to the stable `memo.create` semantic action. A BCP 47 `locale_hint` can select a trusted natural-language adapter; the bundled Chinese rules remain the only free-form offline grammar in this prototype. Unknown locales fail closed unless the explicit `memo:` prefix is used.
@@ -300,4 +353,4 @@ Successful Runtime steps are written to the normal receipt chain. Negative prefl
 
 ## Prototype trust boundary
 
-Use only controlled reference apps and disposable, idempotent test data on a real device. Demo runtimes still default to `InMemoryGrantLedger`; real-device entry points explicitly require `SqliteGrantLedger`. The durable ledger provides cross-process, local-disk at-most-once authorization while the same database continuously exists. A crash after ledger COMMIT but before provider dispatch permanently consumes the grant and may produce zero task executions; this is fail-closed, not exactly-once recovery. SQLite `quick_check` does not detect legitimate row deletion or rollback to an older valid database. Receipt/event hashes likewise are not authenticated against an attacker who can rewrite the entire chain, and `ReceiptLog` is not a cross-process atomic appender. The system version needs protected file ownership plus an Android Keystore/StrongBox HMAC or signature anchor and a durable task state machine. Discovered package metadata is untrusted and remains `external`, non-reversible, and confirmation-required; the true-device harness adds a package-signing-certificate allowlist before enabling writes.
+Use only controlled reference apps and disposable, idempotent test data on a real device. Demo runtimes still default to `InMemoryGrantLedger`; real-device entry points explicitly require `SqliteGrantLedger`. The durable ledger provides cross-process, local-disk at-most-once authorization while the same database continuously exists. A crash after ledger COMMIT but before provider dispatch permanently consumes the grant and may produce zero task executions; this is fail-closed, not exactly-once recovery. SQLite `quick_check` does not detect legitimate row deletion or rollback to an older valid database. `ReceiptLog` now serializes cooperating local processes with an OS file lock, rereads and verifies the disk tail under that lock, and flushes each append before returning; its multiprocess regression proves one unbranched chain. Receipt/event hashes are still not authenticated against an attacker who can rewrite the entire chain, and the lock is not a distributed-filesystem or hostile-local-user guarantee. The system version needs protected file ownership plus an Android Keystore/StrongBox HMAC or signature anchor and a durable task state machine. Discovered package metadata is untrusted and remains `irreversible`, non-reversible, and confirmation-required until a reviewed fixed adapter narrows the contract; the true-device harness adds a package-signing-certificate allowlist before enabling writes.

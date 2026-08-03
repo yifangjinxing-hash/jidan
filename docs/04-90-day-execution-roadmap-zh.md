@@ -2,6 +2,26 @@
 
 > 决策日期：2026-08-01。目标不是做一段“能点手机”的演示，而是证明一种可迁移的系统原语：目标 → 受约束任务图 → 最小授权 → 确定性执行 → 可验证回执。
 
+## 2026-08-03：从真实微动作反推协议
+
+路线再收窄一次：近期不再为了凑 App、语言数量或演示效果扩张功能，而是先验证一个普通人是否真的少记一步、少切一次上下文、少犯一次错。每个候选动作按下面的顺序进入项目：
+
+```text
+真实麻烦 → 可编辑 Action Card → 单一确认点 → 最窄原生 Handoff
+         → 可观察证据 → 用户测试 → 再决定是否提升为公共 JCL Profile
+```
+
+支付宝首轮只进入 **Incubation / Adapter Lab**：在用户明确确认后，验证受信安装包并打开其 Android front-door；不接收账号、收款人、金额、二维码、支付 URL 或订单令牌，不使用私有 Scheme、Accessibility、坐标点击或 OCR，也不声明“已付款”。只有支付宝自己或其正式商户 SDK/服务端验签链能够证明的交易，才可能进入未来独立的 `IRREVERSIBLE` Capability。当前实验不能升格成通用支付 Profile。
+
+这次微动作带来四项即时修正：
+
+- 动态发现但未经 Host 审核的 AppFunction 一律按 `IRREVERSIBLE` 处理；不能因平台元数据缺少风险字段就默认成较低的 `EXTERNAL`。
+- 把 `handoff_requested / handoff_opened / authorization_pending / committed / verified / unknown` 分开；打开 App 永远不等于进入支付页，更不等于付款成功。
+- 一个语义动作只保留一个由 Host 拥有的确认点，避免 Host、Gateway 与 Adapter 重复弹出同义确认；支付宝收银台里的确认属于后续、由支付宝拥有的授权阶段。
+- Nine Lights 保留为 **Conformance Lab** 的确定性夹具，退出首页徽章、产品主叙事、用户 Quick Start 与近期功能投入；根 README 只保留一段清楚标注的开发者实验索引。
+
+支付宝边界、官方来源、近一周失败报告与 Kill Gate 详见[支付宝微动作与协议教训](09-alipay-micro-actions-and-protocol-lessons-zh.md)。
+
 ## 2026-08-02 历史镜鉴修正
 
 C/UNIX、JVM、Web 和容器真正反复证明的是“稳定接口让实现者吸收差异”，不是“所有平台最终共用同一种语言、ABI、Runtime 或 UI”。本路线因此把冻结对象从公共 JGraph/共享实现改为 **JCL 的外部可观察语义、Profile 版本与 conformance fixtures**；JGraph 继续是 Host 内部实现。自然语言只能产生无权限 Proposal；Pinyin Frontend 0.1 已于 2026-08-02 标记为 **`archived/experimental`**，只保留兼容、复现与安全修复，不属于本 90 天主线，不占用近期里程碑或 Gate。依据见[历史镜鉴与路线护栏](06-history-lessons-and-route-guardrails-zh.md)。

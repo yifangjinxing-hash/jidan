@@ -5,15 +5,13 @@
 <h1 align="center">Jidan</h1>
 
 <p align="center">
-  <strong>跨 App 與裝置、以能力為核心的開放式 AI 動作執行環境。</strong><br />
-  一份意圖契約，多種平台 Binding；現實動作的最後一步仍由人決定。
+  <strong>真實微動作優先：先把一件小事做少一步、做得可見、做得安全。</strong><br />
+  本機準備，如實交接；不可逆的最後一步仍由人決定。
 </p>
 
 <p align="center">
-  <a href="#-快速開始"><img src="https://img.shields.io/badge/快速開始-195A41?style=for-the-badge" alt="快速開始" /></a>
+  <a href="#-開發者快速開始"><img src="https://img.shields.io/badge/開發者快速開始-195A41?style=for-the-badge" alt="開發者快速開始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
-  <a href="docs/07-universal-game-spike-zh.md"><img src="https://img.shields.io/badge/Nine_Lights-一致性尖峰-8A5A2B?style=for-the-badge" alt="Nine Lights 一致性尖峰" /></a>
-  <a href="docs/i18n/README.md"><img src="https://img.shields.io/badge/UI_Locale-23-D9A441?style=for-the-badge" alt="23 個種子 UI Locale" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/歡迎-共同建設-3978C6?style=for-the-badge" alt="歡迎共同建設" /></a>
 </p>
 
@@ -26,7 +24,7 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan 目前仍是實驗原型，不是完整的 Android 發行版、提權工具，也不是可託付重要事務的正式產品。請只使用受控 App、測試裝置與可捨棄資料。
+> Jidan 目前仍是實驗原型，不是完整的 Android 發行版、提權工具，也不是可託付重要事務的正式產品。普通使用者行動產品尚未完成。請只使用受控 App、測試裝置與可捨棄資料。
 
 ## ✨ 定位
 
@@ -41,6 +39,10 @@
 長期目標不是再做一個「超級 App」，而是形成薄而開放的相容層，讓 Android、Apple、Web、HarmonyOS、Windows 與未來平台實作相同且穩定的意圖語意。
 
 > **統一語意，不統一實作。** 自然語言與 UI 輸入位於 JCL 機器契約之外；Kotlin、Swift、JavaScript、C/C++ 只是 Host 或 Adapter 的實作選擇；Web Binding 仍受瀏覽器沙箱限制。Pinyin 0.1 已凍結，不是專案底層。參見[歷史鏡鑑與路線護欄](docs/06-history-lessons-and-route-guardrails-zh.md)。
+
+## 🧭 真實微動作優先
+
+Jidan 現在先驗證人每天真的會遇到的小麻煩，再反推協議。首個金融實驗只在受控 Android/ADB Lab 中核對 Host 固定的支付寶版本、簽章與前景元件，然後打開該受信 front door。它不接收收款人、帳號或金額，不使用私有 Scheme，也永遠不宣稱已付款。這仍是 Adapter 證據，不是普通使用者產品，更不是「AI 自動轉帳」。詳見[支付寶微動作與協議教訓](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md)（簡體中文）。
 
 ## 🔌 `message.compose`：一份契約，多端實作
 
@@ -85,29 +87,10 @@ plan = TaskPlan(
 
 `handoff_planned` 只表示呼叫計畫已準備，絕不冒充「介面已開啟」。只有真正驗證 Android Picker 已出現在前景後，才能回報 `handoff_opened`；即使如此，`sent` 仍為 `false`，因為 Jidan 不選擇收件人，也不按下傳送。
 
-## 🎮 Nine Lights：小型互操作檢查
+## 🧪 Conformance Lab：Nine Lights
 
-<p align="center">
-  <img src="docs/assets/ninelights-icon.png" alt="九燈 3 × 3 翻燈遊戲圖示" width="180" />
-</p>
-
-[`game.ninelights.start`](profiles/game.ninelights.start.tool.json) 與
-[`game.ninelights.press`](profiles/game.ninelights.press.tool.json) 描述一款確定性的 3 × 3 翻燈遊戲。Python CLI 的每個動作都經過 TaskPlan、最小 READ Grant、`JidanRuntime` 與雜湊鏈 Receipt；獨立 JavaScript Web Host 則實作相同 Profile，並重放同一份[一致性向量](profiles/conformance/game.ninelights.vectors.json)。
-
-複製倉庫後，可直接用瀏覽器開啟無依賴的 [Nine Lights Web UI](prototype/web/ninelights.html)，不需要建置步驟。
-
-Windows 使用者也可以開啟中文桌面視窗，或建置帶獨立圖示的單檔 EXE：
-
-```powershell
-cd prototype
-python -m pip install PyInstaller==6.21.0
-python ninelights_gui.py
-powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
-```
-
-輸出位於 `prototype/build/pyinstaller/dist/JidanNineLights.exe`。本機開發版本未簽署；請勿繞過 Windows SmartScreen。只執行從可信任檢出自行建置的 EXE，並將檔案 SHA-256 與建置腳本輸出的值比對。若本機原則阻擋腳本，請先檢查腳本，再採用組織核准的執行方式。
-
-這只證明外部可觀察語意可共享，不代表共享 Runtime、通用遊戲語言或 Android/iOS 已支援。詳見[尖峰範圍與證據](docs/07-universal-game-spike-zh.md)。
+Nine Lights 只保留為共享語意的一致性夾具，不是 Jidan 的使用者功能，也不證明跨平台 App 自動化。
+Python 與獨立 JavaScript Host 會重放同一份[一致性向量](profiles/conformance/game.ninelights.vectors.json)；實驗程式和建置方法保留在[原型說明](prototype/README.md#nine-lights-conformance-spike)，範圍見[實驗證據說明](docs/07-universal-game-spike-zh.md)。
 
 > [!NOTE]
 > Pinyin Frontend 0.1 實驗已於 2026-08-02 凍結。程式碼、Profile、示範與測試暫時保留供相容與重現，但不再屬於活躍路線或快速開始；不接受新語法與新別名。
@@ -130,8 +113,10 @@ Web → 可編輯 Web 審閱介面
 
 | 新增層級 | 狀態 | 目前證據 |
 |---|---:|---|
-| Nine Lights 語意尖峰 | 🧪 | Python Runtime/Receipt + 獨立 JS Host；共享向量 |
+| 固定支付寶前門交接 | 🧪 Lab | 空輸入 ADB Adapter；實機驗收未完成，不自動付款 |
+| Conformance Lab：Nine Lights | 🧪 Lab | Python Runtime/Receipt + 獨立 JS Host；不是使用者產品 |
 | Pinyin Frontend 0.1 | ⏸️ | 凍結相容實驗；不新增語法或別名 |
+| 普通使用者 Android 產品 | 🗺️ | 尚未建成；ADB Lab 不等於消費者上手流程 |
 
 目前原型已包含：無第三方依賴的能力註冊與 Schema 驗證、任務圖與限權 Grant、確認閘門、SQLite 重放阻擋、雜湊鏈回執、Android 17 AppFunctions 受控驗證、語意表面探索，以及不選人、不傳送的微信原生交接。Android、iOS 與 Web 的 `message.compose` 資料計畫已提供；這不代表生產級行動 Agent OS 已完成。
 
@@ -148,7 +133,7 @@ Web → 可編輯 Web 審閱介面
 
 連接真實裝置前，請先閱讀 [SECURITY.md](SECURITY.md)。
 
-## 🚀 快速開始
+## 🚀 開發者快速開始
 
 使用 Python 3.11+ 執行完整的無依賴測試與跨端示範：
 
@@ -156,13 +141,10 @@ Web → 可編輯 Web 審閱介面
 cd prototype
 python -m unittest discover -s tests -p "test_*.py"
 python message_compose_demo.py
-python ninelights_gui.py --self-test
-python ninelights_demo.py --level cross --moves 5
-node tools/check_ninelights_web.js
 python appfunctions_smoke.py
 ```
 
-訊息示範預設停在 `awaiting_confirmation`；`--simulate-approval` 會明確標示為模擬批准，不能視為使用者真的確認。Nine Lights 是本機 READ/COMPUTE 示範，不需人工確認，但 Python 路徑仍經過完整 Runtime 與 Receipt 鏈。
+訊息示範預設停在 `awaiting_confirmation`；`--simulate-approval` 會明確標示為模擬批准，不能視為使用者真的確認。這是開發者路徑，不是普通使用者上手流程。Nine Lights 保留在 Conformance Lab 索引，但不屬於本路徑。
 
 檢查全部 Android 語言資源：
 
@@ -187,9 +169,9 @@ Jidan 將人類語言與機器協定分離。任意 Unicode 正文可穿過 JSON
 
 ## 🤝 共同建設
 
-歡迎貢獻新的 `message.compose` 平台 Binding、能攔截「假成功」的一致性測試、23 個 Locale 的母語校訂、不匯入 Python Runtime 但通過共享向量的獨立 Nine Lights Host、只產生既有語意 ID 的受限語言 Adapter，以及可在受控 App 或裝置上重現的測試。
+歡迎貢獻新的 `message.compose` 平台 Binding、能攔截「假成功」的一致性測試、23 個 Locale 的母語校訂、只產生既有語意 ID 的受限語言 Adapter，以及可在受控 App 或裝置上重現的測試。
 
-請先閱讀 [CONTRIBUTING.md](CONTRIBUTING.md)、[90 天路線圖](docs/04-90-day-execution-roadmap-zh.md)與[近七日協定複盤](docs/08-seven-day-protocol-review-zh.md)（簡體中文）。
+請先閱讀 [CONTRIBUTING.md](CONTRIBUTING.md)、[微動作與支付寶邊界](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md)、[90 天路線圖](docs/04-90-day-execution-roadmap-zh.md)與[近七日協定複盤](docs/08-seven-day-protocol-review-zh.md)（簡體中文）。
 
 ## 授權條款
 

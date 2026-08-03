@@ -155,7 +155,7 @@ class AndroidAppFunctionsTests(unittest.TestCase):
         self.assertEqual(PACKAGE, record.package_name)
         self.assertEqual(FUNCTION, record.function_id)
         self.assertEqual(PACKAGE, record.capability.app)
-        self.assertEqual(Effect.EXTERNAL, record.capability.effect)
+        self.assertEqual(Effect.IRREVERSIBLE, record.capability.effect)
         self.assertTrue(record.capability.requires_confirmation)
         self.assertFalse(record.capability.reversible)
         self.assertIn("android.appfunctions.execute", record.capability.scopes)

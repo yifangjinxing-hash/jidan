@@ -58,7 +58,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--approve",
         action="store_true",
-        help="explicitly approve this external test action after preflight",
+        help=(
+            "explicitly approve this dynamically discovered test action after "
+            "review; unknown AppFunctions use the irreversible ceiling"
+        ),
     )
     return parser
 
@@ -148,7 +151,7 @@ def main() -> int:
         preflight_plan,
         {target.capability.id},
         target.capability.scopes,
-        Effect.EXTERNAL,
+        Effect.IRREVERSIBLE,
         capability_digests=registry.definition_digests({target.capability.id}),
     )
     preflight = runtime.execute(preflight_plan, unapproved)
@@ -185,7 +188,7 @@ def main() -> int:
             plan,
             {target.capability.id},
             target.capability.scopes,
-            Effect.EXTERNAL,
+            Effect.IRREVERSIBLE,
             approved_steps={"call"},
             capability_digests=registry.definition_digests({target.capability.id}),
         )
@@ -199,7 +202,7 @@ def main() -> int:
                 "receipt_hashes": [receipt["hash"] for receipt in result.receipts],
             }
         )
-        # Never auto-retry an ambiguous external action.
+        # Never auto-retry an ambiguous discovered action.
         if result.status != "completed":
             break
 

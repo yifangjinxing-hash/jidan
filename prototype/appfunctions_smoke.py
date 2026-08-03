@@ -79,7 +79,7 @@ def run_smoke() -> dict[str, Any]:
         plan,
         [capability.id],
         capability.scopes,
-        Effect.EXTERNAL,
+        Effect.IRREVERSIBLE,
         capability_digests=registry.definition_digests({capability.id}),
     )
 
@@ -95,7 +95,7 @@ def run_smoke() -> dict[str, Any]:
         plan,
         [capability.id],
         capability.scopes,
-        Effect.EXTERNAL,
+        Effect.IRREVERSIBLE,
         approved_steps={"create_note"},
         capability_digests=registry.definition_digests({capability.id}),
     )
