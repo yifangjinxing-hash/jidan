@@ -44,7 +44,7 @@ final class SpeechRecognizer: ObservableObject {
     }
 
     private func requestMicrophonePermission(onStarted: @escaping () -> Void) {
-        AVAudioSession.sharedInstance().requestRecordPermission { [weak self] granted in
+        AVAudioApplication.requestRecordPermission { [weak self] granted in
             Task { @MainActor in
                 guard let self else { return }
                 guard granted else {
@@ -141,4 +141,3 @@ private enum SpeechFailure: Error {
     case unavailable
     case noAudioInput
 }
-

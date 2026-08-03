@@ -32,6 +32,7 @@
 
 <p align="center">
   <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.1.png" alt="Jidan Shell 0.1 cosmic home screen" width="360" /></a>
+  <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 running full-screen in an iPhone 16 Simulator" width="360" /></a>
 </p>
 
 <p align="center"><strong>Do not question the doorway; stop before money moves.</strong></p>

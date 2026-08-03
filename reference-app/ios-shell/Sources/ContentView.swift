@@ -19,6 +19,7 @@ private enum OrbMode: Equatable {
 }
 
 struct ContentView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var speech = SpeechRecognizer()
     @State private var input = ""
     @State private var statusTitle = "想做什么？"
@@ -54,12 +55,28 @@ struct ContentView: View {
             .padding(.bottom, 10)
         }
         .task {
-            guard !didRunDemo,
-                  ProcessInfo.processInfo.arguments.contains("--jidan-demo-settings") else { return }
+            guard !didRunDemo else { return }
+            let arguments = ProcessInfo.processInfo.arguments
+            let demoCommand: String?
+            if arguments.contains("--jidan-demo-settings") {
+                demoCommand = "打开鸡蛋设置"
+            } else if arguments.contains("--jidan-demo-alipay") {
+                demoCommand = "打开支付宝"
+            } else {
+                demoCommand = nil
+            }
+            guard let demoCommand else { return }
             didRunDemo = true
             try? await Task.sleep(nanoseconds: 1_200_000_000)
-            input = "打开系统设置"
+            input = demoCommand
             submit(input)
+        }
+        .onChange(of: scenePhase) { _, phase in
+            guard phase != .active, speech.isListening else { return }
+            speech.stop()
+            orbMode = .idle
+            statusTitle = "已经停止听写"
+            statusSubtitle = "鸡蛋进入后台后不会继续听。"
         }
     }
 

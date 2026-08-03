@@ -34,7 +34,7 @@ enum CommandDecision: Equatable {
 
 enum CommandPolicy {
     private static let riskyTokens = [
-        "给", "转账", "转帐", "付款", "付钱", "代付", "收款", "扫一扫", "扫码",
+        "转账", "转帐", "付款", "付钱", "代付", "收款", "扫一扫", "扫码",
         "二维码", "红包", "充值", "提现", "余额", "订单", "密码", "验证码",
         "人脸", "指纹", "链接"
     ]
@@ -87,11 +87,19 @@ enum CommandPolicy {
     private static func normalize(_ raw: String) -> String {
         let compatible = raw.precomposedStringWithCompatibilityMapping
         let noWhitespace = compatible.components(separatedBy: .whitespacesAndNewlines).joined()
-        return noWhitespace.trimmingCharacters(in: CharacterSet(charactersIn: "。！!？？?，,"))
+        var command = noWhitespace.trimmingCharacters(in: CharacterSet(charactersIn: "。！!？？?，,"))
+        let politePrefixes = ["请麻烦帮我", "麻烦帮我", "请帮我", "麻烦", "帮我", "给我", "替我", "请"]
+        for prefix in politePrefixes where command.hasPrefix(prefix) {
+            command.removeFirst(prefix.count)
+            break
+        }
+        if command.hasSuffix("一下") {
+            command.removeLast(2)
+        }
+        return command
     }
 
     private static func containsMatch(_ pattern: String, in value: String) -> Bool {
         value.range(of: pattern, options: .regularExpression) != nil
     }
 }
-

@@ -3,7 +3,7 @@ import XCTest
 
 final class CommandPolicyTests: XCTestCase {
     func testSettingsNavigationIsDirectWithoutSecondConfirmation() {
-        guard case let .direct(proposal) = CommandPolicy.parse("  打开 系统设置。 ") else {
+        guard case let .direct(proposal) = CommandPolicy.parse("  请帮我打开 系统设置一下。 ") else {
             return XCTFail("expected direct navigation")
         }
 
@@ -15,12 +15,14 @@ final class CommandPolicyTests: XCTestCase {
     }
 
     func testAlipayFrontDoorRequestIsNarrowAndDirect() {
-        guard case let .direct(proposal) = CommandPolicy.parse("打开支付宝") else {
-            return XCTFail("expected direct navigation proposal")
-        }
+        for command in ["打开支付宝", "帮我打开支付宝一下", "给我打开支付宝"] {
+            guard case let .direct(proposal) = CommandPolicy.parse(command) else {
+                return XCTFail("expected direct navigation proposal for: \(command)")
+            }
 
-        XCTAssertEqual(proposal.target, .alipayFrontDoor)
-        XCTAssertFalse(proposal.requiresConfirmation)
+            XCTAssertEqual(proposal.target, .alipayFrontDoor)
+            XCTAssertFalse(proposal.requiresConfirmation)
+        }
     }
 
     func testMoneyAndCredentialLanguageNeverFallsThroughToNavigation() {

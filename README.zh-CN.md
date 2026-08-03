@@ -32,6 +32,7 @@
 
 <p align="center">
   <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.1.png" alt="Jidan Shell 0.1 星空主页" width="360" /></a>
+  <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 在 iPhone 16 模拟器中全屏运行" width="360" /></a>
 </p>
 
 <p align="center"><strong>进门不盘问，动钱要停下。</strong></p>

@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_可觀察原型-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="#-開發者快速開始"><img src="https://img.shields.io/badge/開發者快速開始-195A41?style=for-the-badge" alt="開發者快速開始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/歡迎-共同建設-3978C6?style=for-the-badge" alt="歡迎共同建設" /></a>
@@ -24,7 +25,11 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan 目前仍是實驗原型，不是完整的 Android 發行版、提權工具，也不是可託付重要事務的正式產品。普通使用者行動產品尚未完成。請只使用受控 App、測試裝置與可捨棄資料。
+> Jidan 目前仍是實驗原型，不是完整的 Android/iOS 發行版、提權工具，也不是可託付重要事務的正式產品。倉庫已有 Android APK 與真實 SwiftUI iOS Shell 的遠端 Apple Simulator 證據，但它仍不是商店簽章產品、預設桌面或獨立 OS。請只使用受控 App、測試裝置與可捨棄資料。
+
+<p align="center">
+  <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 在 iPhone 16 Simulator 中全螢幕執行" width="360" /></a>
+</p>
 
 ## ✨ 定位
 
@@ -117,8 +122,9 @@ Web → 可編輯 Web 審閱介面
 | Conformance Lab：Nine Lights | 🧪 Lab | Python Runtime/Receipt + 獨立 JS Host；不是使用者產品 |
 | Pinyin Frontend 0.1 | ⏸️ | 凍結相容實驗；不新增語法或別名 |
 | 普通使用者 Android 產品 | 🗺️ | 尚未建成；ADB Lab 不等於消費者上手流程 |
+| [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI、Apple Speech 與直接低風險導航；由遠端 iPhone Simulator 建置、測試並截圖 |
 
-目前原型已包含：無第三方依賴的能力註冊與 Schema 驗證、任務圖與限權 Grant、確認閘門、SQLite 重放阻擋、雜湊鏈回執、Android 17 AppFunctions 受控驗證、語意表面探索，以及不選人、不傳送的微信原生交接。Android、iOS 與 Web 的 `message.compose` 資料計畫已提供；這不代表生產級行動 Agent OS 已完成。
+目前原型已包含：無第三方依賴的能力註冊與 Schema 驗證、任務圖與限權 Grant、確認閘門、SQLite 重放阻擋、雜湊鏈回執、Android 17 AppFunctions 受控驗證、語意表面探索、不選人不傳送的微信原生交接，以及可在 Apple Simulator 啟動的 SwiftUI iOS Shell。這仍不代表生產級行動 Agent OS 已完成。
 
 ## 🛡️ 安全邊界
 

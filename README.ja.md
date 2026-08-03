@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_観測可能プロトタイプ-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="#-開発者向けクイックスタート"><img src="https://img.shields.io/badge/開発者向けスタート-195A41?style=for-the-badge" alt="開発者向けクイックスタート" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contributions-Welcome-3978C6?style=for-the-badge" alt="コントリビューション歓迎" /></a>
@@ -24,7 +25,11 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan は実験段階のプロトタイプです。完成した Android ディストリビューション、権限昇格ツール、または重要な処理を任せられる本番用アシスタントではありません。一般利用者向けモバイル製品はまだ完成していません。管理下のアプリ、テスト端末、破棄可能なデータだけを使用してください。
+> Jidan は実験段階のプロトタイプです。完成した Android/iOS ディストリビューション、権限昇格ツール、または本番用アシスタントではありません。Android APK と、Apple Simulator で検証する実際の SwiftUI iOS Shell はありますが、ストア署名済み製品、既定ランチャー、独立 OS ではありません。管理下のアプリ、テスト端末、破棄可能なデータだけを使用してください。
+
+<p align="center">
+  <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="iPhone 16 Simulator で全画面動作する Jidan iOS Shell 0.1" width="360" /></a>
+</p>
 
 ## ✨ 位置づけ
 
@@ -111,7 +116,7 @@ Web → 編集可能な Web 確認画面
   └→ 人が最後の操作を行う（最終送信は現在の Jidan 検証範囲外）
 ```
 
-現在のプロトタイプには、外部依存のない能力 Registry と Schema 検証、タスクグラフ、権限を絞った Grant、確認ゲート、SQLite によるリプレイ拒否、ハッシュチェーン化された Receipt、Android 17 AppFunctions の管理下テスト、セマンティック・サーフェス探索、さらに宛先選択も送信もしない管理下の WeChat handoff が含まれます。Alipay は空入力の ADB Lab に限られ、実機受け入れ試験と一般利用者向け Host は未完成です。Android、iOS、Web 向けの `message.compose` データプランはありますが、本番品質のモバイル Agent OS が完成したという意味ではありません。
+現在のプロトタイプには、外部依存のない能力 Registry と Schema 検証、タスクグラフ、権限を絞った Grant、確認ゲート、SQLite によるリプレイ拒否、ハッシュチェーン化された Receipt、Android 17 AppFunctions の管理下テスト、セマンティック・サーフェス探索、宛先選択も送信もしない WeChat handoff、そして Apple Simulator で起動する [SwiftUI iOS Shell](reference-app/ios-shell/README.md) が含まれます。iOS の Alipay 入口は公開・監査可能な契約が見つかるまで未接続です。これは本番品質のモバイル Agent OS が完成したという意味ではありません。
 
 ## 🛡️ セキュリティ境界
 

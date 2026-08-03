@@ -2,6 +2,14 @@
 
 这是一个真正的 SwiftUI iPhone App 原型：界面、JCL 命令边界与直接导航策略属于 Jidan，iOS 暂时提供内核、沙箱、语音识别和系统入口。它不是一套新的 Apple OS，也不能替换 iPhone 的桌面或越过其他 App 的权限。
 
+<p align="center">
+  <img src="../../docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 在 iPhone 16 Simulator 中全屏运行" width="360" />
+</p>
+
+<p align="center">
+  <a href="https://github.com/yifangjinxing-hash/jidan/actions/workflows/ios-shell.yml"><img src="https://img.shields.io/badge/打开_苹果模拟器证据-Actions-8B7AC8?style=for-the-badge" alt="打开 iOS Shell CI" /></a>
+</p>
+
 ## 普通人能看到什么
 
 - 星空鸡蛋主页、文字输入、快捷动作和本机回执编号；
@@ -19,7 +27,7 @@
 1. 固定 Xcode 16.4 与 iOS 18.5；
 2. 生成 Xcode 工程并运行 Swift 单元测试；
 3. 创建并启动一台 iPhone 16 Simulator；
-4. 安装、启动 Jidan，截取主页和直接打开设置后的画面；
+4. 安装、启动 Jidan，截取全屏主页、真正的鸡蛋设置页，以及“支付宝转接头未接上”的诚实状态；
 5. 上传截图、测试结果和一个 **仅供 iOS Simulator 使用** 的 `.app.zip`。
 
 在 GitHub 的 Actions 页面打开最近一次 `iOS Shell CI`，下载 `jidan-ios-...` Artifact 就能看到全部证据。Windows 不能本机运行 Apple Simulator；压缩包也不能直接安装到真实 iPhone，真机安装仍需要 Xcode 与 Apple 签名。
@@ -45,4 +53,3 @@ xcodebuild test \
 - 经典 `SFSpeechRecognizer` 在部分语言或设备上可能联网；第一次点击麦克风会出现 iOS 必需的权限询问。这是系统权限，不是 Jidan 对同一动作的重复确认。
 - 当前不使用网上流传的支付宝私有 URL Scheme。自定义 Scheme 不能可靠证明接收方身份，`open()` 成功也不能证明页面、付款或现实结果。
 - 第一版没有后台常听、无障碍坐标点击、OCR 偷点、自动发送或自动付款。
-

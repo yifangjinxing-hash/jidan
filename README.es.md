@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_Prototipo_observable-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="#-inicio-rápido-para-desarrolladores"><img src="https://img.shields.io/badge/Inicio_para_desarrolladores-195A41?style=for-the-badge" alt="Inicio rápido para desarrolladores" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/Perfil_JCL-0.1-2F8F68?style=for-the-badge" alt="Perfil JCL 0.1" /></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/Contribuciones-Bienvenidas-3978C6?style=for-the-badge" alt="Contribuciones bienvenidas" /></a>
@@ -24,7 +25,11 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan es un prototipo experimental: no es una distribución alternativa de Android, una herramienta para elevar privilegios ni un asistente listo para producción. El producto móvil para usuarios comunes todavía no existe. Utilízalo con aplicaciones controladas, dispositivos de prueba y datos desechables.
+> Jidan es un prototipo experimental: no es una distribución alternativa de Android/iOS, una herramienta para elevar privilegios ni un asistente listo para producción. Ya existen un APK de Android y una Shell iOS real en SwiftUI que se valida en un Apple Simulator remoto, pero no son productos firmados para tienda, launchers predeterminados ni un sistema operativo independiente. Utilízalo con aplicaciones controladas, dispositivos de prueba y datos desechables.
+
+<p align="center">
+  <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 ejecutándose a pantalla completa en un simulador de iPhone 16" width="360" /></a>
+</p>
 
 ## ✨ Por qué Jidan
 
@@ -145,9 +150,10 @@ flowchart LR
 | Conformance Lab: Nine Lights | 🧪 Lab | Runtime/recibos Python + Host JS independiente; no es un producto para usuarios |
 | Pinyin Frontend 0.1 | ⏸️ | Experimento de compatibilidad congelado; sin sintaxis ni alias nuevos |
 | Producto Android para usuarios comunes | 🗺️ | Aún no construido; un laboratorio ADB no es onboarding de consumo |
+| [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI, Apple Speech y navegación directa de bajo riesgo; compilada, probada y capturada en un iPhone Simulator remoto |
 | Sistema operativo móvil de agentes listo para producción | 🗺️ | Todavía no se afirma |
 
-El perfil multiplataforma `message.compose` sigue siendo experimental: Android, iOS y Web tienen planes de adaptador, mientras que la evidencia de apertura verificada disponible actualmente corresponde al binding de Android. Jidan todavía no afirma ser un sistema operativo de agentes móvil listo para producción.
+El perfil multiplataforma `message.compose` sigue siendo experimental. La Shell iOS ya es código SwiftUI ejecutable, pero el adaptador de entrada de Alipay en iOS permanece desconectado hasta que exista un contrato público y auditable. Jidan todavía no afirma ser un sistema operativo de agentes móvil listo para producción.
 
 ## 🛡️ Seguridad por diseño
 

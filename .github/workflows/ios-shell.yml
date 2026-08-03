@@ -2,6 +2,8 @@ name: iOS Shell CI
 
 on:
   push:
+    branches:
+      - main
     paths:
       - "reference-app/ios-shell/**"
       - ".github/workflows/ios-shell.yml"
@@ -137,6 +139,13 @@ jobs:
           sleep 8
           xcrun simctl io "$SIMULATOR_UDID" screenshot --type=png \
             "$ARTIFACT_DIR/JidanIOS-direct-settings-iPhone16.png"
+
+          xcrun simctl launch --terminate-running-process \
+            "$SIMULATOR_UDID" "$BUNDLE_ID" \
+            --jidan-demo-alipay -AppleLanguages '(zh-Hans)' -AppleLocale zh_CN
+          sleep 3
+          xcrun simctl io "$SIMULATOR_UDID" screenshot --type=png \
+            "$ARTIFACT_DIR/JidanIOS-alipay-unavailable-iPhone16.png"
 
           ditto -c -k --sequesterRsrc --keepParent "$app" \
             "$ARTIFACT_DIR/JidanIOS-simulator.app.zip"
