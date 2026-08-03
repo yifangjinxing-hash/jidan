@@ -26,6 +26,7 @@ targets:
         INFOPLIST_KEY_NSMicrophoneUsageDescription: 鸡蛋只会在你点下麦克风后听取语音，把它转成文字。
         INFOPLIST_KEY_NSSpeechRecognitionUsageDescription: 鸡蛋需要使用苹果语音识别，把你说的话转成可见文字。
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
         MARKETING_VERSION: 0.1.0
         CURRENT_PROJECT_VERSION: 1
         TARGETED_DEVICE_FAMILY: "1"
@@ -52,4 +53,3 @@ schemes:
       gatherCoverageData: true
       targets:
         - JidanIOSTests
-

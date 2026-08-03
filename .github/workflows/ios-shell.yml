@@ -134,7 +134,7 @@ jobs:
           xcrun simctl launch --terminate-running-process \
             "$SIMULATOR_UDID" "$BUNDLE_ID" \
             --jidan-demo-settings -AppleLanguages '(zh-Hans)' -AppleLocale zh_CN
-          sleep 3
+          sleep 8
           xcrun simctl io "$SIMULATOR_UDID" screenshot --type=png \
             "$ARTIFACT_DIR/JidanIOS-direct-settings-iPhone16.png"
 
