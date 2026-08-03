@@ -1,0 +1,48 @@
+# Jidan iOS Shell 0.1
+
+这是一个真正的 SwiftUI iPhone App 原型：界面、JCL 命令边界与直接导航策略属于 Jidan，iOS 暂时提供内核、沙箱、语音识别和系统入口。它不是一套新的 Apple OS，也不能替换 iPhone 的桌面或越过其他 App 的权限。
+
+## 普通人能看到什么
+
+- 星空鸡蛋主页、文字输入、快捷动作和本机回执编号；
+- 点麦克风后，使用 Apple Speech 把普通话转成文字；
+- “打开鸡蛋设置”直接交给 iOS，不弹第二张同义确认卡；
+- “打开支付宝”同样不会再问一次，但当前苹果端没有经过审计的公开首页契约，因此如实显示“转接头还没接上”；
+- 任何金额、收款人、付款、扫码、密码或验证码语义都在适配器之前停下。
+
+一句话：**进门不盘问，没接上的门不假装打开，动钱要停下。**
+
+## 像安卓模拟器一样观察
+
+仓库的 `iOS Shell CI` 会在 GitHub 的苹果机器上：
+
+1. 固定 Xcode 16.4 与 iOS 18.5；
+2. 生成 Xcode 工程并运行 Swift 单元测试；
+3. 创建并启动一台 iPhone 16 Simulator；
+4. 安装、启动 Jidan，截取主页和直接打开设置后的画面；
+5. 上传截图、测试结果和一个 **仅供 iOS Simulator 使用** 的 `.app.zip`。
+
+在 GitHub 的 Actions 页面打开最近一次 `iOS Shell CI`，下载 `jidan-ios-...` Artifact 就能看到全部证据。Windows 不能本机运行 Apple Simulator；压缩包也不能直接安装到真实 iPhone，真机安装仍需要 Xcode 与 Apple 签名。
+
+## 在 Mac 上运行
+
+需要 Xcode 16.4、iOS 18.5 Simulator 和 XcodeGen 2.46.0：
+
+```bash
+cd reference-app/ios-shell
+xcodegen generate
+xcodebuild test \
+  -project JidanIOS.xcodeproj \
+  -scheme JidanIOS \
+  -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5'
+```
+
+也可以直接用 Xcode 打开生成的 `JidanIOS.xcodeproj`，选择 iPhone 16 后按 Run。
+
+## 诚实边界
+
+- Apple 的公开设置 URL 只能打开 **Jidan 自己的设置页**，不能让第三方 App 随意控制整个系统设置。
+- 经典 `SFSpeechRecognizer` 在部分语言或设备上可能联网；第一次点击麦克风会出现 iOS 必需的权限询问。这是系统权限，不是 Jidan 对同一动作的重复确认。
+- 当前不使用网上流传的支付宝私有 URL Scheme。自定义 Scheme 不能可靠证明接收方身份，`open()` 成功也不能证明页面、付款或现实结果。
+- 第一版没有后台常听、无障碍坐标点击、OCR 偷点、自动发送或自动付款。
+

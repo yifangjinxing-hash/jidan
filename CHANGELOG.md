@@ -2,6 +2,9 @@
 
 ## Unreleased — initial public preview
 
+- Added a real SwiftUI Jidan iOS Shell with Apple Speech input, the same narrow JCL command policy as Android, and no redundant confirmation for low-risk navigation.
+- Kept the iOS Alipay front-door adapter unavailable until an auditable public binding exists; the prototype does not guess private URL schemes or claim that a payment happened.
+- Added a pinned Apple-runner workflow that builds, tests, boots an iPhone 16 Simulator, captures observable screenshots, and uploads the Simulator app plus evidence.
 - Added an explicit low-risk `NAVIGATION` effect and `DIRECT` Alipay front-door Profile: a foreground user submit now dispatches the empty-input open action without a duplicate confirmation, while payment, recipient, amount, QR, URI, and credential inputs remain outside the contract.
 - Reframed the landing pages around **real micro-actions first**: reduce one concrete step, disclose the observed state, and stop before the human commit instead of leading with an app catalogue or a universal-agent claim.
 - Added a controlled Alipay front-door Lab adapter with an empty input contract, exact package/version/certificate/component pins, host-side APK signature verification, explicit launch, stable Activity/Window foreground evidence, and payment outcome fields fixed to false. It is not automatic payment or an ordinary-user Binding, and `opened` must never be confused with `paid`. See [the product and protocol note](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md).

@@ -16,6 +16,13 @@ local.properties
 *.iml
 .idea/
 
+# Apple / Xcode (the project is generated from project.yml)
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcresult
+reference-app/ios-shell/JidanIOS.xcodeproj/
+
 # Runtime and validation artifacts
 evidence/
 *.apk

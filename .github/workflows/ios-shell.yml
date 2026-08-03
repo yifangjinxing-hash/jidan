@@ -1,0 +1,169 @@
+name: iOS Shell CI
+
+on:
+  push:
+    paths:
+      - "reference-app/ios-shell/**"
+      - ".github/workflows/ios-shell.yml"
+  pull_request:
+    paths:
+      - "reference-app/ios-shell/**"
+      - ".github/workflows/ios-shell.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-shell-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-screenshot:
+    runs-on: macos-15-intel
+    timeout-minutes: 30
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_16.4.app/Contents/Developer
+      IOS_DIR: reference-app/ios-shell
+      PROJECT: JidanIOS.xcodeproj
+      SCHEME: JidanIOS
+      BUNDLE_ID: dev.jidan.iosshell
+      DERIVED_DATA: ${{ runner.temp }}/JidanDerivedData
+      ARTIFACT_DIR: ${{ runner.temp }}/jidan-ios-artifacts
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Verify Apple toolchain
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$ARTIFACT_DIR"
+          xcodebuild -version | tee "$ARTIFACT_DIR/xcode-version.txt"
+          test "$(xcrun --sdk iphonesimulator --show-sdk-version)" = "18.5"
+          xcrun simctl list > /dev/null
+
+      - name: Install pinned XcodeGen
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="$RUNNER_TEMP/xcodegen-2.46.0.zip"
+          tool_root="$RUNNER_TEMP/xcodegen-tool"
+          curl --fail --location --retry 3 --retry-all-errors \
+            "https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.zip" \
+            --output "$archive"
+          printf '%s  %s\n' \
+            '4d9e34b62172d645eed6457cac13fc222569974098ef4ee9c3368bedf0196806' \
+            "$archive" | shasum -a 256 --check
+          mkdir -p "$tool_root"
+          ditto -x -k "$archive" "$tool_root"
+          chmod +x "$tool_root/xcodegen/bin/xcodegen"
+          "$tool_root/xcodegen/bin/xcodegen" --version
+          echo "$tool_root/xcodegen/bin" >> "$GITHUB_PATH"
+
+      - name: Generate Xcode project
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodegen generate --spec "$IOS_DIR/project.yml" --project "$IOS_DIR"
+          test -d "$IOS_DIR/$PROJECT"
+          xcodebuild -project "$IOS_DIR/$PROJECT" -scheme "$SCHEME" -list \
+            | tee "$ARTIFACT_DIR/xcodebuild-list.txt"
+
+      - name: Create and boot iPhone simulator
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcrun simctl list > /dev/null
+          sdk_version="$(xcrun --sdk iphonesimulator --show-sdk-version)"
+          runtime_id="$(xcrun simctl list runtimes -j | jq -r --arg v "$sdk_version" \
+            '.runtimes[] | select(.isAvailable == true and .version == $v and (.identifier | contains(".SimRuntime.iOS-"))) | .identifier' \
+            | head -n 1)"
+          device_type="$(xcrun simctl list devicetypes -j | jq -r \
+            '[.devicetypes[] | select(.name == "iPhone 16")][0].identifier // empty')"
+          test -n "$runtime_id"
+          test -n "$device_type"
+          udid="$(xcrun simctl create \
+            "Jidan-CI-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" \
+            "$device_type" "$runtime_id")"
+          echo "SIMULATOR_UDID=$udid" >> "$GITHUB_ENV"
+          echo "SIMULATOR_RUNTIME=$runtime_id" >> "$GITHUB_ENV"
+          xcrun simctl boot "$udid"
+          xcrun simctl bootstatus "$udid" -b
+          xcrun simctl status_bar "$udid" override \
+            --time 08:16 --batteryState charged --batteryLevel 100 \
+            --wifiBars 3 --cellularBars 4 || true
+          xcrun simctl list devices | tee "$ARTIFACT_DIR/simulators.txt"
+
+      - name: Build and run tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcodebuild test \
+            -project "$IOS_DIR/$PROJECT" \
+            -scheme "$SCHEME" \
+            -configuration Debug \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath "$DERIVED_DATA" \
+            -resultBundlePath "$ARTIFACT_DIR/JidanIOS.xcresult" \
+            -enableCodeCoverage YES \
+            -parallel-testing-enabled NO \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            | tee "$ARTIFACT_DIR/xcodebuild-test.log"
+
+      - name: Install, launch and capture observable evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          app="$DERIVED_DATA/Build/Products/Debug-iphonesimulator/JidanIOS.app"
+          test -d "$app"
+          xcrun simctl install "$SIMULATOR_UDID" "$app"
+          xcrun simctl launch --terminate-running-process \
+            "$SIMULATOR_UDID" "$BUNDLE_ID" \
+            -AppleLanguages '(zh-Hans)' -AppleLocale zh_CN
+          sleep 3
+          xcrun simctl io "$SIMULATOR_UDID" screenshot --type=png \
+            "$ARTIFACT_DIR/JidanIOS-home-iPhone16.png"
+
+          xcrun simctl launch --terminate-running-process \
+            "$SIMULATOR_UDID" "$BUNDLE_ID" \
+            --jidan-demo-settings -AppleLanguages '(zh-Hans)' -AppleLocale zh_CN
+          sleep 3
+          xcrun simctl io "$SIMULATOR_UDID" screenshot --type=png \
+            "$ARTIFACT_DIR/JidanIOS-direct-settings-iPhone16.png"
+
+          ditto -c -k --sequesterRsrc --keepParent "$app" \
+            "$ARTIFACT_DIR/JidanIOS-simulator.app.zip"
+
+      - name: Collect failure diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          mkdir -p "$ARTIFACT_DIR"
+          xcrun simctl list -j > "$ARTIFACT_DIR/simctl-list.json" || true
+          if [[ -n "${SIMULATOR_UDID:-}" ]]; then
+            xcrun simctl spawn "$SIMULATOR_UDID" log show --last 10m --style compact \
+              --predicate 'process == "JidanIOS"' \
+              > "$ARTIFACT_DIR/JidanIOS-simulator.log" 2>&1 || true
+          fi
+
+      - name: Upload iOS evidence
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jidan-ios-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/jidan-ios-artifacts
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Delete temporary simulator
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${SIMULATOR_UDID:-}" ]]; then
+            xcrun simctl shutdown "$SIMULATOR_UDID" || true
+            xcrun simctl delete "$SIMULATOR_UDID" || true
+          fi
+

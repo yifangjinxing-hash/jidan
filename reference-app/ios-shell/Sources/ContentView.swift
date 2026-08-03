@@ -1,0 +1,355 @@
+import SwiftUI
+
+private enum OrbMode: Equatable {
+    case idle
+    case listening
+    case thinking
+    case success
+    case failure
+
+    var accent: Color {
+        switch self {
+        case .idle: return Color(red: 0.72, green: 0.62, blue: 0.95)
+        case .listening: return Color(red: 0.35, green: 0.90, blue: 0.79)
+        case .thinking: return Color(red: 0.98, green: 0.76, blue: 0.35)
+        case .success: return Color(red: 0.45, green: 0.90, blue: 0.68)
+        case .failure: return Color(red: 1.00, green: 0.46, blue: 0.57)
+        }
+    }
+}
+
+struct ContentView: View {
+    @StateObject private var speech = SpeechRecognizer()
+    @State private var input = ""
+    @State private var statusTitle = "想做什么？"
+    @State private var statusSubtitle = "说一句，或写一句。安全的打开动作会直接执行。"
+    @State private var orbMode: OrbMode = .idle
+    @State private var didRunDemo = false
+    @AppStorage("receiptSequence") private var receiptSequence = 1
+
+    var body: some View {
+        ZStack {
+            CosmicBackground()
+
+            VStack(spacing: 0) {
+                topBar
+                Spacer(minLength: 18)
+                JidanOrb(mode: orbMode)
+                    .frame(width: 232, height: 232)
+                    .accessibilityLabel("鸡蛋状态：\(statusTitle)")
+                statusArea
+                Spacer(minLength: 22)
+                commandBar
+                quickActions
+                Text("只有你点麦克风时，我才会听。涉及钱和密码，我会停下。")
+                    .font(.caption2)
+                    .foregroundStyle(.white.opacity(0.55))
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 10)
+                footer
+                    .padding(.top, 12)
+            }
+            .padding(.horizontal, 22)
+            .padding(.top, 8)
+            .padding(.bottom, 10)
+        }
+        .task {
+            guard !didRunDemo,
+                  ProcessInfo.processInfo.arguments.contains("--jidan-demo-settings") else { return }
+            didRunDemo = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            input = "打开系统设置"
+            submit(input)
+        }
+    }
+
+    private var topBar: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Jidan")
+                    .font(.system(size: 27, weight: .bold, design: .rounded))
+                Text("iOS 可观察原型 · 0.1")
+                    .font(.caption)
+                    .foregroundStyle(.white.opacity(0.62))
+            }
+            Spacer()
+            Button {
+                submit("打开鸡蛋设置")
+            } label: {
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(width: 46, height: 46)
+                    .background(.white.opacity(0.09), in: Circle())
+                    .overlay(Circle().stroke(.white.opacity(0.22), lineWidth: 1))
+            }
+            .accessibilityLabel("打开鸡蛋设置")
+        }
+        .foregroundStyle(.white)
+    }
+
+    private var statusArea: some View {
+        VStack(spacing: 5) {
+            Text(statusTitle)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+            Text(statusSubtitle)
+                .font(.subheadline)
+                .foregroundStyle(.white.opacity(0.72))
+                .multilineTextAlignment(.center)
+                .lineLimit(3)
+                .frame(minHeight: 42)
+        }
+        .padding(.top, 7)
+        .animation(.easeOut(duration: 0.2), value: statusTitle)
+    }
+
+    private var commandBar: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "sparkle.magnifyingglass")
+                .foregroundStyle(.white.opacity(0.58))
+                .padding(.leading, 4)
+            TextField("告诉鸡蛋你想做什么", text: $input, axis: .vertical)
+                .textInputAutocapitalization(.never)
+                .submitLabel(.go)
+                .lineLimit(1...2)
+                .onSubmit { submit(input) }
+            Button(action: toggleSpeech) {
+                Image(systemName: speech.isListening ? "stop.fill" : "mic.fill")
+                    .font(.system(size: 17, weight: .semibold))
+                    .frame(width: 46, height: 46)
+                    .background(
+                        speech.isListening ? OrbMode.listening.accent.opacity(0.24) : Color.white.opacity(0.07),
+                        in: Circle()
+                    )
+            }
+            .accessibilityLabel(speech.isListening ? "停止听写" : "开始语音转文字")
+
+            Button { submit(input) } label: {
+                Image(systemName: "arrow.up")
+                    .font(.system(size: 18, weight: .bold))
+                    .frame(width: 46, height: 46)
+                    .background(Color(red: 0.71, green: 0.64, blue: 0.93).opacity(0.25), in: Circle())
+            }
+            .accessibilityLabel("执行")
+        }
+        .foregroundStyle(.white)
+        .padding(7)
+        .background(Color(red: 0.06, green: 0.05, blue: 0.14).opacity(0.76), in: Capsule())
+        .overlay(Capsule().stroke(.white.opacity(0.56), lineWidth: 1.2))
+    }
+
+    private var quickActions: some View {
+        HStack(spacing: 9) {
+            quickButton("打开支付宝", icon: "arrow.up.forward.app")
+            quickButton("打开鸡蛋设置", icon: "gearshape")
+        }
+        .padding(.top, 10)
+    }
+
+    private func quickButton(_ command: String, icon: String) -> some View {
+        Button {
+            input = command
+            submit(command)
+        } label: {
+            Label(command, systemImage: icon)
+                .font(.caption.weight(.semibold))
+                .frame(maxWidth: .infinity, minHeight: 38)
+                .background(.white.opacity(0.075), in: Capsule())
+                .overlay(Capsule().stroke(.white.opacity(0.18), lineWidth: 1))
+        }
+        .foregroundStyle(.white.opacity(0.88))
+    }
+
+    private var footer: some View {
+        HStack {
+            Label("本机", systemImage: "circle.dotted")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color(red: 0.55, green: 0.92, blue: 0.82))
+                .padding(.horizontal, 13)
+                .frame(height: 36)
+                .background(Color(red: 0.03, green: 0.18, blue: 0.17).opacity(0.42), in: Capsule())
+                .overlay(Capsule().stroke(Color(red: 0.31, green: 0.74, blue: 0.65).opacity(0.65), lineWidth: 1))
+            Spacer()
+            Text(String(format: "回执 %04d", receiptSequence))
+                .font(.caption.monospacedDigit())
+                .foregroundStyle(.white.opacity(0.48))
+            Spacer()
+            Image(systemName: "questionmark")
+                .font(.caption.bold())
+                .frame(width: 36, height: 36)
+                .background(.white.opacity(0.07), in: Circle())
+                .overlay(Circle().stroke(.white.opacity(0.18), lineWidth: 1))
+                .foregroundStyle(.white.opacity(0.8))
+                .accessibilityLabel("帮助")
+        }
+    }
+
+    @MainActor
+    private func submit(_ raw: String) {
+        if speech.isListening { speech.stop() }
+        input = raw
+        switch CommandPolicy.parse(raw) {
+        case let .direct(proposal):
+            orbMode = .thinking
+            statusTitle = "正在交给 iOS"
+            statusSubtitle = proposal.compactContract
+            Task { @MainActor in
+                let outcome = await IOSActionDispatcher().dispatch(proposal)
+                apply(outcome)
+            }
+
+        case let .rejected(title, message):
+            orbMode = .failure
+            statusTitle = title
+            statusSubtitle = message
+            appendReceipt()
+
+        case let .unsupported(message):
+            orbMode = .failure
+            statusTitle = "这件事还不会"
+            statusSubtitle = message
+        }
+    }
+
+    @MainActor
+    private func apply(_ outcome: DispatchOutcome) {
+        switch outcome {
+        case let .dispatched(title, message):
+            orbMode = .success
+            statusTitle = title
+            statusSubtitle = message
+        case let .targetUnavailable(title, message):
+            orbMode = .failure
+            statusTitle = title
+            statusSubtitle = message
+        case let .blocked(title, message):
+            orbMode = .failure
+            statusTitle = title
+            statusSubtitle = message
+        }
+        appendReceipt()
+    }
+
+    @MainActor
+    private func toggleSpeech() {
+        if speech.isListening {
+            speech.stop()
+            orbMode = .idle
+            statusTitle = "已经停止听写"
+            statusSubtitle = "你可以修改文字，再点箭头执行。"
+            return
+        }
+
+        speech.start(
+            onPreparing: {
+                orbMode = .thinking
+                statusTitle = "准备麦克风"
+                statusSubtitle = "第一次使用时，iOS 会询问麦克风和语音识别权限。"
+            },
+            onStarted: {
+                orbMode = .listening
+                statusTitle = "我在听"
+                statusSubtitle = "说完后，文字会出现在输入框里并直接判断。"
+            },
+            onPartial: { text in
+                input = text
+            },
+            onFinal: { text in
+                input = text
+                submit(text)
+            },
+            onFailure: { message in
+                orbMode = .failure
+                statusTitle = "语音暂不可用"
+                statusSubtitle = message
+            }
+        )
+    }
+
+    private func appendReceipt() {
+        receiptSequence = receiptSequence >= 9_999 ? 1 : receiptSequence + 1
+    }
+}
+
+private struct JidanOrb: View {
+    let mode: OrbMode
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(mode.accent.opacity(0.17))
+                .blur(radius: 25)
+                .scaleEffect(1.14)
+            Circle()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color.white.opacity(0.30),
+                            mode.accent.opacity(0.32),
+                            Color(red: 0.17, green: 0.12, blue: 0.31).opacity(0.74)
+                        ],
+                        center: .center,
+                        startRadius: 4,
+                        endRadius: 116
+                    )
+                )
+                .overlay(Circle().stroke(mode.accent.opacity(0.55), lineWidth: 1.1))
+            Circle()
+                .stroke(.white.opacity(0.10), lineWidth: 1)
+                .padding(22)
+            Text("🌱 ʕ(˶ᵔ ᵕ ᵔ˶)ʔ ☀️")
+                .font(.system(size: 18))
+                .shadow(color: mode.accent, radius: 12)
+        }
+        .animation(.easeInOut(duration: 0.28), value: mode)
+    }
+}
+
+private struct CosmicBackground: View {
+    private let stars: [(CGFloat, CGFloat, CGFloat)] = [
+        (0.11, 0.12, 2.0), (0.82, 0.09, 1.4), (0.23, 0.29, 1.2), (0.74, 0.33, 2.3),
+        (0.93, 0.49, 1.1), (0.08, 0.57, 1.5), (0.62, 0.66, 1.2), (0.86, 0.73, 2.1),
+        (0.17, 0.82, 1.0), (0.48, 0.91, 1.8), (0.95, 0.92, 1.2), (0.39, 0.18, 0.9)
+    ]
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack {
+                LinearGradient(
+                    colors: [
+                        Color(red: 0.04, green: 0.04, blue: 0.13),
+                        Color(red: 0.09, green: 0.06, blue: 0.22),
+                        Color(red: 0.10, green: 0.03, blue: 0.12),
+                        Color(red: 0.02, green: 0.02, blue: 0.08)
+                    ],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                )
+                Circle()
+                    .fill(Color.purple.opacity(0.18))
+                    .frame(width: proxy.size.width * 0.95)
+                    .blur(radius: 60)
+                    .offset(x: -proxy.size.width * 0.22, y: -proxy.size.height * 0.20)
+                Circle()
+                    .fill(Color.pink.opacity(0.13))
+                    .frame(width: proxy.size.width * 0.75)
+                    .blur(radius: 70)
+                    .offset(x: proxy.size.width * 0.32, y: proxy.size.height * 0.34)
+                ForEach(stars.indices, id: \.self) { index in
+                    let star = stars[index]
+                    Circle()
+                        .fill(.white.opacity(index.isMultiple(of: 3) ? 0.72 : 0.36))
+                        .frame(width: star.2, height: star.2)
+                        .position(x: proxy.size.width * star.0, y: proxy.size.height * star.1)
+                        .shadow(color: .white.opacity(0.45), radius: 4)
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+}
+
+#Preview {
+    ContentView()
+}

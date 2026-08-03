@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_Shell-0.1-7B61A8?style=for-the-badge" alt="Jidan Shell 0.1" /></a>
+  <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_Observable_Prototype-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="#-developer-quick-start"><img src="https://img.shields.io/badge/Developer_Start-195A41?style=for-the-badge" alt="Developer quick start" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
   <a href="docs/09-alipay-micro-actions-and-protocol-lessons-zh.md"><img src="https://img.shields.io/badge/Micro_Actions-Product_Direction-6E5AA8?style=for-the-badge" alt="Real micro-actions first" /></a>
@@ -27,7 +28,7 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan is an experimental prototype, not a replacement Android distribution, a privilege-escalation tool, or a production assistant. The repository now builds an installable Jidan Shell 0.1 APK and has passed an Android-emulator end-to-end run. It is still not a store-signed product, a default launcher, or an independent ROM. Use controlled apps, test devices, and disposable data.
+> Jidan is an experimental prototype, not a replacement Android/iOS distribution, a privilege-escalation tool, or a production assistant. The repository now has an Android APK plus a real SwiftUI iOS Shell that is built, tested, launched, and captured on a remote Apple simulator. It is still not store-signed, a default launcher, or an independent ROM/OS. Use controlled apps, test devices, and disposable data.
 
 <p align="center">
   <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.1.png" alt="Jidan Shell 0.1 cosmic home screen" width="360" /></a>
@@ -179,6 +180,7 @@ flowchart LR
 | Conformance Lab: Nine Lights | 🧪 Lab | Python Runtime/Receipts + independent JS Host; not a user product |
 | Pinyin Frontend 0.1 | ⏸️ | Frozen compatibility experiment; no new syntax or aliases |
 | [Jidan Shell 0.1 Android experience](reference-app/shell/README.md) | 🧪 | APK built and exercised on an Android 17 emulator; not store-signed, a default launcher, or a ROM |
+| [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI + Apple Speech + `NAVIGATION / DIRECT`; built, tested, and captured on a remote Apple simulator; not an independent Apple OS |
 | Production-grade mobile agent OS | 🗺️ | Not claimed yet |
 
 ## 🛡️ Safety by construction
@@ -235,12 +237,23 @@ adb install -r -t shell/build/outputs/apk/debug/shell-debug.apk
 
 In **Jidan Shell**, “Open Alipay” and “Open system settings” navigate directly—there is no duplicate confirmation card. Speech-to-text uses the phone's current recognition service. See the [Shell guide](reference-app/shell/README.md) for installation and honest limits.
 
+Build and observe the Apple version on a Mac:
+
+```bash
+cd reference-app/ios-shell
+xcodegen generate
+xcodebuild test -project JidanIOS.xcodeproj -scheme JidanIOS \
+  -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5'
+```
+
+Windows cannot run Apple Simulator. The checked [`iOS Shell CI`](.github/workflows/ios-shell.yml) boots an iPhone 16 on an Apple runner, captures the home/direct-navigation screens, and uploads the Simulator app. See the [iOS Shell guide](reference-app/ios-shell/README.md).
+
 ## 🗂️ Repository map
 
 ```text
 profiles/       MCP-compatible JCL capabilities and conformance vectors
 prototype/      capability kernel, adapters, policy, grants, receipts, demos
-reference-app/  Android 17 AppFunctions provider + Jidan Shell APK
+reference-app/  Android provider/shell + SwiftUI iOS Shell
 docs/           architecture, research, roadmap, internationalization
 ```
 

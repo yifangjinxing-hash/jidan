@@ -11,6 +11,7 @@
 
 <p align="center">
   <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_体验壳-0.1-7B61A8?style=for-the-badge" alt="Jidan Shell 0.1" /></a>
+  <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_可观察原型-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="#-开发者快速开始"><img src="https://img.shields.io/badge/开发者上手-195A41?style=for-the-badge" alt="开发者快速开始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
   <a href="docs/09-alipay-micro-actions-and-protocol-lessons-zh.md"><img src="https://img.shields.io/badge/微动作优先-产品方向-6E5AA8?style=for-the-badge" alt="真实微动作优先" /></a>
@@ -27,7 +28,7 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan 仍是实验原型，不是完整 Android 发行版、提权工具或可托管重要事务的生产助手。仓库现在已有可安装的 Jidan Shell 0.1 APK，并完成安卓模拟器端到端验证；它仍不是应用商店签名产品、默认桌面或独立 ROM。请只连接受控 App、测试设备和可丢弃数据。
+> Jidan 仍是实验原型，不是完整 Android/iOS 发行版、提权工具或可托管重要事务的生产助手。仓库已有 Android APK，并新增真实 SwiftUI iOS Shell 与苹果远程模拟器验证；它仍不是应用商店签名产品、默认桌面或独立 ROM/OS。请只连接受控 App、测试设备和可丢弃数据。
 
 <p align="center">
   <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.1.png" alt="Jidan Shell 0.1 星空主页" width="360" /></a>
@@ -176,6 +177,7 @@ flowchart LR
 | Conformance Lab：Nine Lights | 🧪 Lab | Python Runtime/Receipt + 独立 JS Host；不是用户产品 |
 | Pinyin Frontend 0.1 | ⏸️ | 冻结兼容实验；不新增语法或别名 |
 | [Jidan Shell 0.1 Android 体验包](reference-app/shell/README.md) | 🧪 | APK 已构建并在 Android 17 模拟器验收；不是商店签名产品、默认桌面或 ROM |
+| [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI + Apple Speech + `NAVIGATION / DIRECT`；由苹果远程模拟器构建、测试并截图；不是独立 Apple OS |
 | 生产级移动 Agent OS | 🗺️ | 尚未宣称完成 |
 
 ## 🛡️ 把安全写进结构
@@ -229,12 +231,23 @@ adb install -r -t shell/build/outputs/apk/debug/shell-debug.apk
 
 打开 **Jidan Shell** 后，点“打开支付宝”或“打开系统设置”会直接导航，不会再弹同义确认卡。语音转文字由手机的语音服务提供。安装说明与诚实边界见 [Shell 说明](reference-app/shell/README.md)。
 
+观察并验证苹果版本：
+
+```bash
+cd reference-app/ios-shell
+xcodegen generate
+xcodebuild test -project JidanIOS.xcodeproj -scheme JidanIOS \
+  -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5'
+```
+
+Windows 没有 Apple Simulator；仓库的 [`iOS Shell CI`](.github/workflows/ios-shell.yml) 会在苹果机器上自动启动 iPhone 16、截取主页与直接导航后的画面，并上传 Simulator App。细节见 [iOS Shell 说明](reference-app/ios-shell/README.md)。
+
 ## 🗂️ 仓库地图
 
 ```text
 profiles/       与 MCP 兼容的 JCL 能力及一致性向量
 prototype/      能力内核、Adapter、策略、授权、回执与演示
-reference-app/  Android 17 AppFunctions Provider + Jidan Shell 体验 APK
+reference-app/  Android Provider/Shell + SwiftUI iOS Shell
 docs/           架构、调研、路线图与国际化说明
 ```
 
