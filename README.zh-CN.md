@@ -12,6 +12,7 @@
 <p align="center">
   <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_体验壳-0.1-7B61A8?style=for-the-badge" alt="Jidan Shell 0.1" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_可观察原型-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
+  <a href="reference-app/windows-shell/README.md"><img src="https://img.shields.io/badge/Windows_系统卡组-0.1-3978C6?style=for-the-badge" alt="JidanOS Windows Shell 0.1" /></a>
   <a href="#-开发者快速开始"><img src="https://img.shields.io/badge/开发者上手-195A41?style=for-the-badge" alt="开发者快速开始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
   <a href="docs/09-alipay-micro-actions-and-protocol-lessons-zh.md"><img src="https://img.shields.io/badge/微动作优先-产品方向-6E5AA8?style=for-the-badge" alt="真实微动作优先" /></a>
@@ -28,7 +29,7 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan 仍是实验原型，不是完整 Android/iOS 发行版、提权工具或可托管重要事务的生产助手。仓库已有 Android APK，并新增真实 SwiftUI iOS Shell 与苹果远程模拟器验证；它仍不是应用商店签名产品、默认桌面或独立 ROM/OS。请只连接受控 App、测试设备和可丢弃数据。
+> Jidan 仍是实验原型，不是完整 Android/iOS 发行版、提权工具或可托管重要事务的生产助手。仓库已有 Android APK、真实 SwiftUI iOS Shell，以及原生 WPF Windows 兼容卡组。Windows 卡组可原生运行 EXE、把 APK 路由到已连接的 ADB guest，并且只执行边界明确的 clean-room ARM64 样本；它不是完整 Apple 运行时。以上体验壳都不是应用商店签名产品、默认桌面或独立 ROM/OS。请只连接受控 App、测试设备和可丢弃数据。
 
 <p align="center">
   <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.1.png" alt="Jidan Shell 0.1 星空主页" width="360" /></a>
@@ -179,6 +180,7 @@ flowchart LR
 | Pinyin Frontend 0.1 | ⏸️ | 冻结兼容实验；不新增语法或别名 |
 | [Jidan Shell 0.1 Android 体验包](reference-app/shell/README.md) | 🧪 | APK 已构建并在 Android 17 模拟器验收；不是商店签名产品、默认桌面或 ROM |
 | [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI + Apple Speech + `NAVIGATION / DIRECT`；由苹果远程模拟器构建、测试并截图；不是独立 Apple OS |
+| [JidanOS Windows Shell 0.1](reference-app/windows-shell/README.md) | 🧪 | 原生 WPF 系统卡组；真实 EXE/ADB 路由与边界明确的 clean-room ARM64 样本；不是完整跨平台 OS 或 Apple 运行时 |
 | 生产级移动 Agent OS | 🗺️ | 尚未宣称完成 |
 
 ## 🛡️ 把安全写进结构
@@ -243,12 +245,25 @@ xcodebuild test -project JidanIOS.xcodeproj -scheme JidanIOS \
 
 Windows 没有 Apple Simulator；仓库的 [`iOS Shell CI`](.github/workflows/ios-shell.yml) 会在苹果机器上自动启动 iPhone 16、截取主页与直接导航后的画面，并上传 Simulator App。细节见 [iOS Shell 说明](reference-app/ios-shell/README.md)。
 
+在 Windows 10/11 构建并验证原生系统卡组：
+
+```powershell
+cd reference-app\windows-shell
+.\build.cmd
+$results = Join-Path $PWD 'test-results.txt'
+$process = Start-Process .\JidanOS.exe -ArgumentList '--test', $results -Wait -PassThru
+Get-Content $results
+if ($process.ExitCode -ne 0) { throw "Tests failed: $($process.ExitCode)" }
+```
+
+仓库的 [`Windows Shell CI`](.github/workflows/windows-shell.yml) 会在 `windows-latest` 重新构建程序、运行全部无头检查，并上传不含 PDB 的 ZIP 成品。准确兼容范围与安全边界见 [Windows Shell 说明](reference-app/windows-shell/README.md)。
+
 ## 🗂️ 仓库地图
 
 ```text
 profiles/       与 MCP 兼容的 JCL 能力及一致性向量
 prototype/      能力内核、Adapter、策略、授权、回执与演示
-reference-app/  Android Provider/Shell + SwiftUI iOS Shell
+reference-app/  Android Provider/Shell + SwiftUI iOS Shell + 原生 WPF Windows Shell
 docs/           架构、调研、路线图与国际化说明
 ```
 

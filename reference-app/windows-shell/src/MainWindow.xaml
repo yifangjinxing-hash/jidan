@@ -1,0 +1,242 @@
+<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="JidanOS · 选系统，不换设备"
+        Width="1440" Height="880" MinWidth="1120" MinHeight="700"
+        WindowStartupLocation="CenterScreen"
+        Background="#080B0A" Foreground="#F2F5F0"
+        FontFamily="Segoe UI" FontSize="13"
+        AllowDrop="True">
+  <Window.Resources>
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#080B0A" />
+    <SolidColorBrush x:Key="PanelBrush" Color="#0E1210" />
+    <SolidColorBrush x:Key="PanelAltBrush" Color="#121713" />
+    <SolidColorBrush x:Key="LineBrush" Color="#273029" />
+    <SolidColorBrush x:Key="TextBrush" Color="#F2F5F0" />
+    <SolidColorBrush x:Key="MutedBrush" Color="#8F9991" />
+    <SolidColorBrush x:Key="AccentBrush" Color="#B9FF57" />
+    <Style x:Key="BaseButton" TargetType="Button">
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+      <Setter Property="Background" Value="#151B17" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="13,9" />
+      <Setter Property="Cursor" Value="Hand" />
+      <Setter Property="HorizontalContentAlignment" Value="Center" />
+      <Setter Property="Template">
+        <Setter.Value>
+          <ControlTemplate TargetType="Button">
+            <Border x:Name="Border" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4" Padding="{TemplateBinding Padding}">
+              <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+              <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Border" Property="BorderBrush" Value="#70806F" /><Setter TargetName="Border" Property="Background" Value="#1A211C" /></Trigger>
+              <Trigger Property="IsPressed" Value="True"><Setter TargetName="Border" Property="Opacity" Value="0.78" /></Trigger>
+              <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Border" Property="Opacity" Value="0.42" /></Trigger>
+            </ControlTemplate.Triggers>
+          </ControlTemplate>
+        </Setter.Value>
+      </Setter>
+    </Style>
+    <Style x:Key="PrimaryButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+      <Setter Property="Background" Value="{StaticResource AccentBrush}" />
+      <Setter Property="Foreground" Value="#0A0E09" />
+      <Setter Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style x:Key="FlatButton" TargetType="Button" BasedOn="{StaticResource BaseButton}">
+      <Setter Property="Background" Value="Transparent" />
+      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+      <Setter Property="Padding" Value="0" />
+    </Style>
+    <Style TargetType="TextBox">
+      <Setter Property="Foreground" Value="#C7CEC8" />
+      <Setter Property="Background" Value="#090C0A" />
+      <Setter Property="BorderBrush" Value="{StaticResource LineBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="12" />
+      <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+      <Setter Property="CaretBrush" Value="{StaticResource AccentBrush}" />
+    </Style>
+  </Window.Resources>
+
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="64" />
+      <RowDefinition Height="*" />
+      <RowDefinition Height="31" />
+    </Grid.RowDefinitions>
+
+    <Border Grid.Row="0" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" Background="#0B0F0C">
+      <Grid Margin="22,0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto" />
+          <ColumnDefinition Width="*" />
+          <ColumnDefinition Width="Auto" />
+        </Grid.ColumnDefinitions>
+        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+          <Grid Width="31" Height="31" Margin="0,0,12,0">
+            <Rectangle Width="7" Height="26" Fill="#B9FF57" HorizontalAlignment="Left" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5"><Rectangle.RenderTransform><RotateTransform Angle="-8" /></Rectangle.RenderTransform></Rectangle>
+            <Rectangle Width="7" Height="20" Fill="#62F4BC" HorizontalAlignment="Center" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5"><Rectangle.RenderTransform><RotateTransform Angle="-8" /></Rectangle.RenderTransform></Rectangle>
+            <Rectangle Width="7" Height="14" Fill="#A993FF" HorizontalAlignment="Right" VerticalAlignment="Bottom" RenderTransformOrigin="0.5,0.5"><Rectangle.RenderTransform><RotateTransform Angle="-8" /></Rectangle.RenderTransform></Rectangle>
+          </Grid>
+          <StackPanel VerticalAlignment="Center">
+            <TextBlock Text="JidanOS" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Text="UNIVERSAL SYSTEM DECK" Foreground="{StaticResource MutedBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="9" />
+          </StackPanel>
+        </StackPanel>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+          <TextBlock Text="选系统，不换设备" FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Center" />
+          <TextBlock Text="SYSTEMS ARE RUNTIMES · APPS ARE ARTIFACTS" Foreground="#657068" FontFamily="Cascadia Mono, Consolas" FontSize="9" />
+        </StackPanel>
+        <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+          <Button x:Name="RefreshButton" Style="{StaticResource BaseButton}" Content="刷新引擎" Margin="0,0,8,0" />
+          <Button x:Name="ImportButton" Style="{StaticResource PrimaryButton}" Content="导入 EXE / APK / IPA" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <Grid Grid.Row="1">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="220" />
+        <ColumnDefinition Width="315" />
+        <ColumnDefinition Width="*" />
+        <ColumnDefinition Width="350" />
+      </Grid.ColumnDefinitions>
+
+      <Border Grid.Column="0" Background="#0B0F0C" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+        <Grid Margin="16,18">
+          <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+          <StackPanel Grid.Row="0" Margin="4,0,4,14">
+            <TextBlock Text="选择系统" FontSize="18" FontWeight="SemiBold" />
+            <TextBlock Text="同一设备，不同运行世界" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" />
+          </StackPanel>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel x:Name="SystemList" />
+          </ScrollViewer>
+          <Border Grid.Row="2" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Padding="12" Margin="0,12,0,0" CornerRadius="4">
+            <StackPanel>
+              <TextBlock Text="JIDAN PRINCIPLE" Foreground="{StaticResource AccentBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="9" />
+              <TextBlock Text="能启动就运行；不能启动就准确列出缺失引擎。" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}" Margin="0,8,0,0" LineHeight="19" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Border>
+
+      <Border Grid.Column="1" Background="#0D110E" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,1,0">
+        <Grid Margin="16,18">
+          <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+          <Grid Grid.Row="0" Margin="4,0,4,14">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel>
+              <TextBlock Text="成品包" FontSize="18" FontWeight="SemiBold" />
+              <TextBlock x:Name="PackageFilterLabel" Text="全部平台" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" />
+            </StackPanel>
+            <TextBlock Grid.Column="1" x:Name="PackageCountLabel" Text="0" Foreground="{StaticResource AccentBrush}" FontFamily="Cascadia Mono, Consolas" VerticalAlignment="Bottom" />
+          </Grid>
+          <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+            <StackPanel x:Name="PackageList" />
+          </ScrollViewer>
+          <Border Grid.Row="2" BorderBrush="#364039" BorderThickness="1" Padding="13" Margin="0,12,0,0" CornerRadius="4">
+            <TextBlock Text="拖放成品包到窗口，或按 Ctrl+O" Foreground="{StaticResource MutedBrush}" HorizontalAlignment="Center" />
+          </Border>
+        </Grid>
+      </Border>
+
+      <Grid Grid.Column="2" Margin="22,18">
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="190" /></Grid.RowDefinitions>
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+          <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+          <StackPanel>
+            <TextBlock x:Name="ActiveSystemName" Text="Jidan" FontSize="25" FontWeight="SemiBold" />
+            <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+              <TextBlock x:Name="ActiveSystemEngine" Text="Universal Router" Foreground="{StaticResource MutedBrush}" />
+              <TextBlock Text="  ·  " Foreground="#475149" />
+              <TextBlock x:Name="ActiveSystemStatus" Text="可启动" Foreground="{StaticResource AccentBrush}" />
+            </StackPanel>
+          </StackPanel>
+          <Button Grid.Column="1" x:Name="BootSystemButton" Style="{StaticResource BaseButton}" Content="启动所选系统" VerticalAlignment="Center" />
+        </Grid>
+
+        <Border Grid.Row="1" Background="#090C0A" BorderBrush="#354138" BorderThickness="1" CornerRadius="8" Padding="2">
+          <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="35" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+            <Border Grid.Row="0" Background="#111713" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1" CornerRadius="6,6,0,0">
+              <Grid Margin="13,0">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <TextBlock x:Name="SessionSystemLabel" Text="JIDAN SESSION" VerticalAlignment="Center" Foreground="#98A099" FontFamily="Cascadia Mono, Consolas" FontSize="9" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                  <Ellipse x:Name="SessionLed" Width="7" Height="7" Fill="#5B645D" Margin="0,0,7,0" />
+                  <TextBlock x:Name="SessionStateLabel" Text="STOPPED" Foreground="#778078" FontFamily="Cascadia Mono, Consolas" FontSize="9" />
+                </StackPanel>
+              </Grid>
+            </Border>
+            <Grid Grid.Row="1" Margin="28,22">
+              <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+              <Border x:Name="SessionGlyphBorder" Grid.Row="0" Width="70" Height="70" Background="#172016" BorderBrush="{StaticResource AccentBrush}" BorderThickness="1" CornerRadius="35" HorizontalAlignment="Left">
+                <TextBlock x:Name="SessionGlyph" Text="J" Foreground="{StaticResource AccentBrush}" FontSize="31" FontWeight="Bold" HorizontalAlignment="Center" VerticalAlignment="Center" />
+              </Border>
+              <TextBlock x:Name="SessionTitle" Grid.Row="1" Text="选择一个系统和成品包" FontSize="24" FontWeight="SemiBold" Margin="0,20,0,0" />
+              <TextBlock x:Name="SessionMessage" Grid.Row="2" Text="JidanOS 会为包选择原生、虚拟机或翻译运行路径。" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" LineHeight="20" Margin="0,8,0,14" />
+              <TextBox x:Name="SessionOutput" Grid.Row="3" Text="等待会话。" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" />
+            </Grid>
+          </Grid>
+        </Border>
+
+        <Grid Grid.Row="2" Margin="0,13">
+          <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+          <Button x:Name="RunPackageButton" Grid.Column="0" Style="{StaticResource PrimaryButton}" Content="运行所选成品包" HorizontalContentAlignment="Center" />
+          <Button x:Name="SettingsActionButton" Grid.Column="1" Style="{StaticResource BaseButton}" Content="设置" Margin="8,0,0,0" Visibility="Collapsed" />
+          <Button x:Name="PaymentActionButton" Grid.Column="2" Style="{StaticResource BaseButton}" Content="付款" Margin="8,0,0,0" Visibility="Collapsed" />
+          <Button x:Name="VoiceActionButton" Grid.Column="3" Style="{StaticResource BaseButton}" Content="语音" Margin="8,0,0,0" Visibility="Collapsed" />
+        </Grid>
+
+        <Border Grid.Row="3" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" Background="#0B0F0C" CornerRadius="5">
+          <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="35" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+            <Grid Grid.Row="0" Margin="12,0">
+              <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+              <TextBlock Text="真实执行证据" VerticalAlignment="Center" FontWeight="SemiBold" />
+              <TextBlock Grid.Column="1" Text="N NATIVE  ·  V VM  ·  E EXACT  ·  H HELPER  ·  D DEOPT" VerticalAlignment="Center" Foreground="#687269" FontFamily="Cascadia Mono, Consolas" FontSize="8" />
+            </Grid>
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+              <StackPanel x:Name="TracePanel" />
+            </ScrollViewer>
+          </Grid>
+        </Border>
+      </Grid>
+
+      <Border Grid.Column="3" Background="#0B0F0C" BorderBrush="{StaticResource LineBrush}" BorderThickness="1,0,0,0">
+        <Grid Margin="19,18">
+          <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+          <StackPanel Grid.Row="0">
+            <TextBlock Text="成品包身份" Foreground="{StaticResource MutedBrush}" FontFamily="Cascadia Mono, Consolas" FontSize="9" />
+            <TextBlock x:Name="ArtifactName" Text="未选择" FontSize="21" FontWeight="SemiBold" Margin="0,8,0,0" TextWrapping="Wrap" />
+            <TextBlock x:Name="ArtifactIdentity" Text="—" Foreground="{StaticResource MutedBrush}" Margin="0,5,0,0" TextWrapping="Wrap" />
+          </StackPanel>
+          <Border Grid.Row="1" x:Name="CompatibilityBorder" BorderBrush="#354138" BorderThickness="1" Background="#101611" Padding="14" CornerRadius="5" Margin="0,18,0,0">
+            <StackPanel>
+              <TextBlock x:Name="CompatibilityStatus" Text="等待识别" Foreground="{StaticResource AccentBrush}" FontWeight="SemiBold" />
+              <TextBlock x:Name="CompatibilitySummary" Text="导入或选择一个成品包。" Foreground="{StaticResource MutedBrush}" TextWrapping="Wrap" LineHeight="19" Margin="0,7,0,0" />
+            </StackPanel>
+          </Border>
+          <Grid Grid.Row="2" Margin="0,18,0,10">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <TextBlock Text="检查结果" FontSize="16" FontWeight="SemiBold" />
+            <TextBlock Grid.Column="1" x:Name="ArtifactKindLabel" Text="—" Foreground="{StaticResource AccentBrush}" FontFamily="Cascadia Mono, Consolas" />
+          </Grid>
+          <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <StackPanel x:Name="MetadataPanel" />
+          </ScrollViewer>
+        </Grid>
+      </Border>
+    </Grid>
+
+    <Border Grid.Row="2" Background="#070908" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,1,0,0">
+      <Grid Margin="15,0">
+        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+        <TextBlock x:Name="StatusBarText" Text="JidanOS ready" Foreground="#697169" FontFamily="Cascadia Mono, Consolas" FontSize="9" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="LOCAL · NATIVE WPF · NO WEBVIEW" Foreground="#4E5650" FontFamily="Cascadia Mono, Consolas" FontSize="9" VerticalAlignment="Center" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

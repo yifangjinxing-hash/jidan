@@ -2,6 +2,7 @@
 
 ## Unreleased — initial public preview
 
+- Added the native WPF JidanOS Windows Shell: a five-system runtime deck, PE/APK/IPA inspection, real Windows process and ADB routes, a bounded clean-room ARM64 HLE fixture, 16 headless checks, and a Windows artifact workflow. It does not claim a full iOS, Android, or Windows Phone implementation.
 - Added a real SwiftUI Jidan iOS Shell with Apple Speech input, the same narrow JCL command policy as Android, and no redundant confirmation for low-risk navigation.
 - Kept the iOS Alipay front-door adapter unavailable until an auditable public binding exists; the prototype does not guess private URL schemes or claim that a payment happened.
 - Added a pinned Apple-runner workflow that builds, tests, boots an iPhone 16 Simulator, captures observable screenshots, and uploads the Simulator app plus evidence.

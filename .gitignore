@@ -46,6 +46,13 @@ evidence/
 *.p12
 *.pfx
 
+# Native Windows Shell outputs
+reference-app/windows-shell/JidanOS.exe
+reference-app/windows-shell/JidanOS.pdb
+reference-app/windows-shell/test-results*.txt
+reference-app/windows-shell/samples/
+*.idsig
+
 # Local tools and editors
 .vscode/
 *.swp
