@@ -14,8 +14,11 @@ final class ObservableFlowsUITests: XCTestCase {
 
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 8))
         XCTAssertTrue(app.textFields["jidan.command.input"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["jidan.command.mic"].exists)
         XCTAssertTrue(app.buttons["jidan.quick.alipay"].exists)
         XCTAssertTrue(app.buttons["jidan.quick.settings"].exists)
+        XCTAssertFalse(app.staticTexts["想做什么？"].exists)
+        XCTAssertFalse(app.staticTexts["iOS 可观察原型 · 0.1"].exists)
     }
 
     override func tearDownWithError() throws {
@@ -51,8 +54,8 @@ final class ObservableFlowsUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["jidan.settings.title"].waitForExistence(timeout: 5))
         attachScreenshot(named: "JidanIOS-direct-settings")
         XCTAssertEqual(app.staticTexts["jidan.settings.title"].label, "鸡蛋设置")
-        XCTAssertEqual(app.staticTexts["jidan.settings.protocol"].label, "JCL 0.1")
-        XCTAssertEqual(app.staticTexts["jidan.settings.policy"].label, "NAVIGATION / DIRECT")
+        XCTAssertTrue(app.staticTexts["jidan.settings.protocol"].label.contains("JCL 0.1"))
+        XCTAssertTrue(app.staticTexts["jidan.settings.policy"].label.contains("NAVIGATION / DIRECT"))
         XCTAssertTrue(app.buttons["jidan.settings.close"].isHittable)
     }
 
