@@ -5,8 +5,6 @@ struct JidanIOSApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .preferredColorScheme(.dark)
         }
     }
 }
-

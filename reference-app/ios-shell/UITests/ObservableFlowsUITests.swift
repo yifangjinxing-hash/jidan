@@ -13,8 +13,9 @@ final class ObservableFlowsUITests: XCTestCase {
         app.launch()
 
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 8))
-        XCTAssertTrue(app.staticTexts["jidan.status.title"].waitForExistence(timeout: 5))
-        XCTAssertEqual(app.staticTexts["jidan.status.title"].label, "想做什么？")
+        XCTAssertTrue(app.textFields["jidan.command.input"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["jidan.quick.alipay"].exists)
+        XCTAssertTrue(app.buttons["jidan.quick.settings"].exists)
     }
 
     override func tearDownWithError() throws {
@@ -28,11 +29,13 @@ final class ObservableFlowsUITests: XCTestCase {
         XCTAssertTrue(button.isHittable)
         button.tap()
 
-        let title = app.staticTexts["jidan.status.title"]
-        XCTAssertTrue(waitForLabel("iOS 转接头还没接上", on: title, timeout: 5))
-        XCTAssertEqual(
-            app.staticTexts["jidan.status.subtitle"].label,
-            "当前没有经过审计的苹果端支付宝公开入口契约。鸡蛋不会猜私有链接，也没有尝试付款。"
+        let alert = app.alerts.firstMatch
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        XCTAssertTrue(alert.staticTexts["iOS 转接头还没接上"].exists)
+        XCTAssertTrue(
+            alert.staticTexts[
+                "当前没有经过审计的苹果端支付宝公开入口契约。鸡蛋不会猜私有链接，也没有尝试付款。"
+            ].exists
         )
         XCTAssertEqual(app.state, .runningForeground)
         attachScreenshot(named: "JidanIOS-alipay-unavailable")
@@ -51,12 +54,6 @@ final class ObservableFlowsUITests: XCTestCase {
         XCTAssertEqual(app.staticTexts["jidan.settings.protocol"].label, "JCL 0.1")
         XCTAssertEqual(app.staticTexts["jidan.settings.policy"].label, "NAVIGATION / DIRECT")
         XCTAssertTrue(app.buttons["jidan.settings.close"].isHittable)
-    }
-
-    private func waitForLabel(_ expected: String, on element: XCUIElement, timeout: TimeInterval) -> Bool {
-        let predicate = NSPredicate(format: "label == %@", expected)
-        let expectation = XCTNSPredicateExpectation(predicate: predicate, object: element)
-        return XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed
     }
 
     private func attachScreenshot(named name: String) {
