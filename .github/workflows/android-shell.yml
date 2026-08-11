@@ -135,4 +135,3 @@ jobs:
             reference-app/accessibility-sandbox/build/reports/lint-results-debug.html
           if-no-files-found: warn
           retention-days: 14
-
