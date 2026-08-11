@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_体验壳-0.1-7B61A8?style=for-the-badge" alt="Jidan Shell 0.1" /></a>
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_手脑实验-0.2-7B61A8?style=for-the-badge" alt="Jidan Shell 0.2 手脑实验" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_可观察原型-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="reference-app/windows-shell/README.md"><img src="https://img.shields.io/badge/Windows_系统卡组-0.1-3978C6?style=for-the-badge" alt="JidanOS Windows Shell 0.1" /></a>
   <a href="#-开发者快速开始"><img src="https://img.shields.io/badge/开发者上手-195A41?style=for-the-badge" alt="开发者快速开始" /></a>
@@ -32,7 +32,7 @@
 > Jidan 仍是实验原型，不是完整 Android/iOS 发行版、提权工具或可托管重要事务的生产助手。仓库已有 Android APK、真实 SwiftUI iOS Shell，以及原生 WPF Windows 兼容卡组。Windows 卡组可原生运行 EXE、把 APK 路由到已连接的 ADB guest，并且只执行边界明确的 clean-room ARM64 样本；它不是完整 Apple 运行时。以上体验壳都不是应用商店签名产品、默认桌面或独立 ROM/OS。请只连接受控 App、测试设备和可丢弃数据。
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.1.png" alt="Jidan Shell 0.1 星空主页" width="360" /></a>
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.2.png" alt="Jidan Shell 0.2 极简安卓命令主页" width="360" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 在 iPhone 16 模拟器中全屏运行" width="360" /></a>
 </p>
 
@@ -83,6 +83,23 @@
 
 产品流程、不可自动化边界与协议修正规则见[《支付宝微动作、协议边界与 JCL 修正规则》](docs/09-alipay-micro-actions-and-protocol-lessons-zh.md)。
 受控实现见 [`android_handoff.py`](prototype/jidan/android_handoff.py)、[`alipay_handoff.py`](prototype/jidan/alipay_handoff.py) 与[直接导航 Lab Harness](prototype/alipay_handoff_live.py)；运行方法和本地信任要求见[原型说明](prototype/README.md#alipay-fixed-front-door-handoff-controlled-lab-only)。
+
+## 🖐️ 第二步：给“手”接上能核验的“脑”
+
+Jidan 现在有了一条真实 Android 无障碍实验链：
+
+```text
+观察自有假页面 → 生成 5 步计划 → 一次执行一步
+              → 每步重新观察并核验 → 写哈希回执
+```
+
+它能在无网络、无账户、无真实资金的实验 APK 中填写假收款人、假金额、假密码和假验证码，再完成一次合成提交。敏感能力没有从协议删掉；它们先在 `SANDBOX` 完整执行。真实第三方 App 目前只有独立的 `SHADOW` 规格契约：Android 观察器尚未接入，该通道也没有注册执行器，不能把“想点”冒充“点过”。当前 Android“手”仍使用内部 Kotlin 映射，还没有对外注册 MCP 或 JSON 执行端点。
+
+这次同时把“手”从协议里拆了出来：**JCL 是任务卡和脑，MCP 是插座，Hand Provider 才是可更换的手。** 本机 Host 决定哪只手可信；MCP 参数和 Provider 自述都不能给自己提权。内置无障碍手只准碰自有沙盒；按键精灵以 `HANDOFF_ONLY` 候选身份可见、可打开，但不能进入执行器选择。参见 [`Hand Provider` 清单](profiles/providers/)与[只读发现工具](profiles/experimental/android.hand.providers.inspect.tool.json)。
+
+![Android 手脑实验完成画面](docs/assets/jidan-hand-brain-lab-0.2.png)
+
+提供的按键精灵 APK 只做了离线静态审计。它证明节点、坐标、输入、截图和 OCR 可以组成一只强大的手，但没有发现适合 Jidan 稳定依赖的公开 SDK/AIDL/deeplink，因此没有把私有接口接进 JCL。完整阶段说明、社区踩坑和审计结论见[《Android 手 + 脑实验》](docs/10-android-hand-brain-lab-zh.md)。
 
 ## 🔌 一份契约，多端实现
 
@@ -175,10 +192,11 @@ flowchart LR
 | 语义表面发现 | ✅ | AppFunctions → RemoteInput → Shortcut → 公开分享 |
 | 受控微信原生交接 | 🧪 | ADB/真机 Harness 验证准确 Picker；不选人、不发送 |
 | [支付宝 front-door 直接导航](profiles/app.open.alipay_frontdoor.tool.json) | 🧪 Lab | 空输入 `NAVIGATION / DIRECT` Profile + 对抗测试；真机验收待完成；没有自动付款 |
+| [Android 手 + 脑无障碍实验](docs/10-android-hand-brain-lab-zh.md) | 🧪 Lab | 自有无网络 APK 中 5 步合成执行/核验；输入原文不进入 Jidan 计划、回执或实验应用存储；真实 App 的 SHADOW 仍只有规格 |
 | 跨端 `message.compose` Profile | 🧪 | Android / iOS / Web 计划；Android 已验证 Binding |
 | Conformance Lab：Nine Lights | 🧪 Lab | Python Runtime/Receipt + 独立 JS Host；不是用户产品 |
 | Pinyin Frontend 0.1 | ⏸️ | 冻结兼容实验；不新增语法或别名 |
-| [Jidan Shell 0.1 Android 体验包](reference-app/shell/README.md) | 🧪 | APK 已构建并在 Android 17 模拟器验收；不是商店签名产品、默认桌面或 ROM |
+| [Jidan Shell 0.2 Android 体验包](reference-app/shell/README.md) | 🧪 | 可安装的调试 APK；硬化后的 Android 17 模拟器证据在实跑后单独记录；不是商店签名产品、默认桌面或 ROM |
 | [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI + Apple Speech + `NAVIGATION / DIRECT`；由苹果远程模拟器构建、测试并截图；不是独立 Apple OS |
 | [JidanOS Windows Shell 0.1](reference-app/windows-shell/README.md) | 🧪 | 原生 WPF 系统卡组；真实 EXE/ADB 路由与边界明确的 clean-room ARM64 样本；不是完整跨平台 OS 或 Apple 运行时 |
 | 生产级移动 Agent OS | 🗺️ | 尚未宣称完成 |
@@ -224,15 +242,16 @@ cd reference-app
 
 Windows 请用 `gradlew.bat`。PowerShell 5.1 的 Unicode 注意事项见[原型说明](prototype/README.md#windows-unicode-arguments)。
 
-构建并安装 Jidan Shell 体验包：
+构建并安装 Jidan Shell 与隔离实验包：
 
 ```bash
 cd reference-app
-./gradlew :shell:testDebugUnitTest :shell:assembleDebug :shell:lintDebug
+./gradlew :shell:testDebugUnitTest :shell:assembleDebug :shell:lintDebug :accessibility-sandbox:assembleDebug
+adb install -r -t accessibility-sandbox/build/outputs/apk/debug/accessibility-sandbox-debug.apk
 adb install -r -t shell/build/outputs/apk/debug/shell-debug.apk
 ```
 
-打开 **Jidan Shell** 后，点“打开支付宝”或“打开系统设置”会直接导航，不会再弹同义确认卡。语音转文字由手机的语音服务提供。安装说明与诚实边界见 [Shell 说明](reference-app/shell/README.md)。
+打开 **Jidan Shell** 后，“打开支付宝”和“打开系统设置”会直接导航，不再弹同义确认卡；“手 + 脑实验”会在需要时引导开启无障碍服务，并且只在服务看到本轮实验页面后运行 5 步合成动作链。Android 或手机厂商以后仍可能停用该服务，届时需要重新开启。语音转文字由手机的语音服务提供。安装说明与诚实边界见 [Shell 说明](reference-app/shell/README.md)。
 
 观察并验证苹果版本：
 

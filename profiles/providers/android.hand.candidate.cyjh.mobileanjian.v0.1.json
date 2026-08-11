@@ -1,0 +1,47 @@
+{
+  "profile": "JCL-Hand-Provider/0.1",
+  "providerId": "android.hand.candidate.cyjh.mobileanjian.v0.1",
+  "displayName": "按键精灵（候选手）",
+  "providerKind": "CANDIDATE",
+  "trustState": "CANDIDATE_UNBOUND",
+  "transport": "HANDOFF_ONLY",
+  "targetPackage": "com.cyjh.mobileanjian",
+  "declaredPlanProfile": "JCL-UI-Action-Plan/0.1",
+  "supportedLanes": [
+    "HANDOFF"
+  ],
+  "observedCapabilities": [
+    "SEMANTIC_TREE",
+    "NODE_ACTIONS",
+    "GESTURES",
+    "TEXT_INPUT",
+    "SCREENSHOT",
+    "OCR",
+    "SCRIPT_ENGINE",
+    "APP_LAUNCH"
+  ],
+  "executionEnabled": false,
+  "publicContract": {
+    "available": false,
+    "protocol": null,
+    "definitionSha256": null
+  },
+  "hostAdapter": {
+    "available": false,
+    "profileSha256": null
+  },
+  "identityBinding": {
+    "mode": "STATIC_ARTIFACT",
+    "versionCode": 2026000224,
+    "certificateSha256": "800614aaf2494f4dc1c4d43fff92ee42771d01fc09435d0b8d4b8e54dbd91413",
+    "artifactSha256": "2d554d35d3c20de38c2adb6b51bdea2ddcf19e4dcdc6f3c3da52244037bb803d",
+    "contractId": null
+  },
+  "realWorldEffectCeiling": "HANDOFF_ONLY",
+  "notes": [
+    "Static audit found strong automation capabilities but no stable public SDK, AIDL or first-party deep link for Jidan.",
+    "The Android Shell may offer an explicit user-initiated launcher handoff, but this registration cannot invoke automation.",
+    "The artifact digest identifies the offline audit sample; Shell launch eligibility checks package name, versionCode and signer, not byte-for-byte installed APK identity.",
+    "A future public vendor contract must use a new verified registration; new plans must bind its new identity and digest."
+  ]
+}

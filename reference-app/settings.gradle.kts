@@ -17,3 +17,4 @@ dependencyResolutionManagement {
 rootProject.name = "JidanReferenceMemo"
 include(":app")
 include(":shell")
+include(":accessibility-sandbox")

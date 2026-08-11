@@ -1,0 +1,495 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.jidan.dev/jcl.ui-action-plan-v0.1.schema.json",
+  "title": "JCL UI Action Plan 0.1",
+  "description": "A semantic-node UI plan for the experimental Android sandbox and shadow lanes. Screen coordinates are not part of this ABI.",
+  "type": "object",
+  "properties": {
+    "profile": {
+      "const": "JCL-UI-Action-Plan/0.1"
+    },
+    "planId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]{0,127}$"
+    },
+    "handProviderId": {
+      "description": "Host-selected execution provider. A model may propose a task, but it cannot silently replace the bound hand provider.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 160,
+      "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]{0,159}$"
+    },
+    "handProviderRegistrationSha256": {
+      "description": "Digest of the Host-reviewed provider registration bound to this plan.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "goalCode": {
+      "enum": [
+        "SYNTHETIC_SENSITIVE_FORM",
+        "REAL_APP_SHADOW_PLAN"
+      ]
+    },
+    "lane": {
+      "enum": [
+        "SANDBOX",
+        "SHADOW"
+      ]
+    },
+    "perceptionMode": {
+      "const": "ACCESSIBILITY_SEMANTIC_TREE"
+    },
+    "targetFingerprint": {
+      "type": "object",
+      "properties": {
+        "packageName": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 255,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
+        },
+        "versionCode": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "certificateSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "androidUserId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fingerprintSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "packageName",
+        "versionCode",
+        "certificateSha256",
+        "androidUserId",
+        "fingerprintSha256"
+      ],
+      "additionalProperties": false
+    },
+    "sourceObservationSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "expectedPrecondition": {
+      "type": "object",
+      "properties": {
+        "packageName": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 255,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
+        },
+        "windowId": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "observationSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "requiredNodeFingerprints": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "mustBeForeground": {
+          "const": true
+        }
+      },
+      "required": [
+        "packageName",
+        "windowId",
+        "observationSha256",
+        "requiredNodeFingerprints",
+        "mustBeForeground"
+      ],
+      "additionalProperties": false
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "properties": {
+          "actionId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]{0,127}$"
+          },
+          "actionKind": {
+            "enum": [
+              "CLICK",
+              "SET_TEXT",
+              "SCROLL_FORWARD",
+              "BACK",
+              "WAIT"
+            ]
+          },
+          "sensitivity": {
+            "enum": [
+              "NONE",
+              "PAYMENT",
+              "PASSWORD",
+              "OTP",
+              "BIOMETRIC",
+              "SYSTEM_SECURITY"
+            ]
+          },
+          "selector": {
+            "type": "object",
+            "properties": {
+              "viewId": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "className": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "semanticRole": {
+                "enum": [
+                  "BUTTON",
+                  "EDIT_TEXT",
+                  "TEXT",
+                  "LIST",
+                  "LIST_ITEM",
+                  "CHECKBOX",
+                  "SWITCH",
+                  "CONTAINER"
+                ]
+              },
+              "structuralPath": {
+                "type": "array",
+                "maxItems": 32,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "nodeFingerprintSha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "textDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "contentDescriptionDigest": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "className",
+              "semanticRole",
+              "structuralPath",
+              "nodeFingerprintSha256"
+            ],
+            "additionalProperties": false
+          },
+          "ephemeralValueRef": {
+            "description": "Opaque session-scoped handle resolved only at execution time. It is never the password, OTP, payment value, or other user text itself.",
+            "type": "string",
+            "minLength": 46,
+            "maxLength": 46,
+            "pattern": "^ephemeral:[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+          },
+          "postconditionKey": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]{0,127}$"
+          }
+        },
+        "required": [
+          "actionId",
+          "actionKind",
+          "sensitivity",
+          "selector",
+          "postconditionKey"
+        ],
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "actionKind": {
+                  "const": "SET_TEXT"
+                }
+              },
+              "required": [
+                "actionKind"
+              ]
+            },
+            "then": {
+              "required": [
+                "ephemeralValueRef"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "sensitivity": {
+                  "enum": [
+                    "PASSWORD",
+                    "OTP"
+                  ]
+                }
+              },
+              "required": [
+                "sensitivity"
+              ]
+            },
+            "then": {
+              "properties": {
+                "actionKind": {
+                  "const": "SET_TEXT"
+                },
+                "selector": {
+                  "properties": {
+                    "textDigest": false,
+                    "contentDescriptionDigest": false
+                  }
+                }
+              },
+              "required": [
+                "ephemeralValueRef"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "sensitivity": {
+                  "enum": [
+                    "PAYMENT",
+                    "PASSWORD",
+                    "OTP",
+                    "BIOMETRIC",
+                    "SYSTEM_SECURITY"
+                  ]
+                }
+              },
+              "required": [
+                "sensitivity"
+              ]
+            },
+            "then": {
+              "properties": {
+                "selector": {
+                  "properties": {
+                    "textDigest": false,
+                    "contentDescriptionDigest": false
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "expectedPostcondition": {
+      "type": "object",
+      "properties": {
+        "packageName": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 255,
+          "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
+        },
+        "windowId": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "observationMustChange": {
+          "type": "boolean"
+        },
+        "requiredNodeFingerprints": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "forbiddenNodeFingerprints": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "deadlineMs": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 30000
+        }
+      },
+      "required": [
+        "packageName",
+        "windowId",
+        "observationMustChange",
+        "requiredNodeFingerprints",
+        "forbiddenNodeFingerprints",
+        "deadlineMs"
+      ],
+      "additionalProperties": false
+    },
+    "executionBudget": {
+      "type": "object",
+      "properties": {
+        "maxObservations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 12
+        },
+        "maxActions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "maxReplans": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2
+        },
+        "timeoutMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 120000
+        }
+      },
+      "required": [
+        "maxObservations",
+        "maxActions",
+        "maxReplans",
+        "timeoutMs"
+      ],
+      "additionalProperties": false
+    },
+    "recoveryCheckpoint": {
+      "type": "object",
+      "properties": {
+        "checkpointId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z][a-zA-Z0-9_.-]{0,127}$"
+        },
+        "beforeActionIndex": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 19
+        },
+        "observationSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "resumePolicy": {
+          "enum": [
+            "REOBSERVE_BEFORE_EFFECT",
+            "RESET_SANDBOX_ONLY",
+            "HANDOFF_ONLY"
+          ]
+        },
+        "afterAttemptPolicy": {
+          "const": "NEVER_AUTOMATICALLY_RETRY"
+        }
+      },
+      "required": [
+        "checkpointId",
+        "beforeActionIndex",
+        "observationSha256",
+        "resumePolicy",
+        "afterAttemptPolicy"
+      ],
+      "additionalProperties": false
+    },
+    "sensitiveClasses": {
+      "type": "array",
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "PAYMENT",
+          "PASSWORD",
+          "OTP",
+          "BIOMETRIC",
+          "SYSTEM_SECURITY"
+        ]
+      }
+    },
+    "selectorAuthority": {
+      "const": "SEMANTIC_NODE_ONLY"
+    },
+    "coordinateInputAccepted": {
+      "const": false
+    },
+    "effectStatus": {
+      "enum": [
+        "NOT_ATTEMPTED",
+        "ATTEMPTED",
+        "OS_ACCEPTED",
+        "TRANSITION_VERIFIED",
+        "FAILED_BEFORE_EFFECT",
+        "OUTCOME_UNKNOWN"
+      ]
+    },
+    "realWorldStatus": {
+      "enum": [
+        "SYNTHETIC_ONLY",
+        "NOT_ATTEMPTED",
+        "HANDOFF_REQUIRED",
+        "UNKNOWN"
+      ]
+    }
+  },
+  "required": [
+    "profile",
+    "planId",
+    "handProviderId",
+    "handProviderRegistrationSha256",
+    "goalCode",
+    "lane",
+    "perceptionMode",
+    "targetFingerprint",
+    "sourceObservationSha256",
+    "expectedPrecondition",
+    "actions",
+    "expectedPostcondition",
+    "executionBudget",
+    "recoveryCheckpoint",
+    "sensitiveClasses",
+    "selectorAuthority",
+    "coordinateInputAccepted",
+    "effectStatus",
+    "realWorldStatus"
+  ],
+  "additionalProperties": false
+}

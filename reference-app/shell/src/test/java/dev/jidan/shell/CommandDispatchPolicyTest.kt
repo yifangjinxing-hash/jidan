@@ -11,6 +11,7 @@ class CommandDispatchPolicyTest {
             "打开支付宝" to ShellAction.OPEN_ALIPAY,
             "启动支付宝" to ShellAction.OPEN_ALIPAY,
             "支付宝" to ShellAction.OPEN_ALIPAY,
+            "打开按键精灵" to ShellAction.OPEN_MOBILEANJIAN,
             "打开系统设置" to ShellAction.OPEN_SYSTEM_SETTINGS,
             "打开设置" to ShellAction.OPEN_SYSTEM_SETTINGS,
             "系统设置" to ShellAction.OPEN_SYSTEM_SETTINGS,
@@ -61,5 +62,17 @@ class CommandDispatchPolicyTest {
 
             assertTrue(command, directive is DispatchDirective.DoNotDispatch)
         }
+    }
+
+    @Test
+    fun namedHandBrainExperimentUsesTheSandboxLane() {
+        val directive = CommandDispatchPolicy.classify(
+            LocalCommandParser.parse("开始手脑实验"),
+        )
+
+        assertTrue(directive is DispatchDirective.SandboxExperiment)
+        val proposal = (directive as DispatchDirective.SandboxExperiment).proposal
+        assertEquals(ShellAction.OPEN_AUTOMATION_LAB, proposal.action)
+        assertEquals(ShellExecutionMode.SANDBOX, proposal.executionMode)
     }
 }

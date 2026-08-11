@@ -3,6 +3,7 @@
 Mobile experience shells:
 
 - [`shell/`](shell/README.md): installable Android shell and Android front-door adapters.
+- [`accessibility-sandbox/`](accessibility-sandbox/): same-signature, no-network synthetic form used to verify one-step Android accessibility execution, postconditions, and sensitive-value non-persistence.
 - [`ios-shell/`](ios-shell/README.md): SwiftUI shell, Apple Speech input, direct low-risk navigation, and remote iPhone Simulator evidence.
 - [`windows-shell/`](windows-shell/README.md): native WPF system deck with PE/APK/IPA inspection, real Windows/ADB routes, and a bounded clean-room ARM64 fixture.
 

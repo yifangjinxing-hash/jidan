@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="lab_recipient" type="id" />
+    <item name="lab_amount" type="id" />
+    <item name="lab_password" type="id" />
+    <item name="lab_otp" type="id" />
+    <item name="lab_submit" type="id" />
+    <item name="lab_reset" type="id" />
+    <item name="lab_status" type="id" />
+    <item name="lab_result" type="id" />
+</resources>

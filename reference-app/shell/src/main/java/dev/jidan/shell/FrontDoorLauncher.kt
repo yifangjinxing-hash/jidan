@@ -4,18 +4,128 @@ import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.provider.Settings
+import dev.jidan.shell.accessibility.AccessibilityExecutionPolicy
+import dev.jidan.shell.accessibility.AccessibilityServiceBridge
+import dev.jidan.shell.accessibility.ExecutionLane
+import dev.jidan.shell.accessibility.ExecutionLaneResolver
+import dev.jidan.shell.accessibility.LabSessionRegistry
+import java.security.MessageDigest
 
 sealed interface DispatchResult {
     data class Dispatched(val message: String) : DispatchResult
     data class TargetUnavailable(val message: String) : DispatchResult
     data class Blocked(val message: String) : DispatchResult
+    data class NeedsAccessibility(val message: String) : DispatchResult
 }
 
 class FrontDoorLauncher(private val activity: Activity) {
     fun dispatch(proposal: ActionProposal): DispatchResult = when (proposal.action) {
         ShellAction.OPEN_ALIPAY -> openPackage(ALIPAY_PACKAGE, "支付宝")
+        ShellAction.OPEN_MOBILEANJIAN -> openVerifiedMobileAnjianCandidate()
         ShellAction.OPEN_SYSTEM_SETTINGS -> startExplicitSystemSettings()
+        ShellAction.OPEN_AUTOMATION_LAB -> openAutomationLab()
+    }
+
+    private fun openAutomationLab(): DispatchResult {
+        val targetPackage = ExecutionLaneResolver.SANDBOX_PACKAGE
+        val targetClass = "$targetPackage.MainActivity"
+        val launchIntent = Intent().apply {
+            component = ComponentName(targetPackage, targetClass)
+            setPackage(targetPackage)
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        if (launchIntent.resolveActivity(activity.packageManager) == null) {
+            return DispatchResult.TargetUnavailable(
+                "没有找到匹配的隔离实验页。请安装与 Shell 签名、版本和实验契约匹配的实验 APK。",
+            )
+        }
+        val trust = AccessibilityExecutionPolicy.decide(activity, targetPackage)
+        if (trust.lane != ExecutionLane.SANDBOX) {
+            return DispatchResult.Blocked("实验页身份检查没有通过：${trust.reason}")
+        }
+        val targetIdentity = trust.identity
+            ?: return DispatchResult.Blocked("实验页没有提供完整的身份指纹。")
+        if (!AccessibilityServiceBridge.connected) {
+            return DispatchResult.NeedsAccessibility(
+                "安卓的“鸡蛋辅助操作”尚未开启，所以这只手还不能工作。",
+            )
+        }
+        if (LabSessionRegistry.activeSession() != null) {
+            return DispatchResult.Blocked("上一轮手脑实验仍在运行；鸡蛋不会叠加第二条动作链。")
+        }
+        val session = runCatching { LabSessionRegistry.arm(targetIdentity) }.getOrElse {
+            return DispatchResult.Blocked("实验会话没有成功建立，鸡蛋没有执行页面动作。")
+        }
+        AccessibilityServiceBridge.armFirstFrameWatchdog(session.id)
+        launchIntent.putExtra(EXTRA_SESSION_NONCE, session.launchNonce)
+        return try {
+            activity.startActivity(launchIntent)
+            DispatchResult.Dispatched(
+                "已启动隔离实验 ${session.id.take(8)}。鸡蛋会每次只做一步，并核对页面变化。",
+            )
+        } catch (_: ActivityNotFoundException) {
+            AccessibilityServiceBridge.cancelWatchdog(session.id)
+            LabSessionRegistry.clear(session.id)
+            DispatchResult.TargetUnavailable("实验页没有打开，鸡蛋没有执行任何界面动作。")
+        } catch (_: SecurityException) {
+            AccessibilityServiceBridge.cancelWatchdog(session.id)
+            LabSessionRegistry.clear(session.id)
+            DispatchResult.Blocked("实验页拒绝了调用；同签名保护可能没有生效。")
+        }
+    }
+
+    fun cancelActiveLab() {
+        LabSessionRegistry.clearActive()
+    }
+
+    @Suppress("DEPRECATION")
+    private fun openVerifiedMobileAnjianCandidate(): DispatchResult {
+        val packageInfo = try {
+            activity.packageManager.getPackageInfo(
+                MOBILEANJIAN_PACKAGE,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    PackageManager.GET_SIGNING_CERTIFICATES
+                } else {
+                    PackageManager.GET_SIGNATURES
+                },
+            )
+        } catch (_: PackageManager.NameNotFoundException) {
+            return DispatchResult.TargetUnavailable(
+                "这台手机没有安装已审计的按键精灵候选版本。鸡蛋没有调用任何自动化能力。",
+            )
+        }
+        val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode
+        } else {
+            packageInfo.versionCode.toLong()
+        }
+        val signers = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.signingInfo?.apkContentsSigners.orEmpty()
+        } else {
+            packageInfo.signatures.orEmpty()
+        }
+        val signerDigests = signers.map { signature ->
+            MessageDigest.getInstance("SHA-256")
+                .digest(signature.toByteArray())
+                .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+        }
+        if (
+            versionCode != MOBILEANJIAN_VERSION_CODE ||
+            MOBILEANJIAN_CERT_SHA256 !in signerDigests
+        ) {
+            return DispatchResult.Blocked(
+                "按键精灵的版本或签名与已审计样本不一致。鸡蛋没有打开，也没有尝试自动化。",
+            )
+        }
+        return when (val result = openPackage(MOBILEANJIAN_PACKAGE, "按键精灵")) {
+            is DispatchResult.Dispatched -> DispatchResult.Dispatched(
+                "只打开了按键精灵首页；鸡蛋没有调用它的私有服务、端口、脚本或支付桥。",
+            )
+            else -> result
+        }
     }
 
     private fun openPackage(packageName: String, label: String): DispatchResult {
@@ -72,5 +182,11 @@ class FrontDoorLauncher(private val activity: Activity) {
 
     companion object {
         const val ALIPAY_PACKAGE = "com.eg.android.AlipayGphone"
+        const val MOBILEANJIAN_PACKAGE = "com.cyjh.mobileanjian"
+        const val MOBILEANJIAN_VERSION_CODE = 2026000224L
+        const val MOBILEANJIAN_CERT_SHA256 =
+            "800614aaf2494f4dc1c4d43fff92ee42771d01fc09435d0b8d4b8e54dbd91413"
+        private const val EXTRA_SESSION_NONCE =
+            "dev.jidan.extra.ACCESSIBILITY_LAB_SESSION_NONCE"
     }
 }

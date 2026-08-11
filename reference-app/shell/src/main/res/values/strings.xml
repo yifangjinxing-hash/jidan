@@ -1,19 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Jidan Shell</string>
-    <string name="brand_name">Jidan</string>
-    <string name="prototype_badge">体验系统 0.1</string>
     <string name="settings">设置</string>
-    <string name="orb_greeting">🌱  鸡蛋  ☀</string>
-    <string name="idle_title">你好，我是鸡蛋。</string>
-    <string name="idle_subtitle">说一句，或写一句。</string>
-    <string name="input_hint">你想做什么？</string>
+    <string name="input_hint">要做什么？</string>
     <string name="microphone">语音输入</string>
     <string name="submit">理解这句话</string>
-    <string name="try_alipay">试试“打开支付宝”</string>
-    <string name="try_settings">试试“打开系统设置”</string>
-    <string name="privacy_short">只有你点麦克风时，我才会听。</string>
-    <string name="local_mode">本地规则 · 不上传 JCL 动作</string>
+    <string name="try_alipay">打开支付宝</string>
+    <string name="try_mobileanjian">按键精灵</string>
+    <string name="try_hand_brain_lab">手脑实验</string>
+    <string name="accessibility_service_label">鸡蛋辅助操作</string>
+    <string name="accessibility_service_description">只在鸡蛋自带的无网络实验页中逐步观察、操作并核验结果。</string>
     <string name="audio_permission_title">让鸡蛋听懂你</string>
     <string name="audio_permission_body">鸡蛋只有在你亲手点下麦克风时才会听。语音由这台手机的语音服务转成文字，服务是否联网取决于手机设置。“打开应用”会直接执行；涉及付款、转账、金额或扫码时会停下。</string>
     <string name="allow_microphone">允许麦克风</string>
@@ -22,9 +18,7 @@
     <string name="speech_unavailable">这台手机暂时不能语音识别。没关系，你还可以打字。</string>
     <string name="speech_error">没有听清，什么也没做。你可以修改文字或再试一次。</string>
     <string name="thinking">我在想你说的意思。</string>
-    <string name="nothing_changed">没有执行，什么也没改变。</string>
     <string name="receipt_format">本机回执 %1$s</string>
-    <string name="help">说明</string>
     <string name="help_title">鸡蛋现在是什么？</string>
     <string name="help_body">这是 Jidan 的第一层“驾驶舱”：界面和安全规则属于鸡蛋，安卓暂时提供手机驱动和已有 App。它还不是完整的新操作系统，也不会替你付款、发送或做最后决定。</string>
     <string name="close">知道了</string>

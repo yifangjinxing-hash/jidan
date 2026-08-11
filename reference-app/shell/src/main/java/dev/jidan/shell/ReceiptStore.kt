@@ -95,6 +95,7 @@ class ReceiptStore(context: Context) {
         private const val GENESIS =
             "0000000000000000000000000000000000000000000000000000000000000000"
         private val ALLOWED_STATUSES = setOf(
+            "dispatch_prepared",
             "handoff_dispatched",
             "target_unavailable",
             "blocked_by_os",

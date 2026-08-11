@@ -2,6 +2,12 @@
 
 ## Unreleased — initial public preview
 
+- Added a host-owned `HandProvider` registry and transport-neutral MCP Tool gateway: provider identity and registration digests are pinned into JCL plans, unregistered tools stay hidden, and the audited 按键精灵 sample remains a visible `HANDOFF_ONLY` candidate that cannot promote itself into an executor.
+- Rebuilt the Android Shell home as a restrained native command surface with one voice/text field, three recent actions, monochrome icons, and no glowing orb, promotional slogans, receipt footer, or test copy.
+- Added the Android Hand + Brain Lab: an owned no-network accessibility fixture, same-signer/version/contract trust gate, deterministic five-step semantic executor, bounded re-observation, postcondition checks, and two-phase hash-chained receipts whose plans, receipts, and fixture storage omit raw password and OTP values.
+- Exercised the complete first-use path on an isolated Android 17 emulator: one Shell activation, visible system accessibility grant, automatic continuation, five accepted and verified transitions, ten valid receipt records, and zero real payments. The live run exposed and fixed an Android 17 pre-decor insets crash without recording a false action success.
+- Added experimental `android.ui.sandbox_execute` and `android.ui.shadow_plan` JCL Profiles with a shared semantic action-plan schema; sensitive PAYMENT/PASSWORD/OTP steps remain expressible while real-package shadow execution is fixed to zero attempts.
+- Added a static, non-executing audit of the supplied `com.cyjh.mobileanjian` APK and a community-only Android automation failure review; private services, sockets, injection payloads, and undocumented payment bridges were deliberately not adopted as Jidan interfaces.
 - Added the native WPF JidanOS Windows Shell: a five-system runtime deck, PE/APK/IPA inspection, real Windows process and ADB routes, a bounded clean-room ARM64 HLE fixture, 16 headless checks, and a Windows artifact workflow. It does not claim a full iOS, Android, or Windows Phone implementation.
 - Added a real SwiftUI Jidan iOS Shell with Apple Speech input, the same narrow JCL command policy as Android, and no redundant confirmation for low-risk navigation.
 - Replaced the iOS concept-demo homepage with a native, adaptive command surface: one voice/text field, two recent actions, system alerts, and an iOS Form-based settings page; removed the glowing orb, promotional copy, debug status, receipt footer, and forced dark mode.

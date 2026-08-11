@@ -4,15 +4,19 @@ import java.security.MessageDigest
 
 enum class ShellAction(val id: String) {
     OPEN_ALIPAY("app.open.alipay_frontdoor"),
+    OPEN_MOBILEANJIAN("app.open.mobileanjian_candidate"),
     OPEN_SYSTEM_SETTINGS("android.settings.open"),
+    OPEN_AUTOMATION_LAB("android.ui.sandbox_start"),
 }
 
 enum class ShellRiskLevel {
     NAVIGATION,
+    SENSITIVE_EXPERIMENT,
 }
 
 enum class ShellExecutionMode {
     DIRECT,
+    SANDBOX,
 }
 
 data class ActionProposal(

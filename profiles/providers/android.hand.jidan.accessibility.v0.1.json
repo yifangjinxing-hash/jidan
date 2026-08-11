@@ -1,0 +1,42 @@
+{
+  "profile": "JCL-Hand-Provider/0.1",
+  "providerId": "android.hand.jidan.accessibility.v0.1",
+  "displayName": "鸡蛋内置语义手",
+  "providerKind": "OWNED",
+  "trustState": "OWNED_RUNTIME_LOCAL_VERIFIED",
+  "transport": "LOCAL_ACCESSIBILITY",
+  "targetPackage": "dev.jidan.accessibility.sandbox",
+  "declaredPlanProfile": "JCL-UI-Action-Plan/0.1",
+  "supportedLanes": [
+    "SANDBOX"
+  ],
+  "observedCapabilities": [
+    "SEMANTIC_TREE",
+    "NODE_ACTIONS",
+    "TEXT_INPUT",
+    "APP_LAUNCH"
+  ],
+  "executionEnabled": true,
+  "publicContract": {
+    "available": false,
+    "protocol": null,
+    "definitionSha256": null
+  },
+  "hostAdapter": {
+    "available": true,
+    "profileSha256": "236f880f89b035efe9f8a354703c9cf3c3b0753a0ad899e841f97e034722c1ae"
+  },
+  "identityBinding": {
+    "mode": "RUNTIME_SIGNER_AND_CONTRACT",
+    "versionCode": 1,
+    "certificateSha256": null,
+    "artifactSha256": null,
+    "contractId": "jidan.accessibility.sandbox.v0.1.semantic-form.5"
+  },
+  "realWorldEffectCeiling": "SYNTHETIC_ONLY",
+  "notes": [
+    "The Android host rechecks package, signer, UID, version, contract, window and semantic node roles before every step.",
+    "The current Android runtime uses an internal Kotlin mapping; no public MCP or JSON execution endpoint is registered yet.",
+    "This provider executes only in the owned offline sandbox and never produces a real payment."
+  ]
+}

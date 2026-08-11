@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <permission
+        android:name="dev.jidan.accessibility.sandbox.RUN"
+        android:protectionLevel="signature" />
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@drawable/ic_jidan_sandbox"
+        android:label="鸡蛋操作实验室"
+        android:roundIcon="@drawable/ic_jidan_sandbox"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.JidanAccessibilitySandbox"
+        android:usesCleartextTraffic="false">
+
+        <meta-data
+            android:name="dev.jidan.ACCESSIBILITY_LAB_CONTRACT"
+            android:value="jidan.accessibility.sandbox.v0.1.semantic-form.5" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:permission="dev.jidan.accessibility.sandbox.RUN" />
+    </application>
+</manifest>

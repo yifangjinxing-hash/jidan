@@ -66,7 +66,33 @@ class LocalCommandParserTest {
     }
 
     @Test
+    fun mobileAnjianIsOnlyAnEmptyInputCandidateHandoff() {
+        val result = LocalCommandParser.parse("打开按键精灵")
+
+        assertTrue(result is ParseResult.Proposal)
+        val proposal = (result as ParseResult.Proposal).value
+        assertEquals(ShellAction.OPEN_MOBILEANJIAN, proposal.action)
+        assertEquals("app.open.mobileanjian_candidate", proposal.action.id)
+        assertEquals(ShellRiskLevel.NAVIGATION, proposal.riskLevel)
+        assertEquals(ShellExecutionMode.DIRECT, proposal.executionMode)
+        assertTrue(proposal.canonicalContract.contains("\"arguments\":{}"))
+    }
+
+    @Test
     fun blankInputDoesNothing() {
         assertTrue(LocalCommandParser.parse("  ") is ParseResult.Unknown)
+    }
+
+    @Test
+    fun sensitiveWordsAreExecutableInsideTheNamedSandboxExperiment() {
+        val result = LocalCommandParser.parse("测试支付密码验证码")
+
+        assertTrue(result is ParseResult.Proposal)
+        val proposal = (result as ParseResult.Proposal).value
+        assertEquals(ShellAction.OPEN_AUTOMATION_LAB, proposal.action)
+        assertEquals("android.ui.sandbox_start", proposal.action.id)
+        assertTrue(proposal.canonicalContract.contains("\"arguments\":{}"))
+        assertEquals(ShellRiskLevel.SENSITIVE_EXPERIMENT, proposal.riskLevel)
+        assertEquals(ShellExecutionMode.SANDBOX, proposal.executionMode)
     }
 }

@@ -1,0 +1,59 @@
+{
+  "name": "android.ui.sandbox_start",
+  "description": "Start the owned Android hand-and-brain lab after one explicit foreground user action. The Android host creates and binds the detailed UI plan only after observing the sandbox; this activation tool does not accept a caller-supplied plan.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "enum": [
+          "lab_launched",
+          "needs_accessibility",
+          "target_unavailable",
+          "blocked"
+        ]
+      },
+      "handProviderId": {
+        "const": "android.hand.jidan.accessibility.v0.1"
+      },
+      "realWorldStatus": {
+        "const": "SYNTHETIC_ONLY"
+      },
+      "realPayment": {
+        "const": false
+      }
+    },
+    "required": [
+      "state",
+      "handProviderId",
+      "realWorldStatus",
+      "realPayment"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "WRITE",
+      "executionMode": "SANDBOX_ACTIVATION",
+      "requiresConfirmation": false,
+      "requiresForegroundUserActivation": true,
+      "activationMode": "EXPLICIT_FOREGROUND",
+      "availability": "ANDROID_SHELL",
+      "registered": true,
+      "targetPackage": "dev.jidan.accessibility.sandbox",
+      "realWorldEffects": false
+    }
+  }
+}

@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -16,34 +17,34 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
+import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.ImageView
+import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
+import dev.jidan.shell.accessibility.JidanAccessibilityService
 
 class MainActivity : Activity(), SpeechController.Listener {
     private lateinit var root: FrameLayout
-    private lateinit var orb: JidanOrbView
+    private lateinit var statusDot: TextView
     private lateinit var statusTitle: TextView
     private lateinit var statusSubtitle: TextView
     private lateinit var input: EditText
-    private lateinit var microphoneButton: Button
+    private lateinit var microphoneButton: ImageButton
     private lateinit var receiptLabel: TextView
     private lateinit var speech: SpeechController
     private lateinit var launcher: FrontDoorLauncher
     private lateinit var receipts: ReceiptStore
     private var receiptsHealthy = true
+    private var resumeAutomationAfterSettings = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.rgb(8, 7, 19)
-        window.decorView.systemUiVisibility =
-            View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        configureSystemBars()
 
         speech = SpeechController(this, this)
         launcher = FrontDoorLauncher(this)
@@ -65,122 +66,84 @@ class MainActivity : Activity(), SpeechController.Listener {
 
     private fun buildInterface() {
         root = FrameLayout(this).apply {
-            setBackgroundColor(Color.rgb(5, 5, 16))
+            setBackgroundColor(Color.rgb(11, 11, 15))
             setOnApplyWindowInsetsListener { view, insets ->
-                view.setPadding(
-                    0,
-                    insets.systemWindowInsetTop,
-                    0,
-                    insets.systemWindowInsetBottom,
-                )
-                insets
+                applySystemBarInsets(view, insets)
             }
         }
-        root.addView(ImageView(this).apply {
-            setImageResource(R.drawable.jidan_cosmos)
-            scaleType = ImageView.ScaleType.CENTER_CROP
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, matchFrame())
-        root.addView(View(this).apply {
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(
-                    Color.argb(90, 2, 3, 12),
-                    Color.argb(12, 6, 5, 18),
-                    Color.argb(125, 5, 4, 15),
-                ),
-            )
-            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, matchFrame())
-
         root.addView(buildTopBar())
-        root.addView(buildOrb())
-        root.addView(buildBottomArea())
-        root.addView(buildFooter())
+        root.addView(buildCommandCenter())
+        receiptLabel = textView("", 1f, Color.TRANSPARENT).apply {
+            visibility = View.GONE
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+        }
         setContentView(root)
         root.requestApplyInsets()
     }
 
     private fun buildTopBar(): View {
         val bar = FrameLayout(this)
-        val brand = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            addView(textView(getString(R.string.brand_name), 26f, Color.WHITE, bold = true))
-            addView(textView(getString(R.string.prototype_badge), 12f, SOFT_TEXT))
+        statusDot = TextView(this).apply {
+            text = "●"
+            textSize = 13f
+            setTextColor(Color.rgb(101, 212, 170))
+            gravity = Gravity.CENTER
+            contentDescription = "鸡蛋已就绪"
+            visibility = View.GONE
         }
-        bar.addView(brand, FrameLayout.LayoutParams(wrap, wrap, Gravity.START or Gravity.CENTER_VERTICAL))
         bar.addView(Button(this).apply {
             setText(R.string.settings)
-            textSize = 14f
+            textSize = 13f
             isAllCaps = false
-            setTextColor(Color.WHITE)
+            setTextColor(Color.rgb(210, 210, 218))
             minWidth = dp(64)
-            minHeight = dp(48)
-            background = rounded(Color.argb(72, 255, 255, 255), dp(24), SOFT_BORDER, dp(1))
+            minHeight = dp(44)
+            background = rounded(Color.rgb(29, 29, 34), dp(22), Color.rgb(62, 62, 70), dp(1))
             contentDescription = getString(R.string.settings)
             setOnClickListener { openAppSettings() }
-        }, FrameLayout.LayoutParams(dp(76), dp(48), Gravity.END or Gravity.CENTER_VERTICAL))
+        }, FrameLayout.LayoutParams(dp(72), dp(44), Gravity.END or Gravity.CENTER_VERTICAL))
         return bar.apply {
-            layoutParams = FrameLayout.LayoutParams(match, dp(68), Gravity.TOP).apply {
-                marginStart = dp(24)
-                marginEnd = dp(24)
-                topMargin = dp(12)
+            layoutParams = FrameLayout.LayoutParams(match, dp(56), Gravity.TOP).apply {
+                marginStart = dp(20)
+                marginEnd = dp(20)
+                topMargin = dp(8)
             }
         }
     }
 
-    private fun buildOrb(): View {
-        val container = FrameLayout(this)
-        orb = JidanOrbView(this)
-        container.addView(orb, matchFrame())
-        container.addView(TextView(this).apply {
-            setText(R.string.orb_greeting)
-            textSize = 20f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            setShadowLayer(12f, 0f, 2f, Color.rgb(83, 55, 140))
-            contentDescription = getString(R.string.orb_greeting)
-        }, matchFrame())
-        return container.apply {
-            layoutParams = FrameLayout.LayoutParams(dp(270), dp(270), Gravity.CENTER)
-            translationY = -dp(54).toFloat()
-        }
-    }
-
-    private fun buildBottomArea(): View {
+    private fun buildCommandCenter(): View {
         val area = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER_HORIZONTAL
         }
-        statusTitle = textView(getString(R.string.idle_title), 23f, Color.WHITE, bold = true).apply {
-            gravity = Gravity.CENTER
+        statusTitle = textView("", 18f, Color.WHITE, bold = true).apply {
+            visibility = View.GONE
+            gravity = Gravity.START
         }
-        statusSubtitle = textView(getString(R.string.idle_subtitle), 16f, SOFT_TEXT).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(4), 0, dp(14))
+        statusSubtitle = textView("", 14f, Color.rgb(174, 174, 184)).apply {
+            visibility = View.GONE
+            gravity = Gravity.START
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            setPadding(0, dp(5), 0, dp(18))
         }
         area.addView(statusTitle, LinearLayout.LayoutParams(match, wrap))
         area.addView(statusSubtitle, LinearLayout.LayoutParams(match, wrap))
-        area.addView(buildInputBar(), LinearLayout.LayoutParams(match, dp(66)))
+        area.addView(buildInputBar(), LinearLayout.LayoutParams(match, dp(62)))
 
         val suggestionRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER
-            setPadding(0, dp(10), 0, 0)
+            setPadding(0, dp(12), 0, 0)
             addView(suggestionButton(R.string.try_alipay, "打开支付宝"))
-            addView(suggestionButton(R.string.try_settings, "打开系统设置"))
+            addView(suggestionButton(R.string.try_mobileanjian, "打开按键精灵"))
+            addView(suggestionButton(R.string.try_hand_brain_lab, "开始手脑实验"))
         }
         area.addView(suggestionRow, LinearLayout.LayoutParams(match, wrap))
-        area.addView(textView(getString(R.string.privacy_short), 12f, MUTED_TEXT).apply {
-            gravity = Gravity.CENTER
-            setPadding(0, dp(10), 0, 0)
-        }, LinearLayout.LayoutParams(match, wrap))
 
         return area.apply {
-            layoutParams = FrameLayout.LayoutParams(match, wrap, Gravity.BOTTOM).apply {
-                marginStart = dp(22)
-                marginEnd = dp(22)
-                bottomMargin = dp(78)
+            layoutParams = FrameLayout.LayoutParams(match, wrap, Gravity.CENTER).apply {
+                marginStart = dp(26)
+                marginEnd = dp(26)
             }
         }
     }
@@ -189,14 +152,14 @@ class MainActivity : Activity(), SpeechController.Listener {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(dp(10), 0, dp(7), 0)
-            background = rounded(Color.argb(165, 13, 12, 32), dp(33), INPUT_BORDER, dp(1))
+            setPadding(dp(12), 0, dp(6), 0)
+            background = rounded(Color.rgb(29, 29, 34), dp(31), INPUT_BORDER, dp(1))
         }
         input = EditText(this).apply {
             setHint(R.string.input_hint)
-            setHintTextColor(Color.argb(165, 235, 229, 247))
+            setHintTextColor(Color.rgb(145, 145, 156))
             setTextColor(Color.WHITE)
-            textSize = 18f
+            textSize = 17f
             maxLines = 2
             minHeight = dp(56)
             setSingleLine(false)
@@ -204,47 +167,16 @@ class MainActivity : Activity(), SpeechController.Listener {
             setPadding(dp(8), 0, dp(8), 0)
         }
         row.addView(input, LinearLayout.LayoutParams(0, match, 1f))
-        microphoneButton = roundActionButton("🎙", R.string.microphone).apply {
+        microphoneButton = roundImageButton(R.drawable.ic_mic, R.string.microphone).apply {
             setOnClickListener { toggleSpeech() }
         }
-        row.addView(microphoneButton, LinearLayout.LayoutParams(dp(52), dp(52)).apply {
+        row.addView(microphoneButton, LinearLayout.LayoutParams(dp(48), dp(48)).apply {
             marginEnd = dp(4)
         })
-        row.addView(roundActionButton("→", R.string.submit).apply {
+        row.addView(roundImageButton(R.drawable.ic_arrow_up, R.string.submit).apply {
             setOnClickListener { submitText() }
-        }, LinearLayout.LayoutParams(dp(52), dp(52)))
+        }, LinearLayout.LayoutParams(dp(48), dp(48)))
         return row
-    }
-
-    private fun buildFooter(): View {
-        val footer = FrameLayout(this)
-        footer.addView(TextView(this).apply {
-            text = "◉  ∞"
-            textSize = 19f
-            setTextColor(Color.rgb(181, 225, 213))
-            gravity = Gravity.CENTER
-            background = rounded(Color.argb(80, 8, 25, 28), dp(26), Color.rgb(76, 140, 127), dp(1))
-            contentDescription = getString(R.string.local_mode)
-        }, FrameLayout.LayoutParams(dp(92), dp(48), Gravity.START or Gravity.CENTER_VERTICAL))
-        receiptLabel = textView("•   0001", 12f, Color.argb(150, 230, 222, 241)).apply {
-            gravity = Gravity.CENTER
-        }
-        footer.addView(receiptLabel, FrameLayout.LayoutParams(dp(120), dp(48), Gravity.CENTER))
-        footer.addView(Button(this).apply {
-            text = "?"
-            textSize = 20f
-            setTextColor(Color.WHITE)
-            background = rounded(Color.argb(95, 31, 28, 50), dp(26), SOFT_BORDER, dp(1))
-            contentDescription = getString(R.string.help)
-            setOnClickListener { showHelp() }
-        }, FrameLayout.LayoutParams(dp(52), dp(48), Gravity.END or Gravity.CENTER_VERTICAL))
-        return footer.apply {
-            layoutParams = FrameLayout.LayoutParams(match, dp(52), Gravity.BOTTOM).apply {
-                marginStart = dp(24)
-                marginEnd = dp(24)
-                bottomMargin = dp(12)
-            }
-        }
     }
 
     private fun submitText() {
@@ -253,17 +185,29 @@ class MainActivity : Activity(), SpeechController.Listener {
             return
         }
         hideKeyboard()
-        orb.setMode(OrbMode.THINKING)
-        statusTitle.text = getString(R.string.thinking)
-        statusSubtitle.text = "安全的打开动作会直接交给安卓。"
+        showStatus(
+            getString(R.string.thinking),
+            "安全的打开动作会直接交给安卓。",
+            OrbMode.THINKING,
+        )
         val parsed = LocalCommandParser.parse(input.text.toString())
         when (val directive = CommandDispatchPolicy.classify(parsed)) {
             is DispatchDirective.DirectNavigation -> dispatchProposal(directive.proposal)
+            is DispatchDirective.SandboxExperiment -> dispatchProposal(directive.proposal)
             is DispatchDirective.DoNotDispatch -> showFailure(directive.title, directive.message)
         }
     }
 
     private fun dispatchProposal(proposal: ActionProposal) {
+        val preparedHash = runCatching {
+            receipts.append(proposal, "dispatch_prepared")
+        }.getOrNull()
+        if (preparedHash == null) {
+            receiptsHealthy = false
+            showFailure("动作意图没有记好", "鸡蛋没有把动作交给安卓，也不会自动重试。")
+            return
+        }
+        receiptLabel.text = getString(R.string.receipt_format, preparedHash.take(8))
         val result = launcher.dispatch(proposal)
         val (status, title, message, mode) = when (result) {
             is DispatchResult.Dispatched -> Quadruple(
@@ -284,24 +228,79 @@ class MainActivity : Activity(), SpeechController.Listener {
                 result.message,
                 OrbMode.FAILURE,
             )
+            is DispatchResult.NeedsAccessibility -> {
+                resumeAutomationAfterSettings = true
+                openAccessibilitySettings()
+                Quadruple(
+                    "blocked_by_os",
+                    "正在接上“手”",
+                    "请在系统页打开鸡蛋辅助操作；返回后会自动继续。",
+                    OrbMode.THINKING,
+                )
+            }
         }
         val receiptHash = runCatching { receipts.append(proposal, status) }.getOrNull()
         if (receiptHash == null) {
+            if (proposal.action == ShellAction.OPEN_AUTOMATION_LAB) {
+                launcher.cancelActiveLab()
+            }
             receiptsHealthy = false
-            showFailure("回执没有写好", "鸡蛋不会自动重试。请先检查本机数据。")
+            showFailure("结果回执没有写好", "动作结果未知；鸡蛋已停下且不会自动重试。")
             return
         }
         receiptLabel.text = getString(R.string.receipt_format, receiptHash.take(8))
-        orb.setMode(mode)
-        statusTitle.text = title
-        statusSubtitle.text = message
+        showStatus(title, message, mode)
     }
 
     private fun showFailure(title: String, message: String) {
-        orb.setMode(OrbMode.FAILURE)
+        showStatus(title, message, OrbMode.FAILURE)
+    }
+
+    @Suppress("DEPRECATION")
+    private fun configureSystemBars() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            window.statusBarColor = Color.TRANSPARENT
+            window.navigationBarColor = Color.rgb(8, 7, 19)
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            window.setDecorFitsSystemWindows(false)
+        } else {
+            window.decorView.systemUiVisibility =
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        }
+    }
+
+    @Suppress("DEPRECATION")
+    private fun applySystemBarInsets(view: View, insets: WindowInsets): WindowInsets {
+        val top: Int
+        val bottom: Int
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bars = insets.getInsets(WindowInsets.Type.systemBars())
+            top = bars.top
+            bottom = bars.bottom
+        } else {
+            top = insets.systemWindowInsetTop
+            bottom = insets.systemWindowInsetBottom
+        }
+        view.setPadding(0, top, 0, bottom)
+        return insets
+    }
+
+    private fun showStatus(title: String, message: String, mode: OrbMode) {
         statusTitle.text = title
         statusSubtitle.text = message
-        statusSubtitle.announceForAccessibility("$title。$message")
+        statusTitle.visibility = View.VISIBLE
+        statusSubtitle.visibility = View.VISIBLE
+        statusDot.setTextColor(
+            when (mode) {
+                OrbMode.SUCCESS -> Color.rgb(101, 212, 170)
+                OrbMode.FAILURE -> Color.rgb(255, 111, 112)
+                OrbMode.LISTENING -> Color.rgb(112, 177, 255)
+                OrbMode.THINKING -> Color.rgb(196, 156, 255)
+                OrbMode.IDLE -> Color.rgb(174, 174, 184)
+            },
+        )
+        statusDot.contentDescription = title
     }
 
     private fun toggleSpeech() {
@@ -345,14 +344,16 @@ class MainActivity : Activity(), SpeechController.Listener {
     }
 
     override fun onListeningStarted(onDevice: Boolean) {
-        microphoneButton.text = "■"
-        orb.setMode(OrbMode.LISTENING)
-        statusTitle.text = getString(R.string.listening)
-        statusSubtitle.text = if (onDevice) {
-            "这次使用手机上的离线识别服务。"
-        } else {
-            "这次由手机的语音服务识别，是否联网取决于手机设置。"
-        }
+        microphoneButton.setImageResource(R.drawable.ic_stop)
+        showStatus(
+            getString(R.string.listening),
+            if (onDevice) {
+                "这次使用手机上的离线识别服务。"
+            } else {
+                "这次由手机的语音服务识别，是否联网取决于手机设置。"
+            },
+            OrbMode.LISTENING,
+        )
     }
 
     override fun onPartialText(text: String) {
@@ -360,13 +361,13 @@ class MainActivity : Activity(), SpeechController.Listener {
     }
 
     override fun onFinalText(text: String) {
-        microphoneButton.text = "🎙"
+        microphoneButton.setImageResource(R.drawable.ic_mic)
         updateInputFromSpeech(text)
         submitText()
     }
 
     override fun onSpeechFailure() {
-        microphoneButton.text = "🎙"
+        microphoneButton.setImageResource(R.drawable.ic_mic)
         showFailure("没有听清", getString(R.string.speech_error))
     }
 
@@ -382,6 +383,35 @@ class MainActivity : Activity(), SpeechController.Listener {
                 Uri.parse("package:$packageName"),
             ),
         )
+    }
+
+    private fun openAccessibilitySettings() {
+        val service = ComponentName(this, JidanAccessibilityService::class.java)
+        val details = Intent(ACTION_ACCESSIBILITY_DETAILS_SETTINGS).apply {
+            putExtra(Intent.EXTRA_COMPONENT_NAME, service)
+        }
+        runCatching { startActivity(details) }
+            .recoverCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
+            .onFailure {
+                resumeAutomationAfterSettings = false
+                showFailure("无障碍设置没有打开", "安卓没有提供可用的设置入口。")
+            }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!resumeAutomationAfterSettings || !::root.isInitialized) return
+        root.postDelayed({
+            if (!resumeAutomationAfterSettings || isFinishing) return@postDelayed
+            resumeAutomationAfterSettings = false
+            if (dev.jidan.shell.accessibility.AccessibilityServiceBridge.connected) {
+                input.setText("开始手脑实验")
+                input.setSelection(input.length())
+                submitText()
+            } else {
+                showFailure("“手”还没有接好", "没有执行任何动作；需要时再点一次手脑实验。")
+            }
+        }, 450L)
     }
 
     private fun showHelp() {
@@ -400,7 +430,7 @@ class MainActivity : Activity(), SpeechController.Listener {
 
     override fun onStop() {
         speech.destroy()
-        microphoneButton.text = "🎙"
+        microphoneButton.setImageResource(R.drawable.ic_mic)
         super.onStop()
     }
 
@@ -423,9 +453,9 @@ class MainActivity : Activity(), SpeechController.Listener {
         setText(label)
         textSize = 13f
         isAllCaps = false
-        setTextColor(Color.rgb(226, 220, 240))
+        setTextColor(Color.rgb(216, 216, 224))
         minHeight = dp(48)
-        background = rounded(Color.argb(72, 31, 27, 52), dp(22), SOFT_BORDER, dp(1))
+        background = rounded(Color.rgb(24, 24, 29), dp(22), Color.rgb(62, 62, 70), dp(1))
         setOnClickListener {
             input.setText(command)
             input.setSelection(input.length())
@@ -437,14 +467,12 @@ class MainActivity : Activity(), SpeechController.Listener {
         }
     }
 
-    private fun roundActionButton(symbol: String, description: Int): Button = Button(this).apply {
-        text = symbol
-        textSize = 21f
-        setTextColor(Color.WHITE)
-        minWidth = 0
-        minHeight = 0
-        setPadding(0, 0, 0, 0)
-        background = rounded(Color.argb(118, 37, 31, 68), dp(26), Color.argb(95, 213, 202, 242), dp(1))
+    private fun roundImageButton(icon: Int, description: Int): ImageButton = ImageButton(this).apply {
+        setImageResource(icon)
+        imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(242, 242, 247))
+        scaleType = android.widget.ImageView.ScaleType.CENTER
+        setPadding(dp(13), dp(13), dp(13), dp(13))
+        background = rounded(Color.rgb(38, 38, 44), dp(26), Color.rgb(74, 74, 84), dp(1))
         contentDescription = getString(description)
     }
 
@@ -478,11 +506,10 @@ class MainActivity : Activity(), SpeechController.Listener {
 
     companion object {
         private const val REQUEST_AUDIO = 501
+        private const val ACTION_ACCESSIBILITY_DETAILS_SETTINGS =
+            "android.settings.ACCESSIBILITY_DETAILS_SETTINGS"
         private const val match = ViewGroup.LayoutParams.MATCH_PARENT
         private const val wrap = ViewGroup.LayoutParams.WRAP_CONTENT
-        private val SOFT_TEXT = Color.rgb(221, 214, 235)
-        private val MUTED_TEXT = Color.argb(165, 210, 203, 221)
-        private val SOFT_BORDER = Color.argb(95, 219, 208, 239)
-        private val INPUT_BORDER = Color.rgb(172, 160, 204)
+        private val INPUT_BORDER = Color.rgb(74, 74, 84)
     }
 }

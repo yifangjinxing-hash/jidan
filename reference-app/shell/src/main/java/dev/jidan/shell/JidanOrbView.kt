@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RadialGradient
 import android.graphics.RectF
@@ -35,6 +36,11 @@ class JidanOrbView @JvmOverloads constructor(
         strokeCap = Paint.Cap.ROUND
         strokeWidth = density(3f)
     }
+    private val glowShaderMatrix = Matrix()
+    private val glowShaders = OrbMode.entries.associateWith { value ->
+        createGlowShader(colorForMode(value))
+    }
+    private val smileBounds = RectF()
     private var pulse = 0f
     private var mode = OrbMode.IDLE
     private val animator = ValueAnimator.ofFloat(0f, 1f).apply {
@@ -74,17 +80,35 @@ class JidanOrbView @JvmOverloads constructor(
         val centerX = width / 2f
         val centerY = height / 2f
         val radius = min(width, height) * (0.34f + pulse * 0.018f)
-        val color = when (mode) {
-            OrbMode.IDLE -> Color.rgb(139, 120, 215)
-            OrbMode.LISTENING -> Color.rgb(76, 206, 202)
-            OrbMode.THINKING -> Color.rgb(236, 225, 194)
-            OrbMode.SUCCESS -> Color.rgb(92, 201, 145)
-            OrbMode.FAILURE -> Color.rgb(225, 112, 112)
-        }
-        glowPaint.shader = RadialGradient(
-            centerX,
-            centerY,
-            radius * 1.45f,
+        val color = colorForMode(mode)
+        val glowRadius = radius * 1.45f
+        val glowShader = glowShaders.getValue(mode)
+        glowShaderMatrix.setScale(glowRadius, glowRadius)
+        glowShaderMatrix.postTranslate(centerX, centerY)
+        glowShader.setLocalMatrix(glowShaderMatrix)
+        glowPaint.shader = glowShader
+        canvas.drawCircle(centerX, centerY, glowRadius, glowPaint)
+        ringPaint.color = Color.argb(115, Color.red(color), Color.green(color), Color.blue(color))
+        canvas.drawCircle(centerX, centerY, radius, ringPaint)
+
+        val eyeY = centerY - radius * 0.04f
+        val eyeOffset = radius * 0.19f
+        canvas.drawPoint(centerX - eyeOffset, eyeY, facePaint)
+        canvas.drawPoint(centerX + eyeOffset, eyeY, facePaint)
+        smileBounds.set(
+            centerX - radius * 0.2f,
+            centerY - radius * 0.02f,
+            centerX + radius * 0.2f,
+            centerY + radius * 0.3f,
+        )
+        canvas.drawArc(smileBounds, 20f, 140f, false, facePaint)
+    }
+
+    private fun createGlowShader(color: Int): RadialGradient =
+        RadialGradient(
+            0f,
+            0f,
+            1f,
             intArrayOf(
                 Color.argb(55, Color.red(color), Color.green(color), Color.blue(color)),
                 Color.argb(18, Color.red(color), Color.green(color), Color.blue(color)),
@@ -93,21 +117,13 @@ class JidanOrbView @JvmOverloads constructor(
             floatArrayOf(0f, 0.6f, 1f),
             Shader.TileMode.CLAMP,
         )
-        canvas.drawCircle(centerX, centerY, radius * 1.45f, glowPaint)
-        ringPaint.color = Color.argb(115, Color.red(color), Color.green(color), Color.blue(color))
-        canvas.drawCircle(centerX, centerY, radius, ringPaint)
 
-        val eyeY = centerY - radius * 0.04f
-        val eyeOffset = radius * 0.19f
-        canvas.drawPoint(centerX - eyeOffset, eyeY, facePaint)
-        canvas.drawPoint(centerX + eyeOffset, eyeY, facePaint)
-        val smile = RectF(
-            centerX - radius * 0.2f,
-            centerY - radius * 0.02f,
-            centerX + radius * 0.2f,
-            centerY + radius * 0.3f,
-        )
-        canvas.drawArc(smile, 20f, 140f, false, facePaint)
+    private fun colorForMode(value: OrbMode): Int = when (value) {
+        OrbMode.IDLE -> Color.rgb(139, 120, 215)
+        OrbMode.LISTENING -> Color.rgb(76, 206, 202)
+        OrbMode.THINKING -> Color.rgb(236, 225, 194)
+        OrbMode.SUCCESS -> Color.rgb(92, 201, 145)
+        OrbMode.FAILURE -> Color.rgb(225, 112, 112)
     }
 
     private fun density(value: Float): Float = value * resources.displayMetrics.density

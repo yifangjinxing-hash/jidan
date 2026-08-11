@@ -52,6 +52,19 @@ object LocalCommandParser {
             )
         }
 
+        if (compact in setOf("打开按键精灵", "启动按键精灵", "按键精灵")) {
+            return ParseResult.Proposal(
+                ActionProposal(
+                    action = ShellAction.OPEN_MOBILEANJIAN,
+                    title = "打开候选手",
+                    safetyMessage = (
+                        "只打开已审计版本的按键精灵首页。鸡蛋不会调用它的私有服务、端口或脚本。"
+                        ),
+                    actionLabel = "打开按键精灵",
+                ),
+            )
+        }
+
         if (compact in setOf("打开系统设置", "打开设置", "系统设置")) {
             return ParseResult.Proposal(
                 ActionProposal(
@@ -59,6 +72,25 @@ object LocalCommandParser {
                     title = "打开系统设置",
                     safetyMessage = "将打开安卓系统设置。鸡蛋不会替你修改任何开关。",
                     actionLabel = "打开设置",
+                ),
+            )
+        }
+
+        if (compact in setOf(
+                "开始手脑实验",
+                "打开手脑实验",
+                "实验支付",
+                "测试支付密码验证码",
+            )
+        ) {
+            return ParseResult.Proposal(
+                ActionProposal(
+                    action = ShellAction.OPEN_AUTOMATION_LAB,
+                    title = "手 + 脑实验",
+                    safetyMessage = "将在鸡蛋自带的无网络假页面中填写虚构金额、假密码和假验证码。",
+                    actionLabel = "开始实验",
+                    riskLevel = ShellRiskLevel.SENSITIVE_EXPERIMENT,
+                    executionMode = ShellExecutionMode.SANDBOX,
                 ),
             )
         }
@@ -74,7 +106,7 @@ object LocalCommandParser {
         }
 
         return ParseResult.Unknown(
-            "现在我只会安全地打开支付宝或系统设置。其他事情没有执行。",
+            "现在我只会打开支付宝、按键精灵、系统设置，或运行隔离的手脑实验。其他事情没有执行。",
         )
     }
 }
