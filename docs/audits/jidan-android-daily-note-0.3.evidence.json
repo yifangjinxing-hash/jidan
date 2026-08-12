@@ -1,6 +1,6 @@
 {
   "schemaVersion": "jidan.android.daily-note.evidence.v0.1",
-  "observedAt": "2026-08-12T04:39:00+08:00",
+  "observedAt": "2026-08-12T04:39:00Z",
   "device": {
     "serial": "emulator-5560",
     "model": "sdk_gphone64_x86_64",

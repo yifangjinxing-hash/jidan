@@ -86,6 +86,7 @@ adb install -r -t .\reference-app\shell\build\outputs\apk\debug\shell-debug.apk
 - 无障碍服务只订阅“小事清单”和合成实验室两个自有包；
 - 只按稳定资源 ID 找输入框与保存按钮，不靠旧屏幕坐标；
 - 系统接收动作后，必须重新读取页面并检查后置条件；
+- JCL 里的 `note_ready` / `saved` 是后置条件名；Android 运行时会把它绑定为 `条件名:<本次正文 SHA-256>`，不会只看到一个通用单词就算成功；
 - 同一个 `requestId` 再来一次，不会多存一条；同一 ID 换了正文会被拒绝；
 - 结果不明时记为未知并停下，不自动连点；
 - 清单正文只在小事清单本机存储中保留，Shell 与无障碍回执保存摘要和哈希链。
