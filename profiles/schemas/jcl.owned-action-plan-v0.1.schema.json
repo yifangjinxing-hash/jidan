@@ -1,0 +1,253 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.jidan.dev/jcl.owned-action-plan-v0.1.schema.json",
+  "title": "JCL Owned App Action Plan 0.1",
+  "description": "A Host-bound semantic UI plan for a real, local effect inside a same-signed owned app. Coordinates and caller-selected providers are not accepted.",
+  "type": "object",
+  "properties": {
+    "profile": {
+      "const": "JCL-Owned-Action-Plan/0.1"
+    },
+    "planId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,127}$"
+    },
+    "handProviderId": {
+      "const": "android.hand.jidan.accessibility.daily.v0.1"
+    },
+    "handProviderRegistrationSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "goalCode": {
+      "const": "CREATE_DAILY_NOTE"
+    },
+    "lane": {
+      "const": "OWNED_APP"
+    },
+    "targetFingerprint": {
+      "type": "object",
+      "properties": {
+        "packageName": {
+          "const": "dev.jidan.daily.demo"
+        },
+        "versionCode": {
+          "const": 1
+        },
+        "certificateSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "androidUid": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "contractId": {
+          "const": "jidan.daily.demo.v0.1.note-form.1"
+        },
+        "fingerprintSha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      },
+      "required": [
+        "packageName",
+        "versionCode",
+        "certificateSha256",
+        "androidUid",
+        "contractId",
+        "fingerprintSha256"
+      ],
+      "additionalProperties": false
+    },
+    "sourceObservationSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "payloadDigestSha256": {
+      "description": "Digest only; the note text travels through a one-shot local value handle and is not persisted in the plan or receipt.",
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "$ref": "#/$defs/setTextAction"
+        },
+        {
+          "$ref": "#/$defs/clickAction"
+        }
+      ],
+      "items": false
+    },
+    "executionBudget": {
+      "type": "object",
+      "properties": {
+        "maxSteps": {
+          "const": 2
+        },
+        "automaticRetryCount": {
+          "const": 0
+        },
+        "preEffectReobserveCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "maxSteps",
+        "automaticRetryCount",
+        "preEffectReobserveCount"
+      ],
+      "additionalProperties": false
+    },
+    "selectorAuthority": {
+      "const": "SEMANTIC_NODE_ONLY"
+    },
+    "coordinateInputAccepted": {
+      "const": false
+    },
+    "effectStatus": {
+      "enum": [
+        "NOT_ATTEMPTED",
+        "FAILED_BEFORE_EFFECT",
+        "TRANSITION_VERIFIED",
+        "OUTCOME_UNKNOWN"
+      ]
+    },
+    "realWorldStatus": {
+      "const": "OWNED_LOCAL_APP"
+    }
+  },
+  "required": [
+    "profile",
+    "planId",
+    "handProviderId",
+    "handProviderRegistrationSha256",
+    "goalCode",
+    "lane",
+    "targetFingerprint",
+    "sourceObservationSha256",
+    "requestId",
+    "payloadDigestSha256",
+    "actions",
+    "executionBudget",
+    "selectorAuthority",
+    "coordinateInputAccepted",
+    "effectStatus",
+    "realWorldStatus"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "selector": {
+      "type": "object",
+      "properties": {
+        "packageName": {
+          "const": "dev.jidan.daily.demo"
+        },
+        "viewId": {
+          "enum": [
+            "dev.jidan.daily.demo:id/daily_note_input",
+            "dev.jidan.daily.demo:id/daily_note_save"
+          ]
+        },
+        "structuralPath": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 24,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "className": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "clickable": {
+          "type": "boolean"
+        },
+        "editable": {
+          "type": "boolean"
+        },
+        "password": {
+          "const": false
+        }
+      },
+      "required": [
+        "packageName",
+        "viewId",
+        "structuralPath",
+        "className",
+        "clickable",
+        "editable",
+        "password"
+      ],
+      "additionalProperties": false
+    },
+    "setTextAction": {
+      "type": "object",
+      "properties": {
+        "actionId": {
+          "const": "set_daily_note"
+        },
+        "actionKind": {
+          "const": "SET_TEXT"
+        },
+        "selector": {
+          "$ref": "#/$defs/selector"
+        },
+        "ephemeralValueRef": {
+          "type": "string",
+          "pattern": "^ephemeral:[0-9a-fA-F-]{36}$"
+        },
+        "postconditionMarker": {
+          "const": "note_ready"
+        }
+      },
+      "required": [
+        "actionId",
+        "actionKind",
+        "selector",
+        "ephemeralValueRef",
+        "postconditionMarker"
+      ],
+      "additionalProperties": false
+    },
+    "clickAction": {
+      "type": "object",
+      "properties": {
+        "actionId": {
+          "const": "save_daily_note"
+        },
+        "actionKind": {
+          "const": "CLICK"
+        },
+        "selector": {
+          "$ref": "#/$defs/selector"
+        },
+        "postconditionMarker": {
+          "const": "saved"
+        }
+      },
+      "required": [
+        "actionId",
+        "actionKind",
+        "selector",
+        "postconditionMarker"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

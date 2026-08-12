@@ -4,7 +4,13 @@ import java.security.MessageDigest
 
 enum class ExecutionLane {
     SANDBOX,
+    OWNED_APP,
     SHADOW,
+}
+
+enum class AccessibilityTaskKind {
+    SANDBOX_LAB,
+    DAILY_NOTE,
 }
 
 enum class UiActionKind {
@@ -28,6 +34,7 @@ enum class EffectStatus {
 
 enum class RealWorldStatus {
     SYNTHETIC_ONLY,
+    OWNED_LOCAL_APP,
 }
 
 data class TargetIdentity(
@@ -53,6 +60,7 @@ data class LabValueReferences(
     val amount: String,
     val password: String,
     val otp: String,
+    val note: String? = null,
 )
 
 data class UiNodeSnapshot(
@@ -165,6 +173,9 @@ object HandProviderIds {
     const val BUILTIN_ACCESSIBILITY_REGISTRATION_SHA256 =
         "3a435217c54c7c7e97f24d2de3d97fc43fc2ccf321d3aa85d049f47a28622920"
     const val MOBILEANJIAN_CANDIDATE = "android.hand.candidate.cyjh.mobileanjian.v0.1"
+    const val DAILY_ACCESSIBILITY = "android.hand.jidan.accessibility.daily.v0.1"
+    const val DAILY_ACCESSIBILITY_REGISTRATION_SHA256 =
+        "652eca8492257de7617519f2adc120bf57e366265f63c8b31147a8d2c9bb325b"
 }
 
 data class AccessibilityReceiptData(
@@ -230,6 +241,7 @@ data class AccessibilityReceiptData(
 
 object ExecutionLaneResolver {
     const val SANDBOX_PACKAGE = "dev.jidan.accessibility.sandbox"
+    const val DAILY_PACKAGE = "dev.jidan.daily.demo"
 
     fun resolve(targetPackage: String, trustedSandbox: Boolean): ExecutionLane =
         if (targetPackage == SANDBOX_PACKAGE && trustedSandbox) {
@@ -237,6 +249,13 @@ object ExecutionLaneResolver {
         } else {
             ExecutionLane.SHADOW
         }
+
+    fun resolveOwnedTarget(targetPackage: String, trusted: Boolean): ExecutionLane = when {
+        !trusted -> ExecutionLane.SHADOW
+        targetPackage == SANDBOX_PACKAGE -> ExecutionLane.SANDBOX
+        targetPackage == DAILY_PACKAGE -> ExecutionLane.OWNED_APP
+        else -> ExecutionLane.SHADOW
+    }
 }
 
 internal fun sha256(value: String): String = MessageDigest

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <permission
+        android:name="dev.jidan.daily.demo.RUN"
+        android:protectionLevel="signature" />
+
+    <application
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="false"
+        android:icon="@drawable/ic_daily_demo"
+        android:label="小事清单"
+        android:roundIcon="@drawable/ic_daily_demo"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.JidanDailyDemo"
+        android:usesCleartextTraffic="false">
+
+        <meta-data
+            android:name="dev.jidan.ACCESSIBILITY_LAB_CONTRACT"
+            android:value="jidan.daily.demo.v0.1.note-form.1" />
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

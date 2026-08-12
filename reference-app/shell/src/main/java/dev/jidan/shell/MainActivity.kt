@@ -27,6 +27,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.window.OnBackInvokedDispatcher
 import dev.jidan.shell.accessibility.JidanAccessibilityService
+import dev.jidan.shell.accessibility.AccessibilityServiceBridge
 
 class MainActivity : Activity(), SpeechController.Listener {
     private lateinit var root: FrameLayout
@@ -40,7 +41,8 @@ class MainActivity : Activity(), SpeechController.Listener {
     private lateinit var launcher: FrontDoorLauncher
     private lateinit var receipts: ReceiptStore
     private var receiptsHealthy = true
-    private var resumeAutomationAfterSettings = false
+    private var pendingProposalAfterSettings: ActionProposal? = null
+    private var activeDailyRequestId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,6 +52,7 @@ class MainActivity : Activity(), SpeechController.Listener {
         launcher = FrontDoorLauncher(this)
         receipts = ReceiptStore(this)
         receiptsHealthy = receipts.verify()
+        activeDailyRequestId = savedInstanceState?.getString(STATE_DAILY_REQUEST_ID)
         buildInterface()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             onBackInvokedDispatcher.registerOnBackInvokedCallback(
@@ -136,7 +139,7 @@ class MainActivity : Activity(), SpeechController.Listener {
             setPadding(0, dp(12), 0, 0)
             addView(suggestionButton(R.string.try_alipay, "打开支付宝"))
             addView(suggestionButton(R.string.try_mobileanjian, "打开按键精灵"))
-            addView(suggestionButton(R.string.try_hand_brain_lab, "开始手脑实验"))
+            addView(suggestionButton(R.string.try_daily_note, "记下明天买鸡蛋"))
         }
         area.addView(suggestionRow, LinearLayout.LayoutParams(match, wrap))
 
@@ -194,15 +197,23 @@ class MainActivity : Activity(), SpeechController.Listener {
         when (val directive = CommandDispatchPolicy.classify(parsed)) {
             is DispatchDirective.DirectNavigation -> dispatchProposal(directive.proposal)
             is DispatchDirective.SandboxExperiment -> dispatchProposal(directive.proposal)
+            is DispatchDirective.OwnedAppAction -> dispatchProposal(directive.proposal)
             is DispatchDirective.DoNotDispatch -> showFailure(directive.title, directive.message)
         }
     }
 
     private fun dispatchProposal(proposal: ActionProposal) {
+        val dailyArguments = proposal.arguments as? ActionArguments.DailyNote
+        if (proposal.action == ShellAction.CREATE_DAILY_NOTE && dailyArguments == null) {
+            showFailure("待办没有准备好", "鸡蛋没有打开日常小事 App，也没有保存任何内容。")
+            return
+        }
+        if (dailyArguments != null) activeDailyRequestId = dailyArguments.requestId
         val preparedHash = runCatching {
             receipts.append(proposal, "dispatch_prepared")
         }.getOrNull()
         if (preparedHash == null) {
+            if (dailyArguments != null) activeDailyRequestId = null
             receiptsHealthy = false
             showFailure("动作意图没有记好", "鸡蛋没有把动作交给安卓，也不会自动重试。")
             return
@@ -229,21 +240,42 @@ class MainActivity : Activity(), SpeechController.Listener {
                 OrbMode.FAILURE,
             )
             is DispatchResult.NeedsAccessibility -> {
-                resumeAutomationAfterSettings = true
-                openAccessibilitySettings()
-                Quadruple(
-                    "blocked_by_os",
-                    "正在接上“手”",
-                    "请在系统页打开鸡蛋辅助操作；返回后会自动继续。",
-                    OrbMode.THINKING,
-                )
+                pendingProposalAfterSettings = proposal
+                if (openAccessibilitySettings()) {
+                    Quadruple(
+                        "blocked_by_os",
+                        "正在接上“手”",
+                        "请在系统页打开鸡蛋辅助操作；返回后会自动继续。",
+                        OrbMode.THINKING,
+                    )
+                } else {
+                    pendingProposalAfterSettings = null
+                    if (dailyArguments != null) activeDailyRequestId = null
+                    Quadruple(
+                        "blocked_by_os",
+                        "无障碍设置没有打开",
+                        "安卓没有提供可用的设置入口；没有执行任何动作。",
+                        OrbMode.FAILURE,
+                    )
+                }
             }
+        }
+        if (
+            dailyArguments != null &&
+            result !is DispatchResult.Dispatched &&
+            result !is DispatchResult.NeedsAccessibility
+        ) {
+            activeDailyRequestId = null
         }
         val receiptHash = runCatching { receipts.append(proposal, status) }.getOrNull()
         if (receiptHash == null) {
-            if (proposal.action == ShellAction.OPEN_AUTOMATION_LAB) {
+            if (
+                proposal.action == ShellAction.OPEN_AUTOMATION_LAB ||
+                proposal.action == ShellAction.CREATE_DAILY_NOTE
+            ) {
                 launcher.cancelActiveLab()
             }
+            if (dailyArguments != null) activeDailyRequestId = null
             receiptsHealthy = false
             showFailure("结果回执没有写好", "动作结果未知；鸡蛋已停下且不会自动重试。")
             return
@@ -385,33 +417,59 @@ class MainActivity : Activity(), SpeechController.Listener {
         )
     }
 
-    private fun openAccessibilitySettings() {
+    private fun openAccessibilitySettings(): Boolean {
         val service = ComponentName(this, JidanAccessibilityService::class.java)
         val details = Intent(ACTION_ACCESSIBILITY_DETAILS_SETTINGS).apply {
             putExtra(Intent.EXTRA_COMPONENT_NAME, service)
         }
-        runCatching { startActivity(details) }
+        return runCatching { startActivity(details) }
             .recoverCatching { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
-            .onFailure {
-                resumeAutomationAfterSettings = false
-                showFailure("无障碍设置没有打开", "安卓没有提供可用的设置入口。")
-            }
+            .isSuccess
     }
 
     override fun onResume() {
         super.onResume()
-        if (!resumeAutomationAfterSettings || !::root.isInitialized) return
+        if (!::root.isInitialized) return
+        consumeDailyCompletionIfReady()
+        val pending = pendingProposalAfterSettings ?: return
         root.postDelayed({
-            if (!resumeAutomationAfterSettings || isFinishing) return@postDelayed
-            resumeAutomationAfterSettings = false
-            if (dev.jidan.shell.accessibility.AccessibilityServiceBridge.connected) {
-                input.setText("开始手脑实验")
-                input.setSelection(input.length())
-                submitText()
+            if (pendingProposalAfterSettings !== pending || isFinishing) return@postDelayed
+            pendingProposalAfterSettings = null
+            if (AccessibilityServiceBridge.connected) {
+                dispatchProposal(pending)
             } else {
-                showFailure("“手”还没有接好", "没有执行任何动作；需要时再点一次手脑实验。")
+                if (pending.arguments is ActionArguments.DailyNote) activeDailyRequestId = null
+                showFailure("“手”还没有接好", "没有执行任何动作；接好后再试一次。")
             }
         }, 450L)
+    }
+
+    private fun consumeDailyCompletionIfReady() {
+        val requestId = activeDailyRequestId ?: return
+        val completion = AccessibilityServiceBridge.consumeDailyCompletion(requestId) ?: return
+        activeDailyRequestId = null
+        if (
+            completion.noteSha256 != ActionProposal.sha256(completion.noteText) ||
+            !completion.receiptHash.matches(Regex("^[0-9a-f]{64}$"))
+        ) {
+            showFailure("保存结果无法核对", "鸡蛋没有把这次结果显示成已保存，也不会自动重试。")
+            return
+        }
+        receiptLabel.text = getString(R.string.receipt_format, completion.receiptHash.take(8))
+        showStatus(
+            "已经记下",
+            if (completion.navigationAccepted) {
+                completion.noteText
+            } else {
+                "${completion.noteText}\n内容已经保存；这次返回动作由你手动完成。"
+            },
+            OrbMode.SUCCESS,
+        )
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        activeDailyRequestId?.let { outState.putString(STATE_DAILY_REQUEST_ID, it) }
     }
 
     private fun showHelp() {
@@ -511,5 +569,6 @@ class MainActivity : Activity(), SpeechController.Listener {
         private const val match = ViewGroup.LayoutParams.MATCH_PARENT
         private const val wrap = ViewGroup.LayoutParams.WRAP_CONTENT
         private val INPUT_BORDER = Color.rgb(74, 74, 84)
+        private const val STATE_DAILY_REQUEST_ID = "daily_request_id"
     }
 }

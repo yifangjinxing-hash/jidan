@@ -1,7 +1,7 @@
 package dev.jidan.shell
 
 /**
- * Turns parser output into the only two routing outcomes the shell understands.
+ * Turns parser output into the shell's explicit routing outcomes.
  *
  * A [DirectNavigation] is front-door navigation: the user already asked to open an
  * app or Android settings, so another confirmation would add no safety. Payment,
@@ -11,6 +11,7 @@ package dev.jidan.shell
 sealed interface DispatchDirective {
     data class DirectNavigation(val proposal: ActionProposal) : DispatchDirective
     data class SandboxExperiment(val proposal: ActionProposal) : DispatchDirective
+    data class OwnedAppAction(val proposal: ActionProposal) : DispatchDirective
 
     data class DoNotDispatch(val title: String, val message: String) : DispatchDirective
 }
@@ -22,6 +23,7 @@ object CommandDispatchPolicy {
             ShellAction.OPEN_MOBILEANJIAN,
             ShellAction.OPEN_SYSTEM_SETTINGS -> DispatchDirective.DirectNavigation(result.value)
             ShellAction.OPEN_AUTOMATION_LAB -> DispatchDirective.SandboxExperiment(result.value)
+            ShellAction.CREATE_DAILY_NOTE -> DispatchDirective.OwnedAppAction(result.value)
         }
 
         is ParseResult.Rejected -> DispatchDirective.DoNotDispatch(

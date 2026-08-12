@@ -7,9 +7,9 @@
     <string name="submit">理解这句话</string>
     <string name="try_alipay">打开支付宝</string>
     <string name="try_mobileanjian">按键精灵</string>
-    <string name="try_hand_brain_lab">手脑实验</string>
+    <string name="try_daily_note">记小事</string>
     <string name="accessibility_service_label">鸡蛋辅助操作</string>
-    <string name="accessibility_service_description">只在鸡蛋自带的无网络实验页中逐步观察、操作并核验结果。</string>
+    <string name="accessibility_service_description">只在鸡蛋自带的无网络实验页和日常小事 App 中逐步观察、操作并核验结果。</string>
     <string name="audio_permission_title">让鸡蛋听懂你</string>
     <string name="audio_permission_body">鸡蛋只有在你亲手点下麦克风时才会听。语音由这台手机的语音服务转成文字，服务是否联网取决于手机设置。“打开应用”会直接执行；涉及付款、转账、金额或扫码时会停下。</string>
     <string name="allow_microphone">允许麦克风</string>

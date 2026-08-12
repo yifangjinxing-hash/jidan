@@ -268,7 +268,7 @@ class UiActionProfileTests(unittest.TestCase):
         manifests = [
             _load_json(path) for path in sorted(PROVIDERS_ROOT.glob("*.json"))
         ]
-        self.assertEqual(len(manifests), 2)
+        self.assertEqual(len(manifests), 3)
         for manifest in manifests:
             with self.subTest(provider=manifest["providerId"]):
                 _validate(

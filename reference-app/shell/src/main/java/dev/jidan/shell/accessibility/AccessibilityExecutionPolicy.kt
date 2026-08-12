@@ -14,13 +14,14 @@ data class TargetTrustDecision(
 )
 
 object AccessibilityExecutionPolicy {
-    const val SANDBOX_CONTRACT_ID = "jidan.accessibility.sandbox.v0.1.semantic-form.5"
-    const val SANDBOX_CONTRACT_METADATA = "dev.jidan.ACCESSIBILITY_LAB_CONTRACT"
-    private const val SANDBOX_VERSION_CODE = 1L
+    const val SANDBOX_CONTRACT_ID = OwnedTargetRegistry.SANDBOX_CONTRACT_ID
+    const val DAILY_CONTRACT_ID = OwnedTargetRegistry.DAILY_CONTRACT_ID
+    const val SANDBOX_CONTRACT_METADATA = OwnedTargetRegistry.CONTRACT_METADATA
 
     @Suppress("DEPRECATION")
     fun decide(context: Context, targetPackage: String): TargetTrustDecision {
-        if (targetPackage != ExecutionLaneResolver.SANDBOX_PACKAGE) {
+        val spec = OwnedTargetRegistry.find(targetPackage)
+        if (spec == null) {
             return TargetTrustDecision(ExecutionLane.SHADOW, "external packages are observation-only")
         }
         val packageManager = context.packageManager
@@ -62,7 +63,7 @@ object AccessibilityExecutionPolicy {
             Manifest.permission.INTERNET,
             targetPackage,
         ) == PackageManager.PERMISSION_GRANTED
-        val contractId = application?.metaData?.getString(SANDBOX_CONTRACT_METADATA).orEmpty()
+        val contractId = application?.metaData?.getString(OwnedTargetRegistry.CONTRACT_METADATA).orEmpty()
         val identity = if (
             application != null &&
             versionCode != null &&
@@ -82,19 +83,19 @@ object AccessibilityExecutionPolicy {
             signaturesMatch &&
                 debuggable &&
                 !hasInternet &&
-                versionCode == SANDBOX_VERSION_CODE &&
-                contractId == SANDBOX_CONTRACT_ID &&
+                versionCode == spec.versionCode &&
+                contractId == spec.contractId &&
                 identity != null
         return TargetTrustDecision(
-            lane = ExecutionLaneResolver.resolve(targetPackage, trusted),
+            lane = ExecutionLaneResolver.resolveOwnedTarget(targetPackage, trusted),
             reason = when {
-                application == null || packageInfo == null -> "sandbox package identity is unavailable"
-                !signaturesMatch -> "sandbox signature mismatch"
-                !debuggable -> "sandbox is not an explicit debug fixture"
-                hasInternet -> "sandbox unexpectedly has network permission"
-                versionCode != SANDBOX_VERSION_CODE -> "sandbox version mismatch"
-                contractId != SANDBOX_CONTRACT_ID -> "sandbox semantic contract mismatch"
-                identity == null -> "sandbox signing identity is unavailable"
+                application == null || packageInfo == null -> "owned target identity is unavailable"
+                !signaturesMatch -> "owned target signature mismatch"
+                !debuggable -> "owned target is not an explicit debug fixture"
+                hasInternet -> "owned target unexpectedly has network permission"
+                versionCode != spec.versionCode -> "owned target version mismatch"
+                contractId != spec.contractId -> "owned target semantic contract mismatch"
+                identity == null -> "owned target signing identity is unavailable"
                 else -> "same signer, pinned version and semantic contract, debuggable, no-network fixture"
             },
             identity = identity.takeIf { trusted },

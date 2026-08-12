@@ -3,6 +3,7 @@
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="dev.jidan.accessibility.sandbox.RUN" />
+    <uses-permission android:name="dev.jidan.daily.demo.RUN" />
 
     <uses-feature
         android:name="android.hardware.microphone"
@@ -12,6 +13,7 @@
         <package android:name="com.eg.android.AlipayGphone" />
         <package android:name="com.cyjh.mobileanjian" />
         <package android:name="dev.jidan.accessibility.sandbox" />
+        <package android:name="dev.jidan.daily.demo" />
         <intent>
             <action android:name="android.speech.RecognitionService" />
         </intent>

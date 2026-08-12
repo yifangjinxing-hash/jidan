@@ -12,6 +12,7 @@ import dev.jidan.shell.accessibility.AccessibilityServiceBridge
 import dev.jidan.shell.accessibility.ExecutionLane
 import dev.jidan.shell.accessibility.ExecutionLaneResolver
 import dev.jidan.shell.accessibility.LabSessionRegistry
+import dev.jidan.shell.accessibility.OwnedTargetRegistry
 import java.security.MessageDigest
 
 sealed interface DispatchResult {
@@ -27,6 +28,58 @@ class FrontDoorLauncher(private val activity: Activity) {
         ShellAction.OPEN_MOBILEANJIAN -> openVerifiedMobileAnjianCandidate()
         ShellAction.OPEN_SYSTEM_SETTINGS -> startExplicitSystemSettings()
         ShellAction.OPEN_AUTOMATION_LAB -> openAutomationLab()
+        ShellAction.CREATE_DAILY_NOTE -> openDailyNote(proposal)
+    }
+
+    private fun openDailyNote(proposal: ActionProposal): DispatchResult {
+        val arguments = proposal.arguments as? ActionArguments.DailyNote
+            ?: return DispatchResult.Blocked("日常待办参数不完整，鸡蛋没有执行。")
+        val spec = OwnedTargetRegistry.daily
+        val launchIntent = Intent().apply {
+            component = ComponentName(spec.packageName, spec.activityClassName)
+            setPackage(spec.packageName)
+        }
+        if (launchIntent.resolveActivity(activity.packageManager) == null) {
+            return DispatchResult.TargetUnavailable(
+                "没有找到与鸡蛋匹配的日常小事 App，待办没有保存。",
+            )
+        }
+        val trust = AccessibilityExecutionPolicy.decide(activity, spec.packageName)
+        if (trust.lane != ExecutionLane.OWNED_APP) {
+            return DispatchResult.Blocked("日常小事 App 身份检查没有通过：${trust.reason}")
+        }
+        val targetIdentity = trust.identity
+            ?: return DispatchResult.Blocked("日常小事 App 没有提供完整身份，待办没有保存。")
+        if (!AccessibilityServiceBridge.connected) {
+            return DispatchResult.NeedsAccessibility("鸡蛋辅助操作尚未开启，待办还没有保存。")
+        }
+        if (LabSessionRegistry.activeSession() != null) {
+            return DispatchResult.Blocked("另一条动作链仍在运行；鸡蛋没有叠加第二次保存。")
+        }
+        val session = runCatching {
+            LabSessionRegistry.armDaily(
+                targetIdentity = targetIdentity,
+                requestId = arguments.requestId,
+                noteText = arguments.text,
+            )
+        }.getOrElse {
+            return DispatchResult.Blocked("日常会话没有成功建立，待办没有保存。")
+        }
+        AccessibilityServiceBridge.armFirstFrameWatchdog(session.id)
+        launchIntent.putExtra(EXTRA_SESSION_NONCE, session.launchNonce)
+        launchIntent.putExtra(EXTRA_DAILY_REQUEST_ID, arguments.requestId)
+        return try {
+            activity.startActivity(launchIntent)
+            DispatchResult.Dispatched("已把日常小事 App 交给内置手；保存结果还要等页面核验。")
+        } catch (_: ActivityNotFoundException) {
+            AccessibilityServiceBridge.cancelWatchdog(session.id)
+            LabSessionRegistry.clear(session.id)
+            DispatchResult.TargetUnavailable("日常小事 App 没有打开，待办没有保存。")
+        } catch (_: SecurityException) {
+            AccessibilityServiceBridge.cancelWatchdog(session.id)
+            LabSessionRegistry.clear(session.id)
+            DispatchResult.Blocked("日常小事 App 拒绝调用，待办没有保存。")
+        }
     }
 
     private fun openAutomationLab(): DispatchResult {
@@ -188,5 +241,6 @@ class FrontDoorLauncher(private val activity: Activity) {
             "800614aaf2494f4dc1c4d43fff92ee42771d01fc09435d0b8d4b8e54dbd91413"
         private const val EXTRA_SESSION_NONCE =
             "dev.jidan.extra.ACCESSIBILITY_LAB_SESSION_NONCE"
+        private const val EXTRA_DAILY_REQUEST_ID = "dev.jidan.extra.DAILY_REQUEST_ID"
     }
 }

@@ -26,6 +26,7 @@ SCHEMAS = REPOSITORY_ROOT / "profiles" / "schemas"
 EXPERIMENTAL = REPOSITORY_ROOT / "profiles" / "experimental"
 VECTORS = REPOSITORY_ROOT / "profiles" / "conformance" / "android.ui-assist.vectors.json"
 OWNED_ID = "android.hand.jidan.accessibility.v0.1"
+DAILY_ID = "android.hand.jidan.accessibility.daily.v0.1"
 CANDIDATE_ID = "android.hand.candidate.cyjh.mobileanjian.v0.1"
 
 
@@ -58,6 +59,19 @@ class HandProviderTests(unittest.TestCase):
         self.assertTrue(owned.host_adapter_available)
         self.assertTrue(owned.executor_eligible)
         self.assertEqual(owned.real_world_effect_ceiling, "SYNTHETIC_ONLY")
+
+    def test_daily_provider_is_a_separate_owned_local_effect(self) -> None:
+        daily = self.catalog.get(DAILY_ID)
+        actual = hashlib.sha256(
+            (SCHEMAS / "jcl.owned-action-plan-v0.1.schema.json").read_bytes()
+        ).hexdigest()
+        self.assertEqual(daily.host_adapter_profile_sha256, actual)
+        self.assertEqual(daily.declared_plan_profile, "JCL-Owned-Action-Plan/0.1")
+        self.assertEqual(daily.supported_lanes, ("OWNED_APP",))
+        self.assertEqual(daily.target_package, "dev.jidan.daily.demo")
+        self.assertEqual(daily.real_world_effect_ceiling, "OWNED_LOCAL_APP")
+        self.assertTrue(daily.executor_eligible)
+        self.assertNotEqual(daily.manifest_sha256, self.catalog.get(OWNED_ID).manifest_sha256)
 
     def test_owned_manifest_canonical_digest_is_pinned_everywhere(self) -> None:
         path = PROVIDERS / f"{OWNED_ID}.json"
@@ -194,7 +208,7 @@ class HandProviderTests(unittest.TestCase):
         )
         discovery = gateway.call_tool(McpHandGateway.INSPECT_TOOL, {})
         self.assertFalse(discovery["privateInterfaceInvoked"])
-        self.assertEqual(len(discovery["providers"]), 2)
+        self.assertEqual(len(discovery["providers"]), 3)
 
         calls: list[dict] = []
         self.catalog.bind(

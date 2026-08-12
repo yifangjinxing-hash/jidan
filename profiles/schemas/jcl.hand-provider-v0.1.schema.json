@@ -48,7 +48,10 @@
       "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
     },
     "declaredPlanProfile": {
-      "const": "JCL-UI-Action-Plan/0.1"
+      "enum": [
+        "JCL-UI-Action-Plan/0.1",
+        "JCL-Owned-Action-Plan/0.1"
+      ]
     },
     "supportedLanes": {
       "type": "array",
@@ -58,6 +61,7 @@
       "items": {
         "enum": [
           "SANDBOX",
+          "OWNED_APP",
           "SHADOW",
           "HANDOFF"
         ]
@@ -179,6 +183,7 @@
     "realWorldEffectCeiling": {
       "enum": [
         "SYNTHETIC_ONLY",
+        "OWNED_LOCAL_APP",
         "HANDOFF_ONLY",
         "PROVIDER_DECLARED"
       ]

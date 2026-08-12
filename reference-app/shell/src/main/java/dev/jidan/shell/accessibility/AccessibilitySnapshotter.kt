@@ -56,7 +56,9 @@ object AccessibilitySnapshotter {
             viewId = node.viewIdResourceName,
             labelDigest = rawLabel?.let(::sha256),
             valueState = if (node.isEditable) {
-                if (node.text.isNullOrEmpty()) "EMPTY" else "PRESENT"
+                // Android may expose an empty editor's visible hint through text.
+                // isShowingHintText distinguishes that placeholder from user data.
+                editableValueState(node.text, node.isShowingHintText)
             } else {
                 "NOT_APPLICABLE"
             },
@@ -69,3 +71,6 @@ object AccessibilitySnapshotter {
         }
     }
 }
+
+internal fun editableValueState(text: CharSequence?, isShowingHintText: Boolean): String =
+    if (text.isNullOrEmpty() || isShowingHintText) "EMPTY" else "PRESENT"

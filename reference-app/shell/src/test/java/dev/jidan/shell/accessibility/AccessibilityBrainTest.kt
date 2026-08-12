@@ -73,6 +73,10 @@ class AccessibilityBrainTest {
             HandProviderIds.BUILTIN_ACCESSIBILITY_REGISTRATION_SHA256,
             plan.handProviderRegistrationSha256,
         )
+        assertEquals(
+            "3a435217c54c7c7e97f24d2de3d97fc43fc2ccf321d3aa85d049f47a28622920",
+            plan.handProviderRegistrationSha256,
+        )
         assertTrue(plan.steps.mapNotNull { it.ephemeralValueRef }.all { it.startsWith("ephemeral:") })
         assertFalse(plan.toString().contains("246810"))
         assertFalse(plan.toString().contains("123456"))

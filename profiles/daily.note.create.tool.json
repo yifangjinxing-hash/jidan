@@ -1,0 +1,121 @@
+{
+  "name": "daily.note.create",
+  "description": "Save one short item in the same-signed, local-only Jidan daily app through the Host-pinned built-in semantic hand.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "text": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 200
+      }
+    },
+    "required": [
+      "text"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "enum": [
+          "saved_local",
+          "handoff_dispatched",
+          "needs_accessibility",
+          "target_unavailable",
+          "blocked",
+          "outcome_unknown"
+        ]
+      },
+      "requestId": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "noteDigestSha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "handProviderId": {
+        "const": "android.hand.jidan.accessibility.daily.v0.1"
+      },
+      "noteSaved": {
+        "type": "boolean"
+      },
+      "automationAttempted": {
+        "type": "boolean"
+      },
+      "receiptHash": {
+        "type": [
+          "string",
+          "null"
+        ],
+        "pattern": "^[0-9a-f]{64}$"
+      }
+    },
+    "required": [
+      "state",
+      "requestId",
+      "noteDigestSha256",
+      "handProviderId",
+      "noteSaved",
+      "automationAttempted",
+      "receiptHash"
+    ],
+    "additionalProperties": false,
+    "allOf": [
+      {
+        "if": {
+          "properties": {
+            "state": {
+              "const": "saved_local"
+            }
+          },
+          "required": [
+            "state"
+          ]
+        },
+        "then": {
+          "properties": {
+            "handProviderId": {
+              "const": "android.hand.jidan.accessibility.daily.v0.1"
+            },
+            "noteSaved": {
+              "const": true
+            },
+            "automationAttempted": {
+              "const": true
+            },
+            "receiptHash": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        }
+      }
+    ]
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "WRITE",
+      "executionMode": "OWNED_APP",
+      "requiresConfirmation": false,
+      "requiresForegroundUserActivation": true,
+      "availability": "ANDROID_SHELL",
+      "registered": true,
+      "externalMcpEndpointAvailable": false,
+      "handProviderId": "android.hand.jidan.accessibility.daily.v0.1",
+      "targetPackage": "dev.jidan.daily.demo",
+      "realWorldEffects": true,
+      "effectScope": "OWNED_LOCAL_APP"
+    }
+  }
+}

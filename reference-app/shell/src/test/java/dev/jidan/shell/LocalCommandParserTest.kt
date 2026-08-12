@@ -95,4 +95,37 @@ class LocalCommandParserTest {
         assertEquals(ShellRiskLevel.SENSITIVE_EXPERIMENT, proposal.riskLevel)
         assertEquals(ShellExecutionMode.SANDBOX, proposal.executionMode)
     }
+
+    @Test
+    fun dailyNoteKeepsThePayloadAndUsesTheOwnedAppLane() {
+        val result = LocalCommandParser.parse("记下明天买鸡蛋")
+
+        assertTrue(result is ParseResult.Proposal)
+        val proposal = (result as ParseResult.Proposal).value
+        assertEquals(ShellAction.CREATE_DAILY_NOTE, proposal.action)
+        assertEquals(ShellRiskLevel.OWNED_APP_WRITE, proposal.riskLevel)
+        assertEquals(ShellExecutionMode.OWNED_APP, proposal.executionMode)
+        val arguments = proposal.arguments as ActionArguments.DailyNote
+        assertEquals("明天买鸡蛋", arguments.text)
+        assertTrue(arguments.requestId.matches(Regex("^[0-9a-f-]{36}$")))
+    }
+
+    @Test
+    fun textInsideANoteIsDataAndNeverFallsThroughToAnotherCommand() {
+        val result = LocalCommandParser.parse("记下打开支付宝付款10元")
+
+        assertTrue(result is ParseResult.Proposal)
+        val proposal = (result as ParseResult.Proposal).value
+        assertEquals(ShellAction.CREATE_DAILY_NOTE, proposal.action)
+        assertEquals(
+            "打开支付宝付款10元",
+            (proposal.arguments as ActionArguments.DailyNote).text,
+        )
+    }
+
+    @Test
+    fun blankAndOversizedDailyNotesAreRejectedWithoutTruncation() {
+        assertTrue(LocalCommandParser.parse("记下   ") is ParseResult.Rejected)
+        assertTrue(LocalCommandParser.parse("记下${"字".repeat(201)}") is ParseResult.Rejected)
+    }
 }

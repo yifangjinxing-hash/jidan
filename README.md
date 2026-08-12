@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_Hand_Brain_Lab-0.2-7B61A8?style=for-the-badge" alt="Jidan Shell 0.2 hand and brain lab" /></a>
+  <a href="docs/11-daily-note-cross-app-hand-zh.md"><img src="https://img.shields.io/badge/Android_Daily_Hand-0.3-7B61A8?style=for-the-badge" alt="Jidan Shell 0.3 owned daily action" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_Observable_Prototype-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="reference-app/windows-shell/README.md"><img src="https://img.shields.io/badge/Windows_System_Deck-0.1-3978C6?style=for-the-badge" alt="JidanOS Windows Shell 0.1" /></a>
   <a href="#-developer-quick-start"><img src="https://img.shields.io/badge/Developer_Start-195A41?style=for-the-badge" alt="Developer quick start" /></a>
@@ -29,10 +29,10 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan is an experimental prototype, not a replacement Android/iOS distribution, a privilege-escalation tool, or a production assistant. The repository has an Android APK, a real SwiftUI iOS Shell, and a native WPF Windows compatibility deck. The Windows deck runs EXE natively, routes APK through an attached ADB guest, and executes only a bounded clean-room ARM64 fixture; it is not a full Apple runtime. None of these shells is store-signed, a default launcher, or an independent ROM/OS. Use controlled apps, test devices, and disposable data.
+> Jidan is an experimental prototype, not a replacement Android/iOS distribution, a privilege-escalation tool, or a production assistant. The Android lab now has three debug APKs: the Shell, an independently usable local daily-list app, and an isolated synthetic fixture. The repository also has a real SwiftUI iOS Shell and a native WPF Windows compatibility deck. None of these shells is store-signed, a default launcher, or an independent ROM/OS. Use controlled apps, test devices, and disposable data.
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-0.2.png" alt="Jidan Shell 0.2 minimal Android command screen" width="360" /></a>
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-daily-0.3.png" alt="Jidan Shell 0.3 minimal Android daily-action screen" width="360" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 running full-screen in an iPhone 16 Simulator" width="360" /></a>
 </p>
 
@@ -94,9 +94,25 @@ observe an owned synthetic page → make a five-step plan → execute one step
                                 → observe and verify → hash-chain a receipt
 ```
 
-The no-network, no-account, no-real-money fixture exercises synthetic payee, amount, password, OTP, and commit steps. Sensitive capabilities were not deleted: they execute fully in `SANDBOX`. A separate, specification-only `SHADOW` contract can describe real-app plans while fixing executor attempts to zero; the Android real-app observer is not connected and no executor is registered for that lane.
+The no-network, no-account, no-real-money fixture exercises synthetic payee, amount, password, OTP, and commit steps. Sensitive capabilities were not deleted: they execute fully in `SANDBOX`. A separate, specification-only `SHADOW` contract can describe third-party-app plans while fixing executor attempts to zero; the Android third-party observer is not connected and no executor is registered for that lane.
 
-The hand is now replaceable: **JCL is the task contract and brain, MCP is the socket, and a Hand Provider is the interchangeable actuator.** The Host—not MCP arguments or provider self-description—decides which provider is trusted. The owned accessibility provider is sandbox-only; the audited automation APK is visible as a `HANDOFF_ONLY` candidate but cannot enter executor selection. See the [provider manifests](profiles/providers/) and [read-only discovery tool](profiles/experimental/android.hand.providers.inspect.tool.json). The Android hand still uses an internal Kotlin mapping—there is no public MCP or JSON execution endpoint yet. See the [Chinese Android hand + brain report](docs/10-android-hand-brain-lab-zh.md) for stage, evidence, community failures, and the machine-readable APK audit.
+The hand is now replaceable: **JCL is the task contract and brain, MCP is the socket, and a Hand Provider is the interchangeable actuator.** The Host—not MCP arguments or provider self-description—decides which provider is trusted. The built-in accessibility hands are limited to two pinned owned packages: the synthetic sandbox and the local daily app. The audited automation APK remains a visible `HANDOFF_ONLY` candidate and cannot enter executor selection. Its public Quick Development UI was exercised on Android 17: the target save worked, but the step list stayed empty and no replayable script was produced. See the [provider manifests](profiles/providers/), [read-only discovery tool](profiles/experimental/android.hand.providers.inspect.tool.json), and [live daily-action report](docs/11-daily-note-cross-app-hand-zh.md). The Android hand still uses an internal Kotlin mapping—there is no public MCP or JSON execution endpoint yet.
+
+## 📝 Third step: use the hand for one reversible daily action
+
+The first useful cross-app write is deliberately small:
+
+```text
+tap “记小事” or enter “记下明天买鸡蛋”
+  → Shell pins the owned app's signer, version, contract, and no-network status
+  → a short-lived accessibility session fills one semantic input and taps Save
+  → the daily app commits locally and rejects an exact request replay
+  → the hand observes the saved digest, writes a receipt, and returns to Shell
+```
+
+The **小事清单** app also works by itself: add an item, mark it complete, undo it, or clear completed items. Its list is stored only on the device and the app has no `INTERNET` permission. The note text belongs in that list; Shell and accessibility receipts retain its digest rather than another plaintext copy. This is a real write to an owned, reversible local surface—not proof that Jidan can control arbitrary third-party apps.
+
+The Android home screen now has exactly three shortcuts: **Open Alipay**, **open the audited automation candidate**, and **remember a small task**. System Settings and the five-step synthetic hand-brain lab remain available as typed or spoken commands, not home shortcuts. The foreground command is the user's activation, so Jidan does not add a duplicate confirmation card. See the [plain-language Chinese walkthrough](docs/11-daily-note-cross-app-hand-zh.md).
 
 ## 🔌 One contract, many bindings
 
@@ -192,10 +208,11 @@ flowchart LR
 | Controlled WeChat native handoff | 🧪 | ADB/device harness verifies the exact picker; no recipient selection or Send |
 | [Direct Alipay front-door navigation](profiles/app.open.alipay_frontdoor.tool.json) | 🧪 Lab | Empty-input `NAVIGATION / DIRECT` Profile + adversarial tests; real-device acceptance pending; no payment automation |
 | [Android accessibility hand + brain lab](docs/10-android-hand-brain-lab-zh.md) | 🧪 Lab | Five synthetic execute/verify steps in an owned no-network APK; raw inputs are excluded from Jidan plans, receipts, and fixture storage; real-app SHADOW remains specification-only |
+| [Owned daily-note cross-app write](docs/11-daily-note-cross-app-hand-zh.md) | 🧪 Lab | Full Android 17 first-run evidence: system enablement, two verified semantic steps, synchronous local save, return to Shell, and persistence after reopening |
 | Cross-platform `message.compose` profile | 🧪 | Android / iOS / Web plans; Android verified binding |
 | Conformance Lab: Nine Lights | 🧪 Lab | Python Runtime/Receipts + independent JS Host; not a user product |
 | Pinyin Frontend 0.1 | ⏸️ | Frozen compatibility experiment; no new syntax or aliases |
-| [Jidan Shell 0.2 Android experience](reference-app/shell/README.md) | 🧪 | Installable debug APK; hardened Android 17 emulator evidence is recorded separately after a live run; not store-signed, a default launcher, or a ROM |
+| [Jidan Shell 0.3 Android experience](reference-app/shell/README.md) | 🧪 | Installable debug APK with accepted Android 17 emulator screenshots and hash-chained receipts; not store-signed, a default launcher, or a ROM |
 | [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI + Apple Speech + `NAVIGATION / DIRECT`; built, tested, and captured on a remote Apple simulator; not an independent Apple OS |
 | [JidanOS Windows Shell 0.1](reference-app/windows-shell/README.md) | 🧪 | Native WPF system deck; real EXE/ADB routes plus a bounded clean-room ARM64 fixture; not a full cross-platform OS or Apple runtime |
 | Production-grade mobile agent OS | 🗺️ | Not claimed yet |
@@ -244,16 +261,19 @@ cd reference-app
 
 On Windows, use `gradlew.bat`. For PowerShell 5.1 Unicode caveats, see the [prototype guide](prototype/README.md#windows-unicode-arguments).
 
-Build and install the Jidan Shell plus its isolated fixture:
+Build and install the Jidan Shell, local daily app, and isolated fixture:
 
 ```bash
 cd reference-app
-./gradlew :shell:testDebugUnitTest :shell:assembleDebug :shell:lintDebug :accessibility-sandbox:assembleDebug
+./gradlew :shell:testDebugUnitTest :shell:assembleDebug :shell:lintDebug \
+  :daily-demo:testDebugUnitTest :daily-demo:assembleDebug :daily-demo:lintDebug \
+  :accessibility-sandbox:assembleDebug :accessibility-sandbox:lintDebug
+adb install -r -t daily-demo/build/outputs/apk/debug/daily-demo-debug.apk
 adb install -r -t accessibility-sandbox/build/outputs/apk/debug/accessibility-sandbox-debug.apk
 adb install -r -t shell/build/outputs/apk/debug/shell-debug.apk
 ```
 
-In **Jidan Shell**, “Open Alipay” and “Open system settings” navigate directly—there is no duplicate confirmation card. “Hand + brain lab” asks for Android's accessibility enablement when needed, then runs the five-step synthetic loop only after the service observes the current lab session. Android or an OEM may disable the service later, in which case it must be enabled again. Speech-to-text uses the phone's current recognition service. See the [Shell guide](reference-app/shell/README.md) for installation and honest limits.
+In **Jidan Shell**, the three home shortcuts are **Open Alipay**, **open the automation candidate**, and **remember a small task**. The daily shortcut runs “记下明天买鸡蛋”: if Android asks for accessibility once, enable **鸡蛋辅助操作** and return; the same pending action continues without a second tap. After a verified local save, Android returns to Shell and Shell shows “已经记下”. System Settings and “开始手脑实验” remain typed or spoken commands. Speech-to-text uses the phone's current recognition service. See the [three-minute walkthrough](docs/11-daily-note-cross-app-hand-zh.md) and [Shell guide](reference-app/shell/README.md).
 
 Build and observe the Apple version on a Mac:
 

@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "jidan.android.daily-note.evidence.v0.1",
+  "observedAt": "2026-08-12T04:39:00+08:00",
+  "device": {
+    "serial": "emulator-5560",
+    "model": "sdk_gphone64_x86_64",
+    "androidRelease": "17",
+    "apiLevel": 37,
+    "buildFingerprint": "google/sdk_gphone64_x86_64/emu64xa:17/CE2A.260420.019/15611780:userdebug/dev-keys",
+    "physicalDeviceTouched": false
+  },
+  "artifacts": [
+    {
+      "packageName": "dev.jidan.shell",
+      "versionCode": 3,
+      "versionName": "0.3.0",
+      "path": "reference-app/shell/build/outputs/apk/debug/shell-debug.apk",
+      "sizeBytes": 1000070,
+      "sha256": "d498b51809af2e1ace1bf408389b57b904b17431fca0e1cc2eb16cfe5f3d7ab4"
+    },
+    {
+      "packageName": "dev.jidan.daily.demo",
+      "versionCode": 1,
+      "versionName": "0.1.0",
+      "path": "reference-app/daily-demo/build/outputs/apk/debug/daily-demo-debug.apk",
+      "sizeBytes": 897845,
+      "sha256": "fb0e2d573171edafa6637df51b66823e53bb343d8b7c15ece35117f9d3515143"
+    },
+    {
+      "packageName": "dev.jidan.accessibility.sandbox",
+      "versionCode": 1,
+      "versionName": "0.1.0",
+      "path": "reference-app/accessibility-sandbox/build/outputs/apk/debug/accessibility-sandbox-debug.apk",
+      "sizeBytes": 885772,
+      "sha256": "d35e6975e8d95056dde44f68a6c2aee03f637676559458aa9346062adfeb23aa"
+    }
+  ],
+  "flow": {
+    "command": "记下明天买鸡蛋",
+    "accessibilityInitiallyEnabled": false,
+    "systemEnablementShown": true,
+    "duplicateInAppConfirmationShown": false,
+    "pendingCommandResumedAfterSettings": true,
+    "targetPackage": "dev.jidan.daily.demo",
+    "payloadSha256": "5865f0506fd9b551789d369675f030fb71e21a26714351c3837768e4fbf27fd7",
+    "requestId": "9e03088d-9858-4a27-b087-48bbea5212ff",
+    "planSha256": "dc6f08102269d1f473b6aa1f57be3212f3fe70cab172c2d5c7d132a6e239c2f9",
+    "steps": [
+      {
+        "id": "set_daily_note",
+        "kind": "SET_TEXT",
+        "executorAttempted": true,
+        "osAccepted": true,
+        "beforeSha256": "f137b0b2c07bafe4f41febe2a741a1e22b6b2c10dc9502b4e421d2165e6be25f",
+        "afterSha256": "dfa6490822c980bb503d242f2c24f04944191468eb0ebbeae37f18820b3e6660",
+        "postconditionVerified": true,
+        "effectStatus": "TRANSITION_VERIFIED"
+      },
+      {
+        "id": "save_daily_note",
+        "kind": "CLICK",
+        "executorAttempted": true,
+        "osAccepted": true,
+        "beforeSha256": "dfa6490822c980bb503d242f2c24f04944191468eb0ebbeae37f18820b3e6660",
+        "afterSha256": "b5dc47b3c9c9edcc60ce094527c9c91425bbcaa39831d2ec34e9dc23d1aed06c",
+        "postconditionVerified": true,
+        "effectStatus": "TRANSITION_VERIFIED",
+        "noteSaved": true
+      }
+    ],
+    "finalReceiptHash": "cdfce91f669774bbe6adf85ec3f2578fe7c2bdb572a8da47984d11d6e315d2a1",
+    "returnedToShell": true,
+    "shellStatus": "已经记下",
+    "receiptContainsPlaintextNote": false,
+    "forceStopAndRelaunchPreservedOneItem": true
+  },
+  "compatibilityFinding": {
+    "platform": "Android 17",
+    "finding": "An empty EditText may expose its visible hint through AccessibilityNodeInfo.text.",
+    "fix": "Treat text as empty when AccessibilityNodeInfo.isShowingHintText is true.",
+    "coordinateFallbackAdded": false
+  },
+  "mobileAnjianCandidate": {
+    "packageName": "com.cyjh.mobileanjian",
+    "versionName": "4.2.3",
+    "publicQuickDevelopmentUiOpened": true,
+    "targetAppOpened": true,
+    "targetTextSaved": true,
+    "recordedStepCount": 0,
+    "replayableScriptCreated": false,
+    "executorRegisteredInJidan": false,
+    "decision": "HANDOFF_ONLY"
+  },
+  "screenshots": [
+    {
+      "path": "docs/assets/jidan-shell-daily-0.3.png",
+      "sha256": "1956e62707b70776432b31262b0ae61951dc1ea259818ad69c2f143783751dbd"
+    },
+    {
+      "path": "docs/assets/jidan-shell-daily-complete-0.3.png",
+      "sha256": "0d2edb159db14fd9c0a0720585ceacc22b5807de6bc2027a7e144bff739ab421"
+    },
+    {
+      "path": "docs/assets/jidan-daily-list-0.1.png",
+      "sha256": "0b26a2263d1d41024ff92c2852a6fc1a7126d5f874014f9202eb8dca90f8860c"
+    },
+    {
+      "path": "docs/assets/mobileanjian-quickdev-empty-0.3.png",
+      "sha256": "2a440459b54ac4ee8c9e92bb3eb36ff0aaf68d4eaa0ae27c9f23dfd13d7df4d9"
+    },
+    {
+      "path": "docs/assets/mobileanjian-daily-saved-0.3.png",
+      "sha256": "989fc80839228da7980ef237e78c0b09d9869b39319e8374efb78e144f2f125a"
+    }
+  ]
+}

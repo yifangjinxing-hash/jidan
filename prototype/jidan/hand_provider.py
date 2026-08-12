@@ -27,7 +27,7 @@ _KNOWN_TRANSPORTS = {
     "MCP_REMOTE",
     "HANDOFF_ONLY",
 }
-_KNOWN_LANES = {"SANDBOX", "SHADOW", "HANDOFF"}
+_KNOWN_LANES = {"SANDBOX", "OWNED_APP", "SHADOW", "HANDOFF"}
 _KNOWN_CAPABILITIES = {
     "SEMANTIC_TREE",
     "NODE_ACTIONS",
@@ -40,6 +40,7 @@ _KNOWN_CAPABILITIES = {
 }
 _KNOWN_EFFECT_CEILINGS = {
     "SYNTHETIC_ONLY",
+    "OWNED_LOCAL_APP",
     "HANDOFF_ONLY",
     "PROVIDER_DECLARED",
 }
@@ -288,7 +289,10 @@ class HandProviderManifest:
         )
 
     def _validate_trust_boundary(self) -> None:
-        if self.declared_plan_profile != "JCL-UI-Action-Plan/0.1":
+        if self.declared_plan_profile not in {
+            "JCL-UI-Action-Plan/0.1",
+            "JCL-Owned-Action-Plan/0.1",
+        }:
             raise ValueError("provider declares an unknown plan profile")
         if self.public_contract_available:
             if self.public_contract_protocol is None or self.public_contract_sha256 is None:

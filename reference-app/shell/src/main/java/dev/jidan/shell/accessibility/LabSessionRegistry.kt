@@ -10,6 +10,11 @@ data class LabSession(
     val expiresAtElapsedMs: Long,
     val targetIdentity: TargetIdentity,
     val valueReferences: LabValueReferences,
+    val taskKind: AccessibilityTaskKind = AccessibilityTaskKind.SANDBOX_LAB,
+    val targetSpec: OwnedTargetSpec = OwnedTargetRegistry.sandbox,
+    val requestId: String? = null,
+    val payloadSha256: String? = null,
+    val dailyNoteText: String? = null,
 )
 
 /**
@@ -81,6 +86,58 @@ object LabSessionRegistry {
             expiresAtElapsedMs = nowElapsedMs + ttlMs,
             targetIdentity = targetIdentity,
             valueReferences = references,
+            taskKind = AccessibilityTaskKind.SANDBOX_LAB,
+            targetSpec = OwnedTargetRegistry.sandbox,
+        )
+        active = Active(session, values)
+        return session
+    }
+
+    @Synchronized
+    fun armDaily(
+        targetIdentity: TargetIdentity,
+        requestId: String,
+        noteText: String,
+        nowElapsedMs: Long = elapsedRealtimeMs(),
+        ttlMs: Long = DEFAULT_TTL_MS,
+    ): LabSession {
+        require(REQUEST_ID.matches(requestId)) { "invalid daily request id" }
+        require(noteText.isNotBlank() && noteText.length <= 200) { "invalid daily note" }
+        require(ttlMs in 1..MAX_TTL_MS) { "invalid daily session TTL" }
+        check(targetIdentity.packageName == ExecutionLaneResolver.DAILY_PACKAGE) {
+            "daily target identity required"
+        }
+        check(current(nowElapsedMs) == null) { "an accessibility session is already active" }
+
+        val noteReference = newReference()
+        val references = LabValueReferences(
+            recipient = "",
+            amount = "",
+            password = "",
+            otp = "",
+            note = noteReference,
+        )
+        val inputId = "${ExecutionLaneResolver.DAILY_PACKAGE}:id/daily_note_input"
+        val values = mutableMapOf(
+            noteReference to BoundValue(
+                actionId = "set_daily_note",
+                selectorViewId = inputId,
+                sensitivity = Sensitivity.NONE,
+                value = noteText,
+            ),
+        )
+        val session = LabSession(
+            id = UUID.randomUUID().toString(),
+            launchNonce = UUID.randomUUID().toString(),
+            createdAtElapsedMs = nowElapsedMs,
+            expiresAtElapsedMs = nowElapsedMs + ttlMs,
+            targetIdentity = targetIdentity,
+            valueReferences = references,
+            taskKind = AccessibilityTaskKind.DAILY_NOTE,
+            targetSpec = OwnedTargetRegistry.daily,
+            requestId = requestId,
+            payloadSha256 = sha256(noteText),
+            dailyNoteText = noteText,
         )
         active = Active(session, values)
         return session
@@ -153,6 +210,11 @@ object LabSessionRegistry {
         .padStart(6, '0')
 
     private fun elapsedRealtimeMs(): Long = System.nanoTime() / 1_000_000L
+
+    private val REQUEST_ID = Regex(
+        "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
+        RegexOption.IGNORE_CASE,
+    )
 
     const val DEFAULT_TTL_MS = 30_000L
     private const val MAX_TTL_MS = 60_000L

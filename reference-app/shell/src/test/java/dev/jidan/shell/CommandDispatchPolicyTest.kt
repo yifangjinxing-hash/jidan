@@ -75,4 +75,16 @@ class CommandDispatchPolicyTest {
         assertEquals(ShellAction.OPEN_AUTOMATION_LAB, proposal.action)
         assertEquals(ShellExecutionMode.SANDBOX, proposal.executionMode)
     }
+
+    @Test
+    fun dailyNoteUsesOnlyTheOwnedAppDirective() {
+        val directive = CommandDispatchPolicy.classify(
+            LocalCommandParser.parse("记下明天买鸡蛋"),
+        )
+
+        assertTrue(directive is DispatchDirective.OwnedAppAction)
+        val proposal = (directive as DispatchDirective.OwnedAppAction).proposal
+        assertEquals(ShellAction.CREATE_DAILY_NOTE, proposal.action)
+        assertEquals(ShellExecutionMode.OWNED_APP, proposal.executionMode)
+    }
 }

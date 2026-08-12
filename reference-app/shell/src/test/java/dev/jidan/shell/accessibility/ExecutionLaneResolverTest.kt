@@ -23,4 +23,29 @@ class ExecutionLaneResolverTest {
             ExecutionLaneResolver.resolve("com.eg.android.AlipayGphone", trustedSandbox = true),
         )
     }
+
+    @Test
+    fun ownedTargetResolutionCannotTurnCandidatesIntoExecutors() {
+        assertEquals(
+            ExecutionLane.OWNED_APP,
+            ExecutionLaneResolver.resolveOwnedTarget(
+                ExecutionLaneResolver.DAILY_PACKAGE,
+                trusted = true,
+            ),
+        )
+        assertEquals(
+            ExecutionLane.SHADOW,
+            ExecutionLaneResolver.resolveOwnedTarget(
+                ExecutionLaneResolver.DAILY_PACKAGE,
+                trusted = false,
+            ),
+        )
+        assertEquals(
+            ExecutionLane.SHADOW,
+            ExecutionLaneResolver.resolveOwnedTarget(
+                "com.cyjh.mobileanjian",
+                trusted = true,
+            ),
+        )
+    }
 }

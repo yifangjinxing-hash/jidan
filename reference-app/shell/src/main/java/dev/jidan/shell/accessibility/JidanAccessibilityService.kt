@@ -8,6 +8,15 @@ import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
 
+data class DailyNoteCompletion(
+    val requestId: String,
+    val noteText: String,
+    val noteSha256: String,
+    val receiptHash: String,
+    val navigationAccepted: Boolean,
+    val createdAtMs: Long,
+)
+
 object AccessibilityServiceBridge {
     private val bridgeHandler = Handler(Looper.getMainLooper())
 
@@ -21,6 +30,9 @@ object AccessibilityServiceBridge {
 
     @Volatile
     private var watchedSessionId: String? = null
+
+    @Volatile
+    private var dailyCompletion: DailyNoteCompletion? = null
 
     internal fun onConnected() {
         connected = true
@@ -54,13 +66,31 @@ object AccessibilityServiceBridge {
         if (watchedSessionId == sessionId) watchedSessionId = null
     }
 
+    internal fun publishDailyCompletion(completion: DailyNoteCompletion) {
+        dailyCompletion = completion
+    }
+
+    fun consumeDailyCompletion(requestId: String): DailyNoteCompletion? {
+        val current = dailyCompletion ?: return null
+        if (System.currentTimeMillis() - current.createdAtMs > DAILY_RESULT_TTL_MS) {
+            dailyCompletion = null
+            return null
+        }
+        if (current.requestId != requestId) return null
+        dailyCompletion = null
+        return current
+    }
+
     private const val FIRST_FRAME_TIMEOUT_MS = 3_000L
+    private const val DAILY_RESULT_TTL_MS = 60_000L
 }
 
 class JidanAccessibilityService : AccessibilityService() {
     private val handler = Handler(Looper.getMainLooper())
     private lateinit var receipts: AccessibilityReceiptStore
+    private lateinit var dailyReceipts: DailyNoteReceiptStore
     private var receiptsHealthy = false
+    private var dailyReceiptsHealthy = false
     private var sessionId: String? = null
     private var plan: UiActionPlan? = null
     private var nextStep = 0
@@ -69,14 +99,24 @@ class JidanAccessibilityService : AccessibilityService() {
     private var terminal = false
     private var boundWindowId: Int? = null
     private var currentPrepared: PreparedAccessibilityAttempt? = null
+    private var currentPreparedTask: AccessibilityTaskKind? = null
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         receipts = AccessibilityReceiptStore(this)
+        dailyReceipts = DailyNoteReceiptStore(this)
         receiptsHealthy = receipts.verify()
+        dailyReceiptsHealthy = dailyReceipts.verify()
         val recovered = if (receiptsHealthy) {
             runCatching { receipts.recoverDanglingAttempt() }
                 .onFailure { receiptsHealthy = false }
+                .getOrDefault(false)
+        } else {
+            false
+        }
+        val dailyRecovered = if (dailyReceiptsHealthy) {
+            runCatching { dailyReceipts.recoverDanglingAttempt() }
+                .onFailure { dailyReceiptsHealthy = false }
                 .getOrDefault(false)
         } else {
             false
@@ -86,24 +126,29 @@ class JidanAccessibilityService : AccessibilityService() {
                 AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
                 AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS or
                 AccessibilityServiceInfo.FLAG_INCLUDE_NOT_IMPORTANT_VIEWS
-            packageNames = arrayOf(ExecutionLaneResolver.SANDBOX_PACKAGE)
+            packageNames = arrayOf(
+                ExecutionLaneResolver.SANDBOX_PACKAGE,
+                ExecutionLaneResolver.DAILY_PACKAGE,
+            )
         }
         AccessibilityServiceBridge.onConnected()
         when {
             !receiptsHealthy -> AccessibilityServiceBridge.update("辅助操作回执链损坏，执行器已停用")
-            recovered -> AccessibilityServiceBridge.update("发现中断动作，结果记为未知且没有重试")
+            !dailyReceiptsHealthy -> AccessibilityServiceBridge.update("日常动作回执链损坏，日常执行器已停用")
+            recovered || dailyRecovered -> AccessibilityServiceBridge.update("发现中断动作，结果记为未知且没有重试")
         }
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val packageName = event?.packageName?.toString() ?: return
-        if (packageName != ExecutionLaneResolver.SANDBOX_PACKAGE) return
-        if (LabSessionRegistry.activeSession() == null) return
+        val active = LabSessionRegistry.activeSession() ?: return
+        if (packageName != active.targetSpec.packageName) return
         handler.post { advanceIfPossible() }
     }
 
     override fun onInterrupt() {
         recoverCurrentAttemptIfNeeded()
+        sessionId?.let(AccessibilityServiceBridge::cancelWatchdog)
         LabSessionRegistry.clearActive()
         resetExecutionState(terminalState = true)
         AccessibilityServiceBridge.update("辅助操作被系统中断；当前实验已清除")
@@ -111,6 +156,7 @@ class JidanAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         recoverCurrentAttemptIfNeeded()
+        sessionId?.let(AccessibilityServiceBridge::cancelWatchdog)
         LabSessionRegistry.clearActive()
         handler.removeCallbacksAndMessages(null)
         resetExecutionState(terminalState = true)
@@ -135,9 +181,11 @@ class JidanAccessibilityService : AccessibilityService() {
             executing = false
             terminal = false
             boundWindowId = null
+            currentPrepared = null
+            currentPreparedTask = null
         }
         if (executing || terminal) return
-        if (!receiptsHealthy) {
+        if (!receiptStoreHealthy(active.taskKind)) {
             finish(active.id, "回执链不可用，实验没有执行")
             return
         }
@@ -146,11 +194,11 @@ class JidanAccessibilityService : AccessibilityService() {
             reobserveBeforeEffectOrStop(active.id, "当前页面无法读取，实验已停止")
             return
         }
-        if (root.packageName?.toString() != ExecutionLaneResolver.SANDBOX_PACKAGE) {
+        if (root.packageName?.toString() != active.targetSpec.packageName) {
             finish(active.id, "窗口已经离开实验页，旧动作不会继续")
             return
         }
-        if (!sessionTokenMatches(root, active.launchNonce)) {
+        if (!sessionTokenMatches(root, active)) {
             finish(active.id, "实验页启动令牌不匹配，旧动作不会继续")
             return
         }
@@ -158,7 +206,7 @@ class JidanAccessibilityService : AccessibilityService() {
 
         val trust = AccessibilityExecutionPolicy.decide(this, root.packageName.toString())
         if (
-            trust.lane != ExecutionLane.SANDBOX ||
+            trust.lane != active.targetSpec.lane ||
             trust.identity == null ||
             trust.identity != active.targetIdentity
         ) {
@@ -178,12 +226,15 @@ class JidanAccessibilityService : AccessibilityService() {
         }
 
         val currentPlan = plan ?: runCatching {
-            AccessibilityBrain.planSandbox(
-                sessionId = active.id,
-                observation = before,
-                targetIdentity = active.targetIdentity,
-                references = active.valueReferences,
-            )
+            when (active.taskKind) {
+                AccessibilityTaskKind.SANDBOX_LAB -> AccessibilityBrain.planSandbox(
+                    sessionId = active.id,
+                    observation = before,
+                    targetIdentity = active.targetIdentity,
+                    references = active.valueReferences,
+                )
+                AccessibilityTaskKind.DAILY_NOTE -> DailyNoteBrain.plan(active, before)
+            }
         }.getOrElse {
             finish(active.id, "页面结构不完整，实验已停止")
             return
@@ -192,13 +243,22 @@ class JidanAccessibilityService : AccessibilityService() {
             finish(active.id, "计划绑定的目标身份已经变化")
             return
         }
-        if (currentPlan.handProviderId != HandProviderIds.BUILTIN_ACCESSIBILITY) {
+        val expectedProvider = when (active.taskKind) {
+            AccessibilityTaskKind.SANDBOX_LAB -> HandProviderIds.BUILTIN_ACCESSIBILITY
+            AccessibilityTaskKind.DAILY_NOTE -> HandProviderIds.DAILY_ACCESSIBILITY
+        }
+        val expectedRegistration = when (active.taskKind) {
+            AccessibilityTaskKind.SANDBOX_LAB ->
+                HandProviderIds.BUILTIN_ACCESSIBILITY_REGISTRATION_SHA256
+            AccessibilityTaskKind.DAILY_NOTE ->
+                HandProviderIds.DAILY_ACCESSIBILITY_REGISTRATION_SHA256
+        }
+        if (currentPlan.handProviderId != expectedProvider) {
             finish(active.id, "计划绑定的执行底座已经变化")
             return
         }
         if (
-            currentPlan.handProviderRegistrationSha256 !=
-            HandProviderIds.BUILTIN_ACCESSIBILITY_REGISTRATION_SHA256
+            currentPlan.handProviderRegistrationSha256 != expectedRegistration
         ) {
             finish(active.id, "执行底座的注册定义已经变化")
             return
@@ -237,20 +297,14 @@ class JidanAccessibilityService : AccessibilityService() {
         }
 
         val prepared = runCatching {
-            receipts.prepare(
-                sessionId = active.id,
-                targetIdentity = active.targetIdentity,
-                windowId = before.windowId,
-                plan = currentPlan,
-                step = step,
-                beforeSha256 = before.evidenceSha256,
-            )
+            prepareReceipt(active, before.windowId, currentPlan, step, before.evidenceSha256)
         }.getOrElse {
-            receiptsHealthy = false
+            markReceiptStoreUnhealthy(active.taskKind)
             finish(active.id, "动作意图没有写入回执，所以实验没有执行")
             return
         }
         currentPrepared = prepared
+        currentPreparedTask = active.taskKind
 
         executing = true
         val performResult = runCatching {
@@ -341,11 +395,11 @@ class JidanAccessibilityService : AccessibilityService() {
         val packageAndWindowMatch =
             currentSession?.id == active.id &&
                 root != null &&
-                root.packageName?.toString() == ExecutionLaneResolver.SANDBOX_PACKAGE &&
+                root.packageName?.toString() == active.targetSpec.packageName &&
                 root.windowId == boundWindowId &&
-                sessionTokenMatches(root, active.launchNonce)
+                sessionTokenMatches(root, active)
         val identityStillMatches = if (packageAndWindowMatch) {
-            AccessibilityExecutionPolicy.decide(this, ExecutionLaneResolver.SANDBOX_PACKAGE).identity ==
+            AccessibilityExecutionPolicy.decide(this, active.targetSpec.packageName).identity ==
                 active.targetIdentity
         } else {
             false
@@ -367,11 +421,10 @@ class JidanAccessibilityService : AccessibilityService() {
                 after != null &&
                 after.evidenceSha256 != beforeSha256 &&
                 marker == step.postconditionMarker
-        val receiptWritten = runCatching {
-            receipts.complete(
+        val receiptHash = runCatching {
+            completeReceipt(
+                active = active,
                 prepared = prepared,
-                sessionId = active.id,
-                targetIdentity = active.targetIdentity,
                 windowId = boundWindowId ?: -1,
                 plan = currentPlan,
                 step = step,
@@ -381,13 +434,14 @@ class JidanAccessibilityService : AccessibilityService() {
                 osAccepted = osAccepted,
                 postconditionVerified = verified,
             )
-        }.isSuccess
-        if (!receiptWritten) {
-            receiptsHealthy = false
+        }.getOrNull()
+        if (receiptHash == null) {
+            markReceiptStoreUnhealthy(active.taskKind)
             finish(active.id, "动作可能已经发生，但结果回执写入失败；没有重试")
             return
         }
         currentPrepared = null
+        currentPreparedTask = null
         if (!verified) {
             finish(active.id, "动作已经尝试，但结果无法确认；没有重试")
             return
@@ -396,7 +450,27 @@ class JidanAccessibilityService : AccessibilityService() {
         preEffectReobserveRemaining = 1
         executing = false
         AccessibilityServiceBridge.update("已核验 ${nextStep}/${currentPlan.steps.size} 个动作")
-        if (nextStep >= currentPlan.steps.size) {
+        if (
+            active.taskKind == AccessibilityTaskKind.DAILY_NOTE &&
+            step.id == "save_daily_note" &&
+            nextStep >= currentPlan.steps.size
+        ) {
+            val navigationAccepted = performGlobalAction(GLOBAL_ACTION_BACK)
+            AccessibilityServiceBridge.publishDailyCompletion(
+                DailyNoteCompletion(
+                    requestId = requireNotNull(active.requestId),
+                    noteText = requireNotNull(active.dailyNoteText),
+                    noteSha256 = requireNotNull(active.payloadSha256),
+                    receiptHash = receiptHash,
+                    navigationAccepted = navigationAccepted,
+                    createdAtMs = System.currentTimeMillis(),
+                ),
+            )
+            finish(
+                active.id,
+                if (navigationAccepted) "日常待办已核验保存，正在返回鸡蛋" else "日常待办已核验保存，请手动返回鸡蛋",
+            )
+        } else if (nextStep >= currentPlan.steps.size) {
             finish(active.id, "实验完成：5 个动作全部核验")
         } else {
             postForSession(active.id, NEXT_STEP_DELAY_MS) { advanceIfPossible() }
@@ -411,10 +485,9 @@ class JidanAccessibilityService : AccessibilityService() {
         prepared: PreparedAccessibilityAttempt,
     ) {
         val written = runCatching {
-            receipts.complete(
+            completeReceipt(
+                active = active,
                 prepared = prepared,
-                sessionId = active.id,
-                targetIdentity = active.targetIdentity,
                 windowId = boundWindowId ?: -1,
                 plan = currentPlan,
                 step = step,
@@ -425,8 +498,11 @@ class JidanAccessibilityService : AccessibilityService() {
                 postconditionVerified = false,
             )
         }.isSuccess
-        if (written) currentPrepared = null
-        if (!written) receiptsHealthy = false
+        if (written) {
+            currentPrepared = null
+            currentPreparedTask = null
+        }
+        if (!written) markReceiptStoreUnhealthy(active.taskKind)
         finish(active.id, "动作没有交给系统，实验已停止且没有重试")
     }
 
@@ -438,16 +514,15 @@ class JidanAccessibilityService : AccessibilityService() {
         message: String,
     ) {
         val written = runCatching {
-            receipts.failedBeforeEffect(
-                sessionId = active.id,
-                targetIdentity = active.targetIdentity,
-                windowId = boundWindowId ?: -1,
-                plan = currentPlan,
-                step = step,
-                beforeSha256 = beforeSha256,
+            failedBeforeEffectReceipt(
+                active,
+                boundWindowId ?: -1,
+                currentPlan,
+                step,
+                beforeSha256,
             )
         }.isSuccess
-        if (!written) receiptsHealthy = false
+        if (!written) markReceiptStoreUnhealthy(active.taskKind)
         finish(active.id, message)
     }
 
@@ -489,11 +564,110 @@ class JidanAccessibilityService : AccessibilityService() {
             node.isEditable == selector.expectedEditable &&
             node.isPassword == selector.expectedPassword
 
-    private fun sessionTokenMatches(root: AccessibilityNodeInfo, launchNonce: String): Boolean {
-        val statusId = "${ExecutionLaneResolver.SANDBOX_PACKAGE}:id/lab_status"
-        val status = root.findAccessibilityNodeInfosByViewId(statusId).singleOrNull() ?: return false
+    private fun receiptStoreHealthy(taskKind: AccessibilityTaskKind): Boolean = when (taskKind) {
+        AccessibilityTaskKind.SANDBOX_LAB -> receiptsHealthy
+        AccessibilityTaskKind.DAILY_NOTE -> dailyReceiptsHealthy
+    }
+
+    private fun markReceiptStoreUnhealthy(taskKind: AccessibilityTaskKind) {
+        when (taskKind) {
+            AccessibilityTaskKind.SANDBOX_LAB -> receiptsHealthy = false
+            AccessibilityTaskKind.DAILY_NOTE -> dailyReceiptsHealthy = false
+        }
+    }
+
+    private fun prepareReceipt(
+        active: LabSession,
+        windowId: Int,
+        plan: UiActionPlan,
+        step: PlannedUiAction,
+        beforeSha256: String,
+    ): PreparedAccessibilityAttempt = when (active.taskKind) {
+        AccessibilityTaskKind.SANDBOX_LAB -> receipts.prepare(
+            sessionId = active.id,
+            targetIdentity = active.targetIdentity,
+            windowId = windowId,
+            plan = plan,
+            step = step,
+            beforeSha256 = beforeSha256,
+        )
+        AccessibilityTaskKind.DAILY_NOTE -> dailyReceipts.prepare(
+            session = active,
+            windowId = windowId,
+            plan = plan,
+            step = step,
+            beforeSha256 = beforeSha256,
+        )
+    }
+
+    private fun completeReceipt(
+        active: LabSession,
+        prepared: PreparedAccessibilityAttempt,
+        windowId: Int,
+        plan: UiActionPlan,
+        step: PlannedUiAction,
+        beforeSha256: String,
+        afterSha256: String,
+        executorAttempted: Boolean,
+        osAccepted: Boolean?,
+        postconditionVerified: Boolean,
+    ): String = when (active.taskKind) {
+        AccessibilityTaskKind.SANDBOX_LAB -> receipts.complete(
+            prepared = prepared,
+            sessionId = active.id,
+            targetIdentity = active.targetIdentity,
+            windowId = windowId,
+            plan = plan,
+            step = step,
+            beforeSha256 = beforeSha256,
+            afterSha256 = afterSha256,
+            executorAttempted = executorAttempted,
+            osAccepted = osAccepted,
+            postconditionVerified = postconditionVerified,
+        )
+        AccessibilityTaskKind.DAILY_NOTE -> dailyReceipts.complete(
+            prepared = prepared,
+            session = active,
+            windowId = windowId,
+            plan = plan,
+            step = step,
+            beforeSha256 = beforeSha256,
+            afterSha256 = afterSha256,
+            executorAttempted = executorAttempted,
+            osAccepted = osAccepted,
+            postconditionVerified = postconditionVerified,
+        )
+    }
+
+    private fun failedBeforeEffectReceipt(
+        active: LabSession,
+        windowId: Int,
+        plan: UiActionPlan,
+        step: PlannedUiAction,
+        beforeSha256: String,
+    ): String = when (active.taskKind) {
+        AccessibilityTaskKind.SANDBOX_LAB -> receipts.failedBeforeEffect(
+            sessionId = active.id,
+            targetIdentity = active.targetIdentity,
+            windowId = windowId,
+            plan = plan,
+            step = step,
+            beforeSha256 = beforeSha256,
+        )
+        AccessibilityTaskKind.DAILY_NOTE -> dailyReceipts.failedBeforeEffect(
+            session = active,
+            windowId = windowId,
+            plan = plan,
+            step = step,
+            beforeSha256 = beforeSha256,
+        )
+    }
+
+    private fun sessionTokenMatches(root: AccessibilityNodeInfo, active: LabSession): Boolean {
+        val status = root.findAccessibilityNodeInfosByViewId(active.targetSpec.statusViewId)
+            .singleOrNull() ?: return false
         val marker = status.contentDescription?.toString() ?: return false
-        return marker.startsWith("$SESSION_MARKER_PREFIX${sha256(launchNonce)}|")
+        return marker.startsWith("${active.targetSpec.sessionMarkerPrefix}${sha256(active.launchNonce)}|")
     }
 
     private fun postForSession(activeSessionId: String, delayMs: Long, block: () -> Unit) {
@@ -506,6 +680,7 @@ class JidanAccessibilityService : AccessibilityService() {
         if (sessionId != activeSessionId) return
         terminal = true
         executing = false
+        AccessibilityServiceBridge.cancelWatchdog(activeSessionId)
         LabSessionRegistry.clear(activeSessionId)
         AccessibilityServiceBridge.update(message)
     }
@@ -518,14 +693,25 @@ class JidanAccessibilityService : AccessibilityService() {
         executing = false
         terminal = terminalState
         boundWindowId = null
+        currentPrepared = null
+        currentPreparedTask = null
     }
 
     private fun recoverCurrentAttemptIfNeeded() {
         if (currentPrepared == null || !::receipts.isInitialized) return
-        val recovered = runCatching { receipts.recoverDanglingAttempt() }
-            .onFailure { receiptsHealthy = false }
+        val taskKind = currentPreparedTask ?: return
+        val recovered = runCatching {
+            when (taskKind) {
+                AccessibilityTaskKind.SANDBOX_LAB -> receipts.recoverDanglingAttempt()
+                AccessibilityTaskKind.DAILY_NOTE -> dailyReceipts.recoverDanglingAttempt()
+            }
+        }
+            .onFailure { markReceiptStoreUnhealthy(taskKind) }
             .getOrDefault(false)
-        if (recovered) currentPrepared = null
+        if (recovered) {
+            currentPrepared = null
+            currentPreparedTask = null
+        }
     }
 
     private data class PerformResult(
@@ -534,7 +720,6 @@ class JidanAccessibilityService : AccessibilityService() {
     )
 
     companion object {
-        private const val SESSION_MARKER_PREFIX = "jidan_lab_session:"
         private const val MAX_ANCESTOR_DEPTH = 4
         private const val REOBSERVE_DELAY_MS = 250L
         private const val VERIFY_DELAY_MS = 420L
