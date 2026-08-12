@@ -118,7 +118,7 @@ jobs:
           artifact_dir="$RUNNER_TEMP/jidan-android-daily-hand-brain"
           mkdir -p "$artifact_dir"
           cp reference-app/shell/build/outputs/apk/debug/shell-debug.apk \
-            "$artifact_dir/JidanShell-0.3-debug.apk"
+            "$artifact_dir/JidanShell-0.4-debug.apk"
           cp reference-app/daily-demo/build/outputs/apk/debug/daily-demo-debug.apk \
             "$artifact_dir/JidanDailyDemo-0.1-debug.apk"
           cp reference-app/accessibility-sandbox/build/outputs/apk/debug/accessibility-sandbox-debug.apk \
@@ -129,7 +129,7 @@ jobs:
             sha256sum \
               JidanDailyDemo-0.1-debug.apk \
               JidanAccessibilitySandbox-0.1-debug.apk \
-              JidanShell-0.3-debug.apk \
+              JidanShell-0.4-debug.apk \
               > SHA256SUMS.txt
           )
 
