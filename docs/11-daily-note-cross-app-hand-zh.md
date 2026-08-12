@@ -33,7 +33,7 @@
 ```powershell
 adb install -r -t .\JidanDailyDemo-0.1-debug.apk
 adb install -r -t .\JidanAccessibilitySandbox-0.1-debug.apk
-adb install -r -t .\JidanShell-0.4-debug.apk
+adb install -r -t .\JidanShell-0.5-debug.apk
 ```
 
 如果是在源码目录本地构建，则对应命令是：
@@ -56,7 +56,7 @@ adb install -r -t .\reference-app\shell\build\outputs\apk\debug\shell-debug.apk
 
 随后从桌面打开**小事清单**，可以亲眼看到“明天买鸡蛋”。点勾选框能完成或撤销，右上方的**清空已完成**只删除已完成事项。
 
-### Android 17 模拟器完整实跑
+### 0.3 历史 Android 17 模拟器完整实跑
 
 下面三张图来自同一轮首次使用：极简首页、自动保存后返回 Shell、重新打开仍存在的小事清单。不是设计稿，也不是单模块假成功。
 
@@ -68,9 +68,9 @@ adb install -r -t .\reference-app\shell\build\outputs\apk\debug\shell-debug.apk
 
 实跑发现并修复了一个 Android 17 兼容问题：系统会把空输入框的提示词暴露为无障碍 `text`。执行器现在同时检查 `isShowingHintText`，不会再把提示词误认成用户内容，也没有因此放宽到坐标盲点。
 
-## 当前 0.4 首页
+## 当前 0.5 首页
 
-0.4 把首页收成**支付 / 手 / 记事**三个图形入口；按键精灵兼容手位于「手」面板中。下表保留 0.3 动作语义，作为本次真实小事证据的历史说明。
+0.5 把首页收成**支付 / 手 / 记事**三个图形入口；按键精灵兼容手位于「手」面板中。下表保留 0.3 动作语义，作为本次真实小事证据的历史说明。
 
 | 按钮 | 实际做什么 | 不会做什么 |
 |---|---|---|
@@ -88,7 +88,7 @@ adb install -r -t .\reference-app\shell\build\outputs\apk\debug\shell-debug.apk
 - 无障碍服务只订阅“小事清单”和合成实验室两个自有包；
 - 只按稳定资源 ID 找输入框与保存按钮，不靠旧屏幕坐标；
 - 系统接收动作后，必须重新读取页面并检查后置条件；
-- JCL 里的 `note_ready` / `saved` 是后置条件名；Android 运行时会把它绑定为 `条件名:<本次正文 SHA-256>`，不会只看到一个通用单词就算成功；
+- Android 内部 Kotlin `DailyNoteBrain` 的 `note_ready` / `saved` 是页面后置条件名；运行时会把它绑定为 `条件名:<本次正文 SHA-256>`，不会只看到一个通用单词就算成功。它们不是对外 JCL Tool 的字段；
 - 同一个 `requestId` 再来一次，不会多存一条；同一 ID 换了正文会被拒绝；
 - 结果不明时记为未知并停下，不自动连点；
 - 清单正文只在小事清单本机存储中保留，Shell 与无障碍回执保存摘要和哈希链。
@@ -114,7 +114,7 @@ adb install -r -t .\reference-app\shell\build\outputs\apk\debug\shell-debug.apk
 
 ## 当前证据边界
 
-“Shell → 首次系统授权 → 小事清单 → 两步无障碍执行 → 页面核验 → 返回 Shell”已在 Android 17 隔离模拟器完整实跑。两步分别写入 `PREPARED / RESULT`：系统均接受动作，前后页面摘要发生变化，后置条件均核验通过，最终 `noteSaved=true`。强退并重新打开小事清单后，事项仍存在。源码、单元测试、lint 和三只 APK 的 CI 构建也已纳入同一条流水线。截图哈希、APK 哈希、前后页面摘要与最终回执哈希见[机器可读证据](audits/jidan-android-daily-note-0.3.evidence.json)。
+“Shell → 首次系统授权 → 小事清单 → 两步无障碍执行 → 页面核验 → 返回 Shell”曾在 Android 17 隔离模拟器完整实跑。两步分别写入 `PREPARED / RESULT`：系统均接受动作，前后页面摘要发生变化，后置条件均核验通过，最终 `noteSaved=true`。强退并重新打开小事清单后，事项仍存在。这份[0.3 机器可读证据](audits/jidan-android-daily-note-0.3.evidence.json)是历史基线；历史 0.5 小米走查只证明精确的 `94b125…` APK，见[历史真机证据](audits/jidan-xiaoai-directional-benchmark-0.5.evidence.json)；当前授权构建 `a9898b…` 的 Android 17 成功、指令正文隔离和中途断手失败实测见[当前模拟器证据](audits/jidan-0.5-current-authorized-build-emulator.evidence.json)。
 
 开发者可在 `reference-app` 目录运行：
 

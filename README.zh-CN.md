@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_手中心-0.4-7B61A8?style=for-the-badge" alt="Jidan Shell 0.4 手中心" /></a>
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_助手-0.5-65D4AA?style=for-the-badge" alt="Jidan Shell 0.5 助手" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_可观察原型-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="reference-app/windows-shell/README.md"><img src="https://img.shields.io/badge/Windows_系统卡组-0.1-3978C6?style=for-the-badge" alt="JidanOS Windows Shell 0.1" /></a>
   <a href="#-开发者快速开始"><img src="https://img.shields.io/badge/开发者上手-195A41?style=for-the-badge" alt="开发者快速开始" /></a>
@@ -32,7 +32,7 @@
 > Jidan 仍是实验原型，不是完整 Android/iOS 发行版、提权工具或可托管重要事务的生产助手。Android 实验包现在有三只调试 APK：Shell、可以单独使用的本地“小事清单”，以及隔离的合成实验页。仓库另有真实 SwiftUI iOS Shell 与原生 WPF Windows 兼容卡组。以上体验壳都不是应用商店签名产品、默认桌面或独立 ROM/OS。请只连接受控 App、测试设备和可丢弃数据。
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-hand-center-0.4.png" alt="Jidan Shell 0.4 图形化手中心" width="360" /></a>
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-assistant-0.5.png" alt="Jidan Shell 0.5 历史真机包 94b125… 首页" width="360" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 在 iPhone 16 模拟器中全屏运行" width="360" /></a>
 </p>
 
@@ -115,7 +115,7 @@ Jidan 现在有了一条真实 Android 无障碍实验链：
 
 **小事清单**也能脱离 Shell 单独使用：新增事项、标为完成、撤销完成、清空已完成。清单只存在本机，App 没有 `INTERNET` 权限。事项原文应该保存在清单里；Shell 与无障碍回执只保留摘要，不再落一份原文。这是真正写入自有、可撤销本地 App 的动作，但不是“已经能随便操控第三方 App”的证据。
 
-Android 0.4 首页只有**支付 / 手 / 记事**三个图形入口。已审计兼容手被收进「手」面板，不再作为外部产品占据首页。系统设置和五步合成实验仍可用文字或语音触发。普通人可直接看[《三分钟实战：让鸡蛋跨 App 记下一件小事》](docs/11-daily-note-cross-app-hand-zh.md)。
+Android 0.5 首页仍只有**支付 / 手 / 记事**三个图形入口，但把状态改成了一个可读事实：真正收到麦克风回调后才说“正在听”，系统只接受启动请求时只说“正在核对”，收到页面变化和回执后才显示绿色完成。普通人可直接看[《三分钟实战：让鸡蛋跨 App 记下一件小事》](docs/11-daily-note-cross-app-hand-zh.md)；与超级小爱的同机对照属于精确绑定 `94b125…` 的历史包，当前包模拟器回归单独记录在[0.5 路线](docs/12-xiaoai-lessons-and-jidan-0.5-zh.md)。
 
 ## 🔌 一份契约，多端实现
 
@@ -209,11 +209,11 @@ flowchart LR
 | 受控微信原生交接 | 🧪 | ADB/真机 Harness 验证准确 Picker；不选人、不发送 |
 | [支付宝 front-door 直接导航](profiles/app.open.alipay_frontdoor.tool.json) | 🧪 Lab | 空输入 `NAVIGATION / DIRECT` Profile + 对抗测试；真机验收待完成；没有自动付款 |
 | [Android 手 + 脑无障碍实验](docs/10-android-hand-brain-lab-zh.md) | 🧪 Lab | 自有无网络 APK 中 5 步合成执行/核验；输入原文不进入 Jidan 计划、回执或实验应用存储；真实 App 的 SHADOW 仍只有规格 |
-| [自有小事清单跨 App 写入](docs/11-daily-note-cross-app-hand-zh.md) | 🧪 Lab | Android 17 首次授权整链实跑：两步语义动作均核验、同步本机保存、返回 Shell、重开仍存在 |
+| [自有小事清单跨 App 写入](docs/11-daily-note-cross-app-hand-zh.md) | 🧪 Lab | 0.3 历史首次授权整链 + 当前 0.5 Android 17 回归，均绑定各自 APK 哈希 |
 | 跨端 `message.compose` Profile | 🧪 | Android / iOS / Web 计划；Android 已验证 Binding |
 | Conformance Lab：Nine Lights | 🧪 Lab | Python Runtime/Receipt + 独立 JS Host；不是用户产品 |
 | Pinyin Frontend 0.1 | ⏸️ | 冻结兼容实验；不新增语法或别名 |
-| [Jidan Shell 0.4 Android 体验包](reference-app/shell/README.md) | 🧪 | 图形化手中心；本地授权构建可内置并校验兼容手；不是商店签名产品、默认桌面或 ROM |
+| [Jidan Shell 0.5 Android 体验包](reference-app/shell/README.md) | 🧪 | 助手状态机和可核验小事清单使用固定 Kotlin 计划；历史真机与当前模拟器证据分别绑定 APK 哈希；另一条 Brain → JCL → Hand IR 原型仅会编译 |
 | [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI + Apple Speech + `NAVIGATION / DIRECT`；由苹果远程模拟器构建、测试并截图；不是独立 Apple OS |
 | [JidanOS Windows Shell 0.1](reference-app/windows-shell/README.md) | 🧪 | 原生 WPF 系统卡组；真实 EXE/ADB 路由与边界明确的 clean-room ARM64 样本；不是完整跨平台 OS 或 Apple 运行时 |
 | 生产级移动 Agent OS | 🗺️ | 尚未宣称完成 |

@@ -29,6 +29,7 @@
     "trustState": {
       "enum": [
         "OWNED_RUNTIME_LOCAL_VERIFIED",
+        "OWNED_ADAPTER_STUB",
         "VENDOR_CONTRACT_VERIFIED",
         "CANDIDATE_UNBOUND"
       ]
@@ -218,6 +219,44 @@
   ],
   "additionalProperties": false,
   "allOf": [
+    {
+      "if": {
+        "properties": {
+          "trustState": {
+            "const": "OWNED_ADAPTER_STUB"
+          }
+        },
+        "required": [
+          "trustState"
+        ]
+      },
+      "then": {
+        "properties": {
+          "providerKind": {
+            "const": "OWNED"
+          },
+          "executionEnabled": {
+            "const": false
+          },
+          "observedCapabilities": {
+            "const": []
+          },
+          "publicContract": {
+            "properties": {
+              "available": { "const": false },
+              "protocol": { "const": null },
+              "definitionSha256": { "const": null }
+            }
+          },
+          "hostAdapter": {
+            "properties": {
+              "available": { "const": false },
+              "profileSha256": { "const": null }
+            }
+          }
+        }
+      }
+    },
     {
       "if": {
         "properties": {

@@ -2,9 +2,10 @@
 <resources>
     <string name="app_name">Jidan</string>
     <string name="settings">设置</string>
-    <string name="input_hint">要做什么？</string>
-    <string name="microphone">语音输入</string>
-    <string name="submit">理解这句话</string>
+    <string name="input_hint">说或输入要做的事</string>
+    <string name="microphone">开始语音输入</string>
+    <string name="stop_microphone">停止听写</string>
+    <string name="submit">执行</string>
     <string name="try_alipay">打开支付宝</string>
     <string name="try_mobileanjian">按键精灵</string>
     <string name="try_daily_note">记小事</string>
@@ -14,8 +15,8 @@
     <string name="hand_center">手</string>
     <string name="jidan_hand">Jidan</string>
     <string name="gesture_hand">按键</string>
-    <string name="hand_connected">已连接</string>
-    <string name="hand_disconnected">未连接</string>
+    <string name="hand_connected">手在线</string>
+    <string name="hand_disconnected">手离线</string>
     <string name="connect_hand">连接中</string>
     <string name="install_hand">安装手</string>
     <string name="installing_hand">正在安装</string>
@@ -24,13 +25,13 @@
     <string name="accessibility_service_label">鸡蛋辅助操作</string>
     <string name="accessibility_service_description">只在鸡蛋自带的无网络实验页和日常小事 App 中逐步观察、操作并核验结果。</string>
     <string name="audio_permission_title">让鸡蛋听懂你</string>
-    <string name="audio_permission_body">鸡蛋只有在你亲手点下麦克风时才会听。语音由这台手机的语音服务转成文字，服务是否联网取决于手机设置。“打开应用”会直接执行；涉及付款、转账、金额或扫码时会停下。</string>
+    <string name="audio_permission_body">鸡蛋只在你点下麦克风后开始听；你也可以随时改用打字。</string>
     <string name="allow_microphone">允许麦克风</string>
     <string name="type_instead">改用打字</string>
-    <string name="listening">我在听……点一下停止。</string>
+    <string name="listening">正在听</string>
     <string name="speech_unavailable">这台手机暂时不能语音识别。没关系，你还可以打字。</string>
     <string name="speech_error">没有听清，什么也没做。你可以修改文字或再试一次。</string>
-    <string name="thinking">我在想你说的意思。</string>
+    <string name="thinking">正在理解</string>
     <string name="receipt_format">本机回执 %1$s</string>
     <string name="help_title">鸡蛋现在是什么？</string>
     <string name="help_body">这是 Jidan 的第一层“驾驶舱”：界面和安全规则属于鸡蛋，安卓暂时提供手机驱动和已有 App。它还不是完整的新操作系统，也不会替你付款、发送或做最后决定。</string>

@@ -1,6 +1,7 @@
 package dev.jidan.daily.demo
 
 import android.app.Activity
+import android.content.Intent
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Paint
@@ -36,25 +37,55 @@ class MainActivity : Activity() {
     private lateinit var clearCompleted: Button
     private lateinit var list: LinearLayout
     private var tasks: List<DailyTask> = emptyList()
-    private val sessionNonce: String by lazy {
-        intent?.getStringExtra(DailyAutomationContract.SESSION_NONCE_EXTRA).orEmpty()
-    }
-    private val requestId: String? by lazy {
-        intent?.getStringExtra(DailyAutomationContract.REQUEST_ID_EXTRA)
-            ?.trim()
-            ?.takeIf(String::isNotBlank)
-    }
+    private var sessionNonce: String = ""
+    private var requestId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        bindAutomationIntent(intent)
         store = DailyTaskStore(this)
         tasks = store.load()
         setContentView(buildInterface())
         configureWindow()
         renderTasks()
+        resetAutomationState()
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        bindAutomationIntent(intent)
+        tasks = store.load()
+        renderTasks()
+        input.text?.clear()
+        resetAutomationState()
+    }
+
+    private fun bindAutomationIntent(intent: Intent?) {
+        sessionNonce = intent
+            ?.getStringExtra(DailyAutomationContract.SESSION_NONCE_EXTRA)
+            .orEmpty()
+        requestId = intent
+            ?.getStringExtra(DailyAutomationContract.REQUEST_ID_EXTRA)
+            ?.trim()
+            ?.takeIf(String::isNotBlank)
+    }
+
+    private fun resetAutomationState() {
         val emptyMarker = DailyAutomationContract.emptyMarker(sessionNonce)
         setAutomationState("等待输入事项", emptyMarker)
+        automationResult.text = "尚未保存"
         automationResult.contentDescription = emptyMarker
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!::store.isInitialized || !::list.isInitialized) return
+        val latest = store.load()
+        if (latest != tasks) {
+            tasks = latest
+            renderTasks()
+        }
     }
 
     private fun buildInterface(): LinearLayout = LinearLayout(this).apply {
@@ -218,69 +249,83 @@ class MainActivity : Activity() {
             return
         }
 
-        val noteDigest = DailyAutomationContract.noteDigest(title)
-        val previousRequestDigest = requestId?.let(store::requestDigest)
-        when (DailyAutomationContract.requestState(previousRequestDigest, noteDigest)) {
-            DailyRequestState.DUPLICATE -> {
-                input.text?.clear()
-                markSaved(title, duplicate = true)
-                return
-            }
-            DailyRequestState.CONFLICT -> {
-                setAutomationState(
-                    "这个请求已经保存过另一条事项，未重复执行",
-                    DailyAutomationContract.marker(sessionNonce, "request_conflict:$noteDigest"),
-                )
-                automationResult.text = "没有新增事项"
-                return
-            }
-            DailyRequestState.NEW -> Unit
-        }
-
-        val updatedTasks = DailyTaskLogic.add(
-            tasks,
-            DailyTask(
+        val result = store.add(
+            task = DailyTask(
                 id = UUID.randomUUID().toString(),
                 title = title,
                 completed = false,
                 createdAtEpochMs = System.currentTimeMillis(),
             ),
+            requestId = requestId,
         )
-        if (!store.commit(updatedTasks, requestId, noteDigest)) {
-            setAutomationState(
-                "保存失败，事项没有落盘",
-                DailyAutomationContract.marker(sessionNonce, "save_failed:$noteDigest"),
-            )
-            automationResult.text = "没有新增事项"
-            return
-        }
-
-        tasks = updatedTasks
+        tasks = result.tasks
         renderTasks()
-        input.text?.clear()
-        markSaved(title, duplicate = false)
+        when (result.status) {
+            DailyTaskAddStatus.DUPLICATE -> {
+                input.text?.clear()
+                markSaved(title, duplicate = true)
+                return
+            }
+            DailyTaskAddStatus.CONFLICT -> {
+                setAutomationState(
+                    "这个请求已经保存过另一条事项，未重复执行",
+                    DailyAutomationContract.marker(
+                        sessionNonce,
+                        "request_conflict:${result.noteDigest}",
+                    ),
+                )
+                automationResult.text = "没有新增事项"
+                return
+            }
+            DailyTaskAddStatus.SAVE_FAILED -> {
+                setAutomationState(
+                    "保存失败，事项没有落盘",
+                    DailyAutomationContract.marker(
+                        sessionNonce,
+                        "save_failed:${result.noteDigest}",
+                    ),
+                )
+                automationResult.text = "没有新增事项"
+                return
+            }
+            DailyTaskAddStatus.ADDED -> {
+                input.text?.clear()
+                markSaved(title, duplicate = false)
+            }
+        }
     }
 
     private fun setTaskCompleted(taskId: String, completed: Boolean) {
-        persistAndRender(DailyTaskLogic.setCompleted(tasks, taskId, completed))
+        applySaveResult(store.setCompleted(taskId, completed))
     }
 
     private fun clearCompletedTasks() {
-        val completedCount = tasks.count(DailyTask::completed)
-        if (completedCount == 0) return
-        if (persistAndRender(DailyTaskLogic.clearCompleted(tasks))) {
-            Toast.makeText(this, "已清空 $completedCount 个完成事项", Toast.LENGTH_SHORT).show()
+        val result = store.clearCompleted()
+        if (result.changedCount == 0) {
+            if (!result.saved) showSaveFailure()
+            return
+        }
+        if (applySaveResult(result)) {
+            Toast.makeText(
+                this,
+                "已清空 ${result.changedCount} 个完成事项",
+                Toast.LENGTH_SHORT,
+            ).show()
         }
     }
 
-    private fun persistAndRender(updatedTasks: List<DailyTask>): Boolean {
-        if (!store.commit(updatedTasks)) {
-            Toast.makeText(this, "没有保存成功，请重试", Toast.LENGTH_SHORT).show()
+    private fun applySaveResult(result: DailyTaskSaveResult): Boolean {
+        tasks = result.tasks
+        renderTasks()
+        if (!result.saved) {
+            showSaveFailure()
             return false
         }
-        tasks = updatedTasks
-        renderTasks()
         return true
+    }
+
+    private fun showSaveFailure() {
+        Toast.makeText(this, "没有保存成功，请重试", Toast.LENGTH_SHORT).show()
     }
 
     @Suppress("DEPRECATION")

@@ -17,19 +17,19 @@ Jidan 想补上的不是另一只手，而是四样东西：
 
 所以当前不是“把 Android 装进 Jidan”，也不是完整独立操作系统。它是一个已经拥有第一只可审计小手的实验性执行内核。
 
-## 目前是第 2 阶段，共 5 阶段
+## 目前：第 2 阶段已完成，并落地了一条自有 App 的真实写入切片
 
 1. **能听懂并写任务卡：已完成。** 已有 JCL Profile、策略门、限权 Grant 和哈希回执。
 2. **能在自己的实验桌上动手：本次完成。** 真 Android 无障碍服务读页面、填字段、点按钮，并逐步核验。
 3. **能看懂真实 App，但先不乱点：契约完成，Android 执行器待接。** `SHADOW` 只生成计划并交给人，不冒充执行成功。
-4. **能通过受审计的 Adapter 处理真实小事：未完成。** 需要为具体 App 建身份、版本、页面和结果证据。
+4. **能通过受审计的 Adapter 处理真实小事：已完成一条自有无网清单切片。** 通用 App 与第三方 App 仍需要分别建立身份、版本、页面和结果证据。
 5. **成为可替代桌面的 Jidan OS：未完成。** 这还需要 AOSP、系统服务、驱动、设备适配和长期安全维护。
 
 最重要的变化是：项目从“打开支付宝/打开设置的前门演示”，迈到了真正的 **观察 → 计划 → 一步执行 → 重新观察 → 核验 → 写回执**。
 
 ## 对提供的按键精灵 APK 做了什么
 
-我们只做了离线静态审计，没有安装、运行、修改或重签它，也没有接触任何真实账户。
+本节最初只做了离线静态审计；后续又在隔离模拟器上完成了可见启动、QuickDev 浮窗和目标页面走查，但步骤栏仍为空，没有得到可回放脚本。整个过程没有修改或重签它，也没有接触任何真实账户。动态细节见[0.3 历史证据与 0.5 路线](11-daily-note-cross-app-hand-zh.md)。
 
 审计对象是 `com.cyjh.mobileanjian.apk`：
 
@@ -63,18 +63,19 @@ Jidan 想补上的不是另一只手，而是四样东西：
 
 ## 这次实际造出的东西
 
-### 1. 两个彼此隔离的 Android APK
+### 1. 三个职责分开的 Android APK
 
 - **Jidan Shell**：脑子、策略、无障碍服务和回执都在这里。
+- **小事清单**：自有、无网络、可撤销的真实本机写入目标。
 - **鸡蛋操作实验室**：自有的假支付页面；没有 `INTERNET` 权限，不连接真实账户，不生成订单，不移动资金。
 
 Shell 启动实验前会同时核对：固定包名、签名身份、固定版本、实验契约、`debuggable` 实验标志和没有网络权限。任何一项不对都会直接阻断；`SHADOW` 目前只是尚未接入 Android 观察器的规格契约，不是可偷偷兜底的执行通道。
 
-无障碍服务当前只订阅实验室这一个包，不常驻收集其他 App 的页面。执行器也没有开启坐标手势，只认稳定的语义节点 ID。
+无障碍服务当前只订阅两个固定的自有包：隔离实验室和小事清单，不常驻收集其他 App 的页面。执行器也没有开启坐标手势，只认稳定的语义节点 ID。小事清单的后续动态走查和真实持久化证据见[0.3 历史证据与 0.5 路线](11-daily-note-cross-app-hand-zh.md)。通用第三方 App 执行和按键精灵命令入口仍未接通。
 
 ### 2. 一条真的跑过的敏感动作链
 
-2026-08-12 在已启用“鸡蛋辅助操作”的 Android 17 模拟器中，用户只点了一次“手 + 脑实验”，随后 Jidan 完成并核验了：
+2026-08-12 的 0.3 历史构建在已启用“鸡蛋辅助操作”的 Android 17 模拟器中，用户只点了一次“手 + 脑实验”，随后 Jidan 完成并核验了：
 
 1. 填写虚构收款人；
 2. 填写虚构金额；
@@ -98,7 +99,7 @@ Shell 启动实验前会同时核对：固定包名、签名身份、固定版�
 
 [`JCL-Hand-Provider/0.1`](../profiles/schemas/jcl.hand-provider-v0.1.schema.json) 把执行后端单独登记。计划同时绑定 `handProviderId` 和 Provider 清单摘要；清单、计划 Schema 或本机 Adapter 任一变化，都不能静默沿用旧绑定。Python 中的传输无关 MCP Gateway 只公布 Host 已注册的 Tool，并在调用执行器之前和之后分别校验输入、输出 Schema。
 
-- 内置无障碍手是 `OWNED_RUNTIME_LOCAL_VERIFIED / SANDBOX`，只在本机内部 Kotlin 映射中运行；
+- 合成实验手是 `OWNED_RUNTIME_LOCAL_VERIFIED / SANDBOX`，小事清单手是 `OWNED_RUNTIME_LOCAL_VERIFIED / OWNED_APP`；二者都只在本机内部 Kotlin 映射中运行；
 - 按键精灵是 `CANDIDATE_UNBOUND / HANDOFF_ONLY`，Shell 可以在精确版本与签名匹配时打开它的首页，但它不能绑定 executor，也不能借 MCP 参数给自己提权；
 - `android.ui.sandbox_execute` 仍明确写着 `registered=false`。这意味着插座和防呆卡口已经做出来，外部 MCP 客户端直通 Android 的桥还没有冒充完成。
 
@@ -106,9 +107,10 @@ Shell 启动实验前会同时核对：固定包名、签名身份、固定版�
 
 ## 普通人怎么试玩
 
-需要 Android 8.0 或更高版本。先安装实验室，再安装 Shell：
+需要 Android 8.0 或更高版本。先安装小事清单与实验室，再安装 Shell：
 
 ```powershell
+adb install -r -t reference-app/daily-demo/build/outputs/apk/debug/daily-demo-debug.apk
 adb install -r -t reference-app/accessibility-sandbox/build/outputs/apk/debug/accessibility-sandbox-debug.apk
 adb install -r -t reference-app/shell/build/outputs/apk/debug/shell-debug.apk
 ```
@@ -121,7 +123,7 @@ adb install -r -t reference-app/shell/build/outputs/apk/debug/shell-debug.apk
 
 如果系统此前已经授权，第 2 步会被跳过，实验会在第一次点击后直接开始。
 
-看到“实验完成：外部交易 0 笔”就说明眼睛、脑子、手和行车记录仪已经第一次接成了一条真链路。
+看到“实验完成：外部交易 0 笔”只表示页面到达了合成终态；完整链路还要以 5 个动作各自成对的 `PREPARED / RESULT` 回执和后置条件核验为准。
 
 ## 下一步该做什么
 
@@ -129,6 +131,6 @@ adb install -r -t reference-app/shell/build/outputs/apk/debug/shell-debug.apk
 
 1. 把 Android 的 `SHADOW` 观察器接上一个用户明确选择的真实 App，只展示它看见了什么、准备做什么，执行次数保持 0；
 2. 为节点树缺失的 WebView/Flutter 页面做独立视觉 Adapter，并把 `A11Y / OCR / VISION` 来源写进证据；
-3. 选一个无钱、可撤销的日常微动作，从影子计划逐步升级为真实执行 Adapter，再用结果回执证明它不是“点过就算成功”。
+3. 在已经落地的小事清单之外，再选第二个无钱、可撤销的日常微动作，从影子计划逐步升级为真实执行 Adapter，再用结果回执证明它不是“点过就算成功”。
 
 先让这只手做到 **少、准、能停、能解释**，然后再逐渐扩大它能碰的世界。

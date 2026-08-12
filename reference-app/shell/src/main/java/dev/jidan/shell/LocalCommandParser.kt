@@ -34,17 +34,7 @@ object LocalCommandParser {
             val note = normalized.removePrefix("记下").trim()
             if (note.isBlank()) return ParseResult.Rejected("要记下的内容还是空的，鸡蛋没有保存。")
             if (note.length > 200) return ParseResult.Rejected("这条内容超过 200 个字，鸡蛋没有截断或保存。")
-            return ParseResult.Proposal(
-                ActionProposal(
-                    action = ShellAction.CREATE_DAILY_NOTE,
-                    title = "记一条待办",
-                    safetyMessage = "将打开鸡蛋自带的日常小事 App，填入这句话并保存。",
-                    actionLabel = "记下",
-                    riskLevel = ShellRiskLevel.OWNED_APP_WRITE,
-                    executionMode = ShellExecutionMode.OWNED_APP,
-                    arguments = ActionArguments.dailyNote(note),
-                ),
-            )
+            return ParseResult.Proposal(dailyNoteProposal(note))
         }
 
         val compact = normalized
@@ -127,4 +117,19 @@ object LocalCommandParser {
             "现在我会记一条日常待办、打开支付宝、按键精灵、系统设置，或运行隔离实验。其他事情没有执行。",
         )
     }
+
+    internal fun dailyNoteProposal(note: String, requestId: String? = null): ActionProposal =
+        ActionProposal(
+            action = ShellAction.CREATE_DAILY_NOTE,
+            title = "记一条待办",
+            safetyMessage = "将打开鸡蛋自带的日常小事 App，填入这句话并保存。",
+            actionLabel = "记下",
+            riskLevel = ShellRiskLevel.OWNED_APP_WRITE,
+            executionMode = ShellExecutionMode.OWNED_APP,
+            arguments = if (requestId == null) {
+                ActionArguments.dailyNote(note)
+            } else {
+                ActionArguments.dailyNote(requestId, note)
+            },
+        )
 }

@@ -2,11 +2,14 @@ package dev.jidan.shell.accessibility
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
+import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.accessibility.AccessibilityEvent
 import android.view.accessibility.AccessibilityNodeInfo
+import dev.jidan.shell.AssistantDiagnostics
 
 data class DailyNoteCompletion(
     val requestId: String,
@@ -14,6 +17,12 @@ data class DailyNoteCompletion(
     val noteSha256: String,
     val receiptHash: String,
     val navigationAccepted: Boolean,
+    val createdAtMs: Long,
+)
+
+data class DailyNoteFailure(
+    val requestId: String,
+    val reason: String,
     val createdAtMs: Long,
 )
 
@@ -34,9 +43,19 @@ object AccessibilityServiceBridge {
     @Volatile
     private var dailyCompletion: DailyNoteCompletion? = null
 
+    @Volatile
+    private var dailyFailure: DailyNoteFailure? = null
+
+    @Volatile
+    private var firstFrameFailureHandler: ((LabSession, String) -> Unit)? = null
+
     internal fun onConnected() {
         connected = true
         lastStatus = "辅助操作已就绪"
+    }
+
+    internal fun setFirstFrameFailureHandler(handler: ((LabSession, String) -> Unit)?) {
+        firstFrameFailureHandler = handler
     }
 
     internal fun onDisconnected() {
@@ -53,6 +72,26 @@ object AccessibilityServiceBridge {
         bridgeHandler.postDelayed({
             if (watchedSessionId != sessionId) return@postDelayed
             watchedSessionId = null
+            val active = LabSessionRegistry.activeSession()
+            if (
+                active?.id == sessionId &&
+                active.taskKind == AccessibilityTaskKind.DAILY_NOTE &&
+                active.requestId != null
+            ) {
+                val reason = "辅助操作没有及时看到小事清单"
+                val handler = firstFrameFailureHandler
+                if (handler == null) {
+                    publishDailyFailure(
+                        DailyNoteFailure(
+                            requestId = active.requestId,
+                            reason = reason,
+                            createdAtMs = System.currentTimeMillis(),
+                        ),
+                    )
+                } else {
+                    handler(active, reason)
+                }
+            }
             LabSessionRegistry.clear(sessionId)
             lastStatus = "辅助操作没有在 3 秒内看到实验页；会话已取消"
         }, FIRST_FRAME_TIMEOUT_MS)
@@ -67,7 +106,13 @@ object AccessibilityServiceBridge {
     }
 
     internal fun publishDailyCompletion(completion: DailyNoteCompletion) {
+        dailyFailure = null
         dailyCompletion = completion
+    }
+
+    internal fun publishDailyFailure(failure: DailyNoteFailure) {
+        dailyCompletion = null
+        dailyFailure = failure
     }
 
     fun consumeDailyCompletion(requestId: String): DailyNoteCompletion? {
@@ -78,6 +123,17 @@ object AccessibilityServiceBridge {
         }
         if (current.requestId != requestId) return null
         dailyCompletion = null
+        return current
+    }
+
+    fun consumeDailyFailure(requestId: String): DailyNoteFailure? {
+        val current = dailyFailure ?: return null
+        if (System.currentTimeMillis() - current.createdAtMs > DAILY_RESULT_TTL_MS) {
+            dailyFailure = null
+            return null
+        }
+        if (current.requestId != requestId) return null
+        dailyFailure = null
         return current
     }
 
@@ -132,6 +188,16 @@ class JidanAccessibilityService : AccessibilityService() {
             )
         }
         AccessibilityServiceBridge.onConnected()
+        AccessibilityServiceBridge.setFirstFrameFailureHandler { active, reason ->
+            AssistantDiagnostics.record(
+                this,
+                "accessibility_watchdog",
+                "first_frame_timeout",
+                "session=${active.id.take(8)};task=${active.taskKind}",
+            )
+            publishDailyFailureAndReturn(active, reason)
+        }
+        AssistantDiagnostics.record(this, "accessibility_service", "connected")
         when {
             !receiptsHealthy -> AccessibilityServiceBridge.update("辅助操作回执链损坏，执行器已停用")
             !dailyReceiptsHealthy -> AccessibilityServiceBridge.update("日常动作回执链损坏，日常执行器已停用")
@@ -148,6 +214,9 @@ class JidanAccessibilityService : AccessibilityService() {
 
     override fun onInterrupt() {
         recoverCurrentAttemptIfNeeded()
+        LabSessionRegistry.activeSession()?.let { active ->
+            publishDailyFailureAndReturn(active, "辅助操作被系统中断")
+        }
         sessionId?.let(AccessibilityServiceBridge::cancelWatchdog)
         LabSessionRegistry.clearActive()
         resetExecutionState(terminalState = true)
@@ -156,10 +225,15 @@ class JidanAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         recoverCurrentAttemptIfNeeded()
+        LabSessionRegistry.activeSession()?.let { active ->
+            publishDailyFailureAndReturn(active, "辅助操作服务已经断开")
+        }
         sessionId?.let(AccessibilityServiceBridge::cancelWatchdog)
         LabSessionRegistry.clearActive()
         handler.removeCallbacksAndMessages(null)
         resetExecutionState(terminalState = true)
+        AccessibilityServiceBridge.setFirstFrameFailureHandler(null)
+        AssistantDiagnostics.record(this, "accessibility_service", "destroyed")
         AccessibilityServiceBridge.onDisconnected()
         super.onDestroy()
     }
@@ -270,6 +344,12 @@ class JidanAccessibilityService : AccessibilityService() {
         }
 
         val step = currentPlan.steps[nextStep]
+        AssistantDiagnostics.record(
+            this,
+            "hand_step",
+            "planning",
+            "session=${active.id.take(8)};step=${step.id};kind=${step.kind}",
+        )
         val semanticMatches = before.nodes.filter { snapshot ->
             snapshot.packageName == step.selector.packageName &&
                 snapshot.viewId == step.selector.viewId
@@ -323,7 +403,7 @@ class JidanAccessibilityService : AccessibilityService() {
             return
         }
 
-        postForSession(active.id, VERIFY_DELAY_MS) {
+        postForSession(active.id, performResult.verifyDelayMs) {
             verifyTransition(
                 active = active,
                 currentPlan = currentPlan,
@@ -369,6 +449,50 @@ class JidanAccessibilityService : AccessibilityService() {
                 osAccepted = target.performAction(AccessibilityNodeInfo.ACTION_CLICK),
             )
         }
+        UiActionKind.SCROLL -> {
+            val target = scrollableNode(node)
+                ?: return PerformResult(executorAttempted = false, osAccepted = null)
+            val action = when (step.scrollDirection) {
+                UiScrollDirection.FORWARD -> AccessibilityNodeInfo.ACTION_SCROLL_FORWARD
+                UiScrollDirection.BACKWARD -> AccessibilityNodeInfo.ACTION_SCROLL_BACKWARD
+                null -> return PerformResult(executorAttempted = false, osAccepted = null)
+            }
+            PerformResult(
+                executorAttempted = true,
+                osAccepted = target.performAction(action),
+            )
+        }
+        UiActionKind.BACK -> PerformResult(
+            executorAttempted = true,
+            osAccepted = performGlobalAction(GLOBAL_ACTION_BACK),
+        )
+        UiActionKind.WAIT -> PerformResult(
+            executorAttempted = true,
+            osAccepted = true,
+            verifyDelayMs = requireNotNull(step.waitMs),
+        )
+        UiActionKind.LAUNCH -> {
+            val packageName = step.launchPackageName
+                ?: return PerformResult(executorAttempted = false, osAccepted = null)
+            val launchIntent = packageManager.getLaunchIntentForPackage(packageName)
+                ?: return PerformResult(executorAttempted = true, osAccepted = false)
+            val resolved = launchIntent.resolveActivity(packageManager)
+                ?: return PerformResult(executorAttempted = true, osAccepted = false)
+            if (resolved.packageName != packageName) {
+                PerformResult(executorAttempted = true, osAccepted = false)
+            } else {
+                val accepted = runCatching {
+                    val explicitIntent = Intent(launchIntent).apply {
+                        component = ComponentName(resolved.packageName, resolved.className)
+                        setPackage(packageName)
+                        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    }
+                    startActivity(explicitIntent)
+                    true
+                }.getOrDefault(false)
+                PerformResult(executorAttempted = true, osAccepted = accepted)
+            }
+        }
     }
 
     private fun clickableNode(start: AccessibilityNodeInfo): AccessibilityNodeInfo? {
@@ -376,6 +500,16 @@ class JidanAccessibilityService : AccessibilityService() {
         repeat(MAX_ANCESTOR_DEPTH + 1) {
             val current = candidate ?: return null
             if (current.isClickable) return current
+            candidate = current.parent
+        }
+        return null
+    }
+
+    private fun scrollableNode(start: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        var candidate: AccessibilityNodeInfo? = start
+        repeat(MAX_ANCESTOR_DEPTH + 1) {
+            val current = candidate ?: return null
+            if (current.isScrollable) return current
             candidate = current.parent
         }
         return null
@@ -416,11 +550,29 @@ class JidanAccessibilityService : AccessibilityService() {
         }
         val marker = markerNode?.contentDescription?.toString()?.substringAfterLast('|')
             ?: markerNode?.text?.toString()
-        val verified =
-            osAccepted == true &&
+        val verified = osAccepted == true && when (step.postconditionKind) {
+            UiPostconditionKind.MARKER ->
                 after != null &&
-                after.evidenceSha256 != beforeSha256 &&
-                marker == step.postconditionMarker
+                    after.evidenceSha256 != beforeSha256 &&
+                    marker == step.postconditionMarker
+            UiPostconditionKind.EVIDENCE_CHANGED ->
+                after != null && after.evidenceSha256 != beforeSha256
+            UiPostconditionKind.SAME_WINDOW -> after != null
+            UiPostconditionKind.LEFT_TARGET ->
+                currentSession?.id == active.id &&
+                    root != null &&
+                    root.packageName?.toString() != active.targetSpec.packageName
+            UiPostconditionKind.TARGET_PACKAGE ->
+                currentSession?.id == active.id &&
+                    root != null &&
+                    root.packageName?.toString() == step.launchPackageName
+        }
+        AssistantDiagnostics.record(
+            this,
+            "hand_step",
+            if (verified) "verified" else "unverified",
+            "session=${active.id.take(8)};step=${step.id};osAccepted=$osAccepted",
+        )
         val receiptHash = runCatching {
             completeReceipt(
                 active = active,
@@ -469,6 +621,7 @@ class JidanAccessibilityService : AccessibilityService() {
             finish(
                 active.id,
                 if (navigationAccepted) "日常待办已核验保存，正在返回鸡蛋" else "日常待办已核验保存，请手动返回鸡蛋",
+                dailySucceeded = true,
             )
         } else if (nextStep >= currentPlan.steps.size) {
             finish(active.id, "实验完成：5 个动作全部核验")
@@ -554,7 +707,8 @@ class JidanAccessibilityService : AccessibilityService() {
             snapshot.className == selector.expectedClassName &&
             snapshot.clickable == selector.expectedClickable &&
             snapshot.editable == selector.expectedEditable &&
-            snapshot.password == selector.expectedPassword
+            snapshot.password == selector.expectedPassword &&
+            snapshot.scrollable == selector.expectedScrollable
 
     private fun selectorMatches(selector: UiNodeSelector, node: AccessibilityNodeInfo): Boolean =
         node.packageName?.toString() == selector.packageName &&
@@ -562,7 +716,8 @@ class JidanAccessibilityService : AccessibilityService() {
             node.className?.toString() == selector.expectedClassName &&
             node.isClickable == selector.expectedClickable &&
             node.isEditable == selector.expectedEditable &&
-            node.isPassword == selector.expectedPassword
+            node.isPassword == selector.expectedPassword &&
+            node.isScrollable == selector.expectedScrollable
 
     private fun receiptStoreHealthy(taskKind: AccessibilityTaskKind): Boolean = when (taskKind) {
         AccessibilityTaskKind.SANDBOX_LAB -> receiptsHealthy
@@ -676,13 +831,41 @@ class JidanAccessibilityService : AccessibilityService() {
         }, delayMs)
     }
 
-    private fun finish(activeSessionId: String, message: String) {
+    private fun finish(
+        activeSessionId: String,
+        message: String,
+        dailySucceeded: Boolean = false,
+    ) {
         if (sessionId != activeSessionId) return
+        val active = LabSessionRegistry.activeSession()
+        if (!dailySucceeded && active?.id == activeSessionId) {
+            publishDailyFailureAndReturn(active, message)
+        }
         terminal = true
         executing = false
         AccessibilityServiceBridge.cancelWatchdog(activeSessionId)
         LabSessionRegistry.clear(activeSessionId)
         AccessibilityServiceBridge.update(message)
+    }
+
+    private fun publishDailyFailureAndReturn(active: LabSession, reason: String) {
+        if (
+            active.taskKind != AccessibilityTaskKind.DAILY_NOTE ||
+            active.requestId == null
+        ) {
+            return
+        }
+        AccessibilityServiceBridge.publishDailyFailure(
+            DailyNoteFailure(
+                requestId = active.requestId,
+                reason = reason,
+                createdAtMs = System.currentTimeMillis(),
+            ),
+        )
+        val foregroundPackage = rootInActiveWindow?.packageName?.toString()
+        if (AccessibilityReturnPolicy.shouldReturn(active.targetSpec.packageName, foregroundPackage)) {
+            performGlobalAction(GLOBAL_ACTION_BACK)
+        }
     }
 
     private fun resetExecutionState(terminalState: Boolean) {
@@ -717,6 +900,7 @@ class JidanAccessibilityService : AccessibilityService() {
     private data class PerformResult(
         val executorAttempted: Boolean,
         val osAccepted: Boolean?,
+        val verifyDelayMs: Long = VERIFY_DELAY_MS,
     )
 
     companion object {
@@ -725,4 +909,9 @@ class JidanAccessibilityService : AccessibilityService() {
         private const val VERIFY_DELAY_MS = 420L
         private const val NEXT_STEP_DELAY_MS = 180L
     }
+}
+
+internal object AccessibilityReturnPolicy {
+    fun shouldReturn(targetPackage: String, foregroundPackage: String?): Boolean =
+        foregroundPackage == targetPackage
 }

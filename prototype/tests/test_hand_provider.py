@@ -28,6 +28,7 @@ VECTORS = REPOSITORY_ROOT / "profiles" / "conformance" / "android.ui-assist.vect
 OWNED_ID = "android.hand.jidan.accessibility.v0.1"
 DAILY_ID = "android.hand.jidan.accessibility.daily.v0.1"
 CANDIDATE_ID = "android.hand.candidate.cyjh.mobileanjian.v0.1"
+GENERAL_STUB_ID = "android.hand.adapter.jidan.general-demo.stub.v0.1"
 
 
 class HandProviderTests(unittest.TestCase):
@@ -72,6 +73,31 @@ class HandProviderTests(unittest.TestCase):
         self.assertEqual(daily.real_world_effect_ceiling, "OWNED_LOCAL_APP")
         self.assertTrue(daily.executor_eligible)
         self.assertNotEqual(daily.manifest_sha256, self.catalog.get(OWNED_ID).manifest_sha256)
+
+    def test_general_adapter_stub_is_non_executable_and_pinned_in_kotlin(self) -> None:
+        stub = self.catalog.get(GENERAL_STUB_ID)
+        self.assertEqual(stub.trust_state, "OWNED_ADAPTER_STUB")
+        self.assertEqual(stub.target_package, "dev.jidan.general.demo")
+        self.assertEqual(stub.supported_lanes, ("OWNED_APP",))
+        self.assertFalse(stub.execution_enabled)
+        self.assertFalse(stub.executor_eligible)
+        self.assertFalse(stub.host_adapter_available)
+        self.assertEqual(stub.observed_capabilities, ())
+        kotlin_contracts = (
+            REPOSITORY_ROOT
+            / "reference-app"
+            / "shell"
+            / "src"
+            / "main"
+            / "java"
+            / "dev"
+            / "jidan"
+            / "shell"
+            / "accessibility"
+            / "ExecutionContracts.kt"
+        ).read_text(encoding="utf-8")
+        self.assertIn(GENERAL_STUB_ID, kotlin_contracts)
+        self.assertIn(stub.manifest_sha256, kotlin_contracts)
 
     def test_owned_manifest_canonical_digest_is_pinned_everywhere(self) -> None:
         path = PROVIDERS / f"{OWNED_ID}.json"
@@ -208,7 +234,11 @@ class HandProviderTests(unittest.TestCase):
         )
         discovery = gateway.call_tool(McpHandGateway.INSPECT_TOOL, {})
         self.assertFalse(discovery["privateInterfaceInvoked"])
-        self.assertEqual(len(discovery["providers"]), 3)
+        discovered_ids = {item["providerId"] for item in discovery["providers"]}
+        self.assertEqual(
+            discovered_ids,
+            {OWNED_ID, DAILY_ID, CANDIDATE_ID, GENERAL_STUB_ID},
+        )
 
         calls: list[dict] = []
         self.catalog.bind(

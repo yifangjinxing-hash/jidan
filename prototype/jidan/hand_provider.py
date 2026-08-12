@@ -19,7 +19,7 @@ _TRUSTED_STATES = {
     "OWNED_RUNTIME_LOCAL_VERIFIED",
     "VENDOR_CONTRACT_VERIFIED",
 }
-_KNOWN_TRUST_STATES = _TRUSTED_STATES | {"CANDIDATE_UNBOUND"}
+_KNOWN_TRUST_STATES = _TRUSTED_STATES | {"CANDIDATE_UNBOUND", "OWNED_ADAPTER_STUB"}
 _KNOWN_PROVIDER_KINDS = {"OWNED", "VENDOR", "CANDIDATE"}
 _KNOWN_TRANSPORTS = {
     "LOCAL_ACCESSIBILITY",
@@ -333,6 +333,13 @@ class HandProviderManifest:
                 raise ValueError("candidate can only declare the HANDOFF lane")
             if identity_mode != "STATIC_ARTIFACT":
                 raise ValueError("candidate identity must be a pinned static artifact")
+        elif self.trust_state == "OWNED_ADAPTER_STUB":
+            if self.provider_kind != "OWNED":
+                raise ValueError("an owned adapter stub must use OWNED kind")
+            if self.execution_enabled or self.host_adapter_available or self.public_contract_available:
+                raise ValueError("an owned adapter stub cannot claim an executable contract")
+            if self.observed_capabilities:
+                raise ValueError("an owned adapter stub cannot claim observed device capabilities")
         elif self.trust_state == "OWNED_RUNTIME_LOCAL_VERIFIED":
             if self.provider_kind != "OWNED":
                 raise ValueError("an owned runtime must use OWNED kind")

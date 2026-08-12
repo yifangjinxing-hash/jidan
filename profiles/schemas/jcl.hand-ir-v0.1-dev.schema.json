@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.jidan.dev/jcl.hand-ir-v0.1-dev.schema.json",
+  "title": "JCL Hand IR 0.1 development profile",
+  "description": "Provider-neutral instructions produced from a JCL Hand Intent. The IR preserves development input verbatim and grants no device execution authority.",
+  "type": "object",
+  "properties": {
+    "profile": {
+      "const": "JCL-Hand-IR/0.1-dev"
+    },
+    "programId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,159}$"
+    },
+    "sourceIntentSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "targetPackage": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
+    },
+    "contentPolicy": {
+      "const": "DEVELOPMENT_PASS_THROUGH"
+    },
+    "instructions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "properties": {
+          "instructionId": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,159}$"
+          },
+          "opcode": {
+            "enum": [
+              "OPEN_PACKAGE",
+              "FIND_CLICK",
+              "FIND_SET_TEXT",
+              "FIND_SCROLL_FORWARD",
+              "GLOBAL_BACK",
+              "WAIT_MS"
+            ]
+          },
+          "sensitivity": {
+            "enum": [
+              "NONE",
+              "PAYMENT",
+              "PASSWORD",
+              "OTP",
+              "BIOMETRIC",
+              "SYSTEM_SECURITY"
+            ]
+          },
+          "selector": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "operand": {
+            "type": [
+              "string",
+              "integer",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "instructionId",
+          "opcode",
+          "sensitivity",
+          "selector",
+          "operand"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "executionAuthority": {
+      "const": "NONE"
+    }
+  },
+  "required": [
+    "profile",
+    "programId",
+    "sourceIntentSha256",
+    "targetPackage",
+    "contentPolicy",
+    "instructions",
+    "executionAuthority"
+  ],
+  "additionalProperties": false
+}

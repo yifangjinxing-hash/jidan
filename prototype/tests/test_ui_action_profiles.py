@@ -268,7 +268,7 @@ class UiActionProfileTests(unittest.TestCase):
         manifests = [
             _load_json(path) for path in sorted(PROVIDERS_ROOT.glob("*.json"))
         ]
-        self.assertEqual(len(manifests), 3)
+        self.assertEqual(len(manifests), 4)
         for manifest in manifests:
             with self.subTest(provider=manifest["providerId"]):
                 _validate(
@@ -279,6 +279,12 @@ class UiActionProfileTests(unittest.TestCase):
         candidate = next(
             item for item in manifests if item["providerKind"] == "CANDIDATE"
         )
+        stub = next(
+            item for item in manifests if item["trustState"] == "OWNED_ADAPTER_STUB"
+        )
+        self.assertFalse(stub["executionEnabled"])
+        self.assertFalse(stub["hostAdapter"]["available"])
+        self.assertEqual(stub["observedCapabilities"], [])
         self.assertFalse(candidate["executionEnabled"])
         self.assertFalse(candidate["hostAdapter"]["available"])
         self.assertEqual(candidate["transport"], "HANDOFF_ONLY")

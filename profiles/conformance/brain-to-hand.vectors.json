@@ -1,0 +1,82 @@
+{
+  "profile": "JCL-Brain-To-Hand-Conformance/0.1-dev",
+  "brainCommand": {
+    "profile": "Jidan-Brain-Action/0.1",
+    "requestId": "dev.payment.flow.001",
+    "locale": "zh-CN",
+    "goal": "打开实验页，填写支付密码和短信验证码，然后点支付",
+    "targetPackage": "dev.jidan.accessibility.sandbox",
+    "actions": [
+      {
+        "actionId": "open_app",
+        "actionKind": "LAUNCH_APP",
+        "sensitivity": "NONE"
+      },
+      {
+        "actionId": "set_payment_password",
+        "actionKind": "SET_TEXT",
+        "sensitivity": "PASSWORD",
+        "selector": {
+          "viewId": "dev.jidan.accessibility.sandbox:id/fake_password",
+          "className": "android.widget.EditText",
+          "semanticRole": "EDIT_TEXT",
+          "text": "支付密码"
+        },
+        "value": "支付密码：Pa$$-开发"
+      },
+      {
+        "actionId": "set_otp",
+        "actionKind": "SET_TEXT",
+        "sensitivity": "OTP",
+        "selector": {
+          "viewId": "dev.jidan.accessibility.sandbox:id/fake_otp",
+          "semanticRole": "EDIT_TEXT",
+          "contentDescription": "短信验证码"
+        },
+        "value": "短信验证码：654321"
+      },
+      {
+        "actionId": "tap_pay",
+        "actionKind": "CLICK",
+        "sensitivity": "PAYMENT",
+        "selector": {
+          "viewId": "dev.jidan.accessibility.sandbox:id/fake_submit",
+          "semanticRole": "BUTTON",
+          "text": "支付"
+        }
+      }
+    ]
+  },
+  "expected": {
+    "jclProfile": "JCL-Hand-Intent/0.1-dev",
+    "handIrProfile": "JCL-Hand-IR/0.1-dev",
+    "opcodes": [
+      "OPEN_PACKAGE",
+      "FIND_SET_TEXT",
+      "FIND_SET_TEXT",
+      "FIND_CLICK"
+    ],
+    "contentMustSurvive": [
+      "支付密码：Pa$$-开发",
+      "短信验证码：654321",
+      "支付"
+    ],
+    "ownedAdapter": {
+      "adapterId": "android.hand.adapter.jidan.accessibility.dev.v0.1",
+      "status": "COMPILED",
+      "bindingKind": "COMPILER_ONLY",
+      "bindingId": "compiler.jidan.hand-ir.accessibility-payload.v0.1",
+      "bindingRegistrationSha256": "2466f7ac04131f7b7a0ec857756e3f0acc6d9de25475a8eb00aa82821579f138",
+      "deviceExecutionAttempted": false
+    },
+    "mobileAnjianAdapter": {
+      "adapterId": "android.hand.adapter.cyjh.mobileanjian.reserved.v0.1",
+      "status": "ADAPTER_UNBOUND",
+      "bindingKind": "HAND_PROVIDER",
+      "bindingId": "android.hand.candidate.cyjh.mobileanjian.v0.1",
+      "bindingRegistrationSha256": "1d187f13e4971ed4562ebea23ce8debe2663eac4471f1b3916887c70140a37c7",
+      "privateInterfaceInvoked": false,
+      "reasonCode": "NO_VERIFIED_VENDOR_CONTRACT"
+    }
+  }
+}

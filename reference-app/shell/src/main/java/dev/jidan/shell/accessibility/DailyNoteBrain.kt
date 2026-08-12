@@ -71,6 +71,7 @@ object DailyNoteBrain {
         expectedClickable = clickable,
         expectedEditable = editable,
         expectedPassword = password,
+        expectedScrollable = scrollable,
     )
 
     private val EPHEMERAL_REFERENCE = Regex(

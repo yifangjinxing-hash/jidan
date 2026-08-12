@@ -16,6 +16,23 @@ enum class AccessibilityTaskKind {
 enum class UiActionKind {
     SET_TEXT,
     CLICK,
+    SCROLL,
+    BACK,
+    WAIT,
+    LAUNCH,
+}
+
+enum class UiScrollDirection {
+    FORWARD,
+    BACKWARD,
+}
+
+enum class UiPostconditionKind {
+    MARKER,
+    EVIDENCE_CHANGED,
+    SAME_WINDOW,
+    LEFT_TARGET,
+    TARGET_PACKAGE,
 }
 
 enum class Sensitivity {
@@ -73,6 +90,7 @@ data class UiNodeSnapshot(
     val clickable: Boolean,
     val editable: Boolean,
     val password: Boolean,
+    val scrollable: Boolean = false,
 )
 
 data class UiObservation(
@@ -91,6 +109,7 @@ data class UiNodeSelector(
     val expectedClickable: Boolean,
     val expectedEditable: Boolean,
     val expectedPassword: Boolean,
+    val expectedScrollable: Boolean = false,
 )
 
 data class PlannedUiAction(
@@ -101,7 +120,46 @@ data class PlannedUiAction(
     val sensitivity: Sensitivity = Sensitivity.NONE,
     val postconditionViewId: String,
     val postconditionMarker: String,
-)
+    val scrollDirection: UiScrollDirection? = null,
+    val waitMs: Long? = null,
+    val launchPackageName: String? = null,
+    val postconditionKind: UiPostconditionKind = UiPostconditionKind.MARKER,
+) {
+    init {
+        when (kind) {
+            UiActionKind.SET_TEXT -> require(!ephemeralValueRef.isNullOrBlank()) {
+                "SET_TEXT requires an opaque value reference"
+            }
+            UiActionKind.SCROLL -> require(scrollDirection != null) {
+                "SCROLL requires a direction"
+            }
+            UiActionKind.WAIT -> require(waitMs != null && waitMs >= 0L) {
+                "WAIT duration must not be negative"
+            }
+            UiActionKind.LAUNCH -> require(
+                launchPackageName != null && PACKAGE_NAME.matches(launchPackageName),
+            ) { "LAUNCH requires an Android package name" }
+            UiActionKind.CLICK,
+            UiActionKind.BACK -> Unit
+        }
+        if (postconditionKind == UiPostconditionKind.MARKER) {
+            require(postconditionViewId.isNotBlank() && postconditionMarker.isNotBlank()) {
+                "MARKER verification requires a view and marker"
+            }
+        }
+        if (postconditionKind == UiPostconditionKind.TARGET_PACKAGE) {
+            require(kind == UiActionKind.LAUNCH && launchPackageName != null) {
+                "TARGET_PACKAGE verification is only valid for LAUNCH"
+            }
+        }
+    }
+
+    companion object {
+        private val PACKAGE_NAME = Regex(
+            "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$",
+        )
+    }
+}
 
 data class UiActionPlan(
     val id: String,
@@ -146,10 +204,15 @@ data class UiActionPlan(
                     append(step.selector.expectedClickable).append('|')
                     append(step.selector.expectedEditable).append('|')
                     append(step.selector.expectedPassword).append('|')
+                    append(step.selector.expectedScrollable).append('|')
                     append(step.ephemeralValueRef.orEmpty()).append('|')
                     append(step.sensitivity.name).append('|')
                     append(step.postconditionViewId).append('|')
-                    append(step.postconditionMarker).append('\n')
+                    append(step.postconditionMarker).append('|')
+                    append(step.scrollDirection?.name.orEmpty()).append('|')
+                    append(step.waitMs?.toString().orEmpty()).append('|')
+                    append(step.launchPackageName.orEmpty()).append('|')
+                    append(step.postconditionKind.name).append('\n')
                 }
             }
             return UiActionPlan(
@@ -176,6 +239,9 @@ object HandProviderIds {
     const val DAILY_ACCESSIBILITY = "android.hand.jidan.accessibility.daily.v0.1"
     const val DAILY_ACCESSIBILITY_REGISTRATION_SHA256 =
         "652eca8492257de7617519f2adc120bf57e366265f63c8b31147a8d2c9bb325b"
+    const val GENERAL_ADAPTER_STUB = "android.hand.adapter.jidan.general-demo.stub.v0.1"
+    const val GENERAL_ADAPTER_STUB_REGISTRATION_SHA256 =
+        "c3094d4f64c2783ae631385c9aec3a906212235a64db658d045c3f5e8bb39239"
 }
 
 data class AccessibilityReceiptData(

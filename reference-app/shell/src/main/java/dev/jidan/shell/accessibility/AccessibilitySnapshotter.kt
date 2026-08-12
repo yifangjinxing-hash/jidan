@@ -24,6 +24,7 @@ object AccessibilitySnapshotter {
                 node.clickable.toString(),
                 node.editable.toString(),
                 node.password.toString(),
+                node.scrollable.toString(),
                 ).joinToString("|")).append('\n')
             }
         }
@@ -65,6 +66,7 @@ object AccessibilitySnapshotter {
             clickable = node.isClickable,
             editable = node.isEditable,
             password = node.isPassword,
+            scrollable = node.isScrollable,
         )
         for (index in 0 until node.childCount) {
             node.getChild(index)?.let { child -> walk(child, "$path.$index", output) }

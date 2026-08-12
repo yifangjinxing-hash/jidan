@@ -1,0 +1,20 @@
+{
+  "profile": "JCL-Hand-Adapter/0.1",
+  "adapterId": "android.hand.adapter.cyjh.mobileanjian.reserved.v0.1",
+  "bindingKind": "HAND_PROVIDER",
+  "bindingId": "android.hand.candidate.cyjh.mobileanjian.v0.1",
+  "bindingRegistrationSha256": "1d187f13e4971ed4562ebea23ce8debe2663eac4471f1b3916887c70140a37c7",
+  "state": "RESERVED_UNBOUND",
+  "compiler": null,
+  "inputProfile": "JCL-Hand-IR/0.1-dev",
+  "outputProfile": null,
+  "supportedOpcodes": [],
+  "contentPolicy": "DEVELOPMENT_PASS_THROUGH",
+  "deviceConsumerAvailable": false,
+  "privateInterfaceAvailable": false,
+  "notes": [
+    "This reserves the MobileAnjian adapter slot without inventing a private scripting contract.",
+    "The same provider-neutral Hand IR can be compiled after an authorized, versioned contract is implemented.",
+    "Compilation currently returns ADAPTER_UNBOUND and never invokes the third-party application."
+  ]
+}

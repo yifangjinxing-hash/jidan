@@ -11,7 +11,7 @@
 ```powershell
 adb install -r -t .\JidanDailyDemo-0.1-debug.apk
 adb install -r -t .\JidanAccessibilitySandbox-0.1-debug.apk
-adb install -r -t .\JidanShell-0.4-debug.apk
+adb install -r -t .\JidanShell-0.5-debug.apk
 ```
 
 macOS 或 Linux 终端使用：
@@ -19,7 +19,7 @@ macOS 或 Linux 终端使用：
 ```bash
 adb install -r -t ./JidanDailyDemo-0.1-debug.apk
 adb install -r -t ./JidanAccessibilitySandbox-0.1-debug.apk
-adb install -r -t ./JidanShell-0.4-debug.apk
+adb install -r -t ./JidanShell-0.5-debug.apk
 ```
 
 三只 APK 来自同一个 CI 实验包，具有互相匹配的签名身份与实验契约。不要把其他来源或其他版本的 APK 混入这组文件；身份不匹配时 Jidan 会停止执行。

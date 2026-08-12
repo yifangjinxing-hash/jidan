@@ -47,6 +47,8 @@ sealed interface ActionArguments {
     companion object {
         fun dailyNote(text: String): DailyNote = DailyNote(UUID.randomUUID().toString(), text)
 
+        fun dailyNote(requestId: String, text: String): DailyNote = DailyNote(requestId, text)
+
         private val UUID_PATTERN = Regex(
             "^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
             RegexOption.IGNORE_CASE,

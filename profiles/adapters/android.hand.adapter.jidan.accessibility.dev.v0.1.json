@@ -1,0 +1,27 @@
+{
+  "profile": "JCL-Hand-Adapter/0.1",
+  "adapterId": "android.hand.adapter.jidan.accessibility.dev.v0.1",
+  "bindingKind": "COMPILER_ONLY",
+  "bindingId": "compiler.jidan.hand-ir.accessibility-payload.v0.1",
+  "bindingRegistrationSha256": "2466f7ac04131f7b7a0ec857756e3f0acc6d9de25475a8eb00aa82821579f138",
+  "state": "COMPILER_READY",
+  "compiler": "jidan.accessibility.semantic-dev-v0.1",
+  "inputProfile": "JCL-Hand-IR/0.1-dev",
+  "outputProfile": "Jidan-Accessibility-Hand-Payload/0.1-dev",
+  "supportedOpcodes": [
+    "OPEN_PACKAGE",
+    "FIND_CLICK",
+    "FIND_SET_TEXT",
+    "FIND_SCROLL_FORWARD",
+    "GLOBAL_BACK",
+    "WAIT_MS"
+  ],
+  "contentPolicy": "DEVELOPMENT_PASS_THROUGH",
+  "deviceConsumerAvailable": false,
+  "privateInterfaceAvailable": false,
+  "notes": [
+    "The prototype compiler binds output to a compiler-only registration, not to an executable HandProvider.",
+    "The Android service does not consume this new payload yet, so compilation does not claim device execution.",
+    "PAYMENT, PASSWORD and OTP are metadata only in this development profile; command text is preserved verbatim."
+  ]
+}

@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700" role="img" aria-labelledby="title desc">
+  <title id="title">Jidan 0.5 历史包与超级小爱单机定向实测</title>
+  <desc id="desc">历史 APK 94b125… 在同一台小米 Android 16 手机上的定向走查；数据不适用于后续同名构建。</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#090a0e"/>
+      <stop offset="1" stop-color="#15131f"/>
+    </linearGradient>
+    <linearGradient id="jidan" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#65d4aa"/>
+      <stop offset="1" stop-color="#8f7cff"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="700" rx="44" fill="url(#bg)"/>
+  <text x="72" y="92" fill="#f7f7fb" font-family="sans-serif" font-size="40" font-weight="700">只求比小爱好用一点点</text>
+  <text x="72" y="136" fill="#a9a8b3" font-family="sans-serif" font-size="23">历史包 94b125… · 小米 Android 16 · 单次走查，不代表后续构建或广泛性能</text>
+
+  <rect x="72" y="180" width="1056" height="186" rx="28" fill="#202027" stroke="#3a3945"/>
+  <text x="110" y="230" fill="#f7f7fb" font-family="sans-serif" font-size="28" font-weight="700">打开系统设置</text>
+  <text x="110" y="280" fill="#65d4aa" font-family="sans-serif" font-size="24" font-weight="700">Jidan</text>
+  <rect x="250" y="257" width="158" height="30" rx="15" fill="url(#jidan)"/>
+  <text x="428" y="281" fill="#f7f7fb" font-family="sans-serif" font-size="24">约 0.28 秒</text>
+  <text x="110" y="331" fill="#b8b7c1" font-family="sans-serif" font-size="24" font-weight="700">超级小爱</text>
+  <rect x="250" y="307" width="800" height="30" rx="15" fill="#6c687c"/>
+  <text x="1068" y="331" fill="#f7f7fb" font-family="sans-serif" font-size="24" text-anchor="end">约 1.43 秒</text>
+
+  <rect x="72" y="390" width="510" height="238" rx="28" fill="#202027" stroke="#3a3945"/>
+  <text x="110" y="440" fill="#f7f7fb" font-family="sans-serif" font-size="28" font-weight="700">记下“明天买鸡蛋”</text>
+  <text x="110" y="490" fill="#65d4aa" font-family="sans-serif" font-size="23" font-weight="700">Jidan · 约 2.3 秒</text>
+  <text x="110" y="530" fill="#d8d7df" font-family="sans-serif" font-size="22">✓ 真正写入本地清单</text>
+  <text x="110" y="566" fill="#d8d7df" font-family="sans-serif" font-size="22">✓ 可勾选、撤销、重新打开</text>
+  <text x="110" y="602" fill="#d8d7df" font-family="sans-serif" font-size="22">✓ 双击执行仍只保存一条</text>
+
+  <rect x="618" y="390" width="510" height="238" rx="28" fill="#202027" stroke="#3a3945"/>
+  <text x="656" y="440" fill="#f7f7fb" font-family="sans-serif" font-size="28" font-weight="700">这版真正改掉的毛病</text>
+  <text x="656" y="490" fill="#d8d7df" font-family="sans-serif" font-size="22">听见前，不先喊“正在听”</text>
+  <text x="656" y="530" fill="#d8d7df" font-family="sans-serif" font-size="22">系统接收，不冒充“已经完成”</text>
+  <text x="656" y="570" fill="#d8d7df" font-family="sans-serif" font-size="22">失败有原因，成功必须有证据</text>
+  <text x="656" y="610" fill="#a9a8b3" font-family="sans-serif" font-size="20">语音仍受手机识别服务可用性影响</text>
+</svg>

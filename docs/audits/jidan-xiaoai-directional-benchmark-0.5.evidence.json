@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "jidan.directional-assistant-benchmark.evidence.v0.1",
+  "evidenceRole": "historical_phone_directional_check",
+  "appliesOnlyToArtifactSha256": "94b12536b4e1525871d113bc4751a2869a5ff966ea49d0907134a66d7e843108",
+  "buildVariant": "authorized_local_debug_with_embedded_companion",
+  "observedAt": "2026-08-12T14:39:24+08:00",
+  "scope": {
+    "kind": "single_device_directional_check",
+    "device": "Xiaomi 2509FPN0BC",
+    "androidApi": 36,
+    "inputMethod": "ADB text injection followed by one visible submit action",
+    "limitations": [
+      "Not a statistically representative benchmark",
+      "Each timing is an approximate foreground-transition observation",
+      "XiaoAI and Jidan use different internal implementations",
+      "This evidence applies only to the exact APK hash above and does not prove any later 0.5.0 build",
+      "The historical APK is not committed because it contains the licensed companion binary"
+    ]
+  },
+  "artifacts": {
+    "jidanApk": {
+      "packageName": "dev.jidan.shell",
+      "versionCode": 5,
+      "versionName": "0.5.0",
+      "sizeBytes": 82934424,
+      "sha256": "94b12536b4e1525871d113bc4751a2869a5ff966ea49d0907134a66d7e843108"
+    },
+    "homeScreenshot": {
+      "path": "docs/assets/jidan-assistant-0.5.png",
+      "sha256": "d78d7bf62eaaf0b077ea5f6ac2b349c83ba3869aada6339ef065df61f25b6a00"
+    }
+  },
+  "observations": [
+    {
+      "command": "打开系统设置",
+      "xiaoaiForegroundMsApprox": 1427,
+      "jidanForegroundMsApprox": 282,
+      "result": "Both reached Android Settings"
+    },
+    {
+      "command": "记下测试：明天买鸡蛋",
+      "xiaoaiVisibleResultMsApprox": 2300,
+      "jidanFormFillMsApprox": 400,
+      "jidanPersistedMsApprox": 1100,
+      "jidanVerifiedShellResultMsApprox": 2300,
+      "result": "XiaoAI showed a memory card; Jidan persisted an actionable local checklist item and returned a verified receipt"
+    },
+    {
+      "command": "记下测试05不重复",
+      "jidanSubmitTapCount": 2,
+      "exactStoredOccurrenceCount": 1,
+      "totalListDelta": 1,
+      "result": "Duplicate foreground submission was suppressed"
+    }
+  ],
+  "assistantStateRules": {
+    "listeningRequiresRecognizerReadyCallback": true,
+    "osDispatchIsCompletion": false,
+    "verifiedReceiptRequiredForGreenCompletion": true,
+    "failureIsExplicit": true
+  },
+  "historicalArtifactValidation": {
+    "prototypeTests": {
+      "passed": 206,
+      "failed": 0
+    },
+    "androidShellJvmTests": {
+      "passed": 45,
+      "failed": 0
+    },
+    "androidBuild": "SUCCESS",
+    "androidLint": "SUCCESS"
+  }
+}

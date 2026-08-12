@@ -15,6 +15,7 @@ import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
@@ -49,6 +50,10 @@ class MainActivity : Activity(), SpeechController.Listener {
     private var awaitingCompanionInstall = false
     private var resumedGeneration = 0L
     private var activeDailyRequestId: String? = null
+    private var dailyCompletionDeadlineElapsed = 0L
+    private var pendingDirectHandoffTitle: String? = null
+    private var directHandoffLeftForeground = false
+    private var commandBusy = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,11 +64,40 @@ class MainActivity : Activity(), SpeechController.Listener {
         receipts = ReceiptStore(this)
         receiptsHealthy = receipts.verify()
         activeDailyRequestId = savedInstanceState?.getString(STATE_DAILY_REQUEST_ID)
+        val savedDailyRemaining =
+            (savedInstanceState?.getLong(STATE_DAILY_COMPLETION_REMAINING) ?: 0L)
+                .coerceIn(0L, DAILY_COMPLETION_TIMEOUT_MS)
+        dailyCompletionDeadlineElapsed = AssistantLifecyclePolicy.restoredDeadline(
+            savedDailyRemaining,
+            SystemClock.elapsedRealtime(),
+            DAILY_COMPLETION_TIMEOUT_MS,
+        )
+        pendingProposalAfterSettings = restorePendingAccessibilityProposal(savedInstanceState)
+        (pendingProposalAfterSettings?.arguments as? ActionArguments.DailyNote)?.let { pending ->
+            activeDailyRequestId = pending.requestId
+        }
+        pendingDirectHandoffTitle = savedInstanceState?.getString(STATE_DIRECT_HANDOFF_TITLE)
+        directHandoffLeftForeground =
+            savedInstanceState?.getBoolean(STATE_DIRECT_HANDOFF_LEFT) == true
         awaitingCompanionInstall = savedInstanceState?.getBoolean(STATE_COMPANION_INSTALL) == true
         if (savedInstanceState?.getBoolean(STATE_PACKAGE_SOURCE_PENDING) == true) {
             pendingProposalAfterPackageSource =
                 (LocalCommandParser.parse("打开按键精灵") as? ParseResult.Proposal)?.value
         }
+        val orphanedDailyRequest =
+            activeDailyRequestId != null &&
+                dailyCompletionDeadlineElapsed <= 0L &&
+                pendingProposalAfterSettings == null
+        if (orphanedDailyRequest) {
+            AssistantDiagnostics.record(this, "daily_restore", "orphan_cleared")
+            activeDailyRequestId = null
+        }
+        commandBusy =
+            activeDailyRequestId != null ||
+                pendingProposalAfterSettings != null ||
+                pendingDirectHandoffTitle != null ||
+                pendingProposalAfterPackageSource != null ||
+                awaitingCompanionInstall
         buildInterface()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             onBackInvokedDispatcher.registerOnBackInvokedCallback(
@@ -75,6 +109,8 @@ class MainActivity : Activity(), SpeechController.Listener {
                 "安全回执需要检查",
                 "本机回执链不完整。鸡蛋已经停下，不会打开外部应用。",
             )
+        } else if (orphanedDailyRequest) {
+            showFailure("上次记事已中断", "没有找到可核对的结果；不会自动重试。")
         }
     }
 
@@ -98,13 +134,15 @@ class MainActivity : Activity(), SpeechController.Listener {
     private fun buildTopBar(): View {
         val bar = FrameLayout(this)
         statusDot = TextView(this).apply {
-            text = "●"
+            text = "● 手在线"
             textSize = 12f
             setTextColor(Color.rgb(101, 212, 170))
             gravity = Gravity.CENTER
-            contentDescription = "鸡蛋已就绪"
+            setPadding(dp(10), 0, dp(10), 0)
+            background = rounded(Color.rgb(28, 50, 43), dp(18), Color.rgb(101, 212, 170), dp(1))
+            contentDescription = getString(R.string.hand_connected)
         }
-        bar.addView(statusDot, FrameLayout.LayoutParams(dp(28), dp(44), Gravity.START or Gravity.CENTER_VERTICAL))
+        bar.addView(statusDot, FrameLayout.LayoutParams(dp(88), dp(36), Gravity.START or Gravity.CENTER_VERTICAL))
         bar.addView(ImageButton(this).apply {
             setImageResource(R.drawable.ic_settings)
             imageTintList = android.content.res.ColorStateList.valueOf(Color.rgb(210, 210, 218))
@@ -141,11 +179,11 @@ class MainActivity : Activity(), SpeechController.Listener {
         statusTitle = textView("", 18f, Color.WHITE, bold = true).apply {
             visibility = View.GONE
             gravity = Gravity.CENTER
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
         }
         statusSubtitle = textView("", 14f, Color.rgb(174, 174, 184)).apply {
             visibility = View.GONE
             gravity = Gravity.CENTER
-            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
             setPadding(0, dp(4), 0, dp(12))
         }
         area.addView(statusTitle, LinearLayout.LayoutParams(match, wrap))
@@ -208,22 +246,40 @@ class MainActivity : Activity(), SpeechController.Listener {
     }
 
     private fun submitText() {
+        if (speech.isListening) {
+            speech.cancel()
+            resetMicrophoneButton()
+            AssistantDiagnostics.record(this, "speech", "cancelled_for_text_submit")
+        }
+        if (commandBusy) {
+            AssistantDiagnostics.record(this, "command", "duplicate_ignored")
+            return
+        }
         if (!receiptsHealthy) {
             showFailure("安全回执需要检查", "鸡蛋没有执行任何外部动作。")
             return
         }
         hideKeyboard()
-        showStatus(
-            getString(R.string.thinking),
-            "安全的打开动作会直接交给安卓。",
-            OrbMode.THINKING,
-        )
         val parsed = LocalCommandParser.parse(input.text.toString())
         when (val directive = CommandDispatchPolicy.classify(parsed)) {
-            is DispatchDirective.DirectNavigation -> dispatchProposal(directive.proposal)
-            is DispatchDirective.SandboxExperiment -> dispatchProposal(directive.proposal)
-            is DispatchDirective.OwnedAppAction -> dispatchProposal(directive.proposal)
+            is DispatchDirective.DirectNavigation -> beginDispatch(directive.proposal)
+            is DispatchDirective.SandboxExperiment -> beginDispatch(directive.proposal)
+            is DispatchDirective.OwnedAppAction -> beginDispatch(directive.proposal)
             is DispatchDirective.DoNotDispatch -> showFailure(directive.title, directive.message)
+        }
+    }
+
+    private fun beginDispatch(proposal: ActionProposal) {
+        commandBusy = true
+        AssistantDiagnostics.record(
+            this,
+            "command_dispatch",
+            "started",
+            "action=${proposal.action.id};digest=${proposal.digest.take(12)}",
+        )
+        renderState(AssistantUiState.executing(proposal.title))
+        root.post {
+            if (!isFinishing && commandBusy) dispatchProposal(proposal)
         }
     }
 
@@ -236,27 +292,47 @@ class MainActivity : Activity(), SpeechController.Listener {
     private fun dispatchProposal(proposal: ActionProposal) {
         val dailyArguments = proposal.arguments as? ActionArguments.DailyNote
         if (proposal.action == ShellAction.CREATE_DAILY_NOTE && dailyArguments == null) {
+            commandBusy = false
             showFailure("待办没有准备好", "鸡蛋没有打开日常小事 App，也没有保存任何内容。")
             return
         }
-        if (dailyArguments != null) activeDailyRequestId = dailyArguments.requestId
+        if (dailyArguments != null) {
+            activeDailyRequestId = dailyArguments.requestId
+            dailyCompletionDeadlineElapsed = 0L
+        }
         val preparedHash = runCatching {
             receipts.append(proposal, "dispatch_prepared")
         }.getOrNull()
         if (preparedHash == null) {
+            commandBusy = false
             if (dailyArguments != null) activeDailyRequestId = null
             receiptsHealthy = false
             showFailure("动作意图没有记好", "鸡蛋没有把动作交给安卓，也不会自动重试。")
             return
         }
         receiptLabel.text = getString(R.string.receipt_format, preparedHash.take(8))
+        val directHandoffTitle = if (proposal.action in DIRECT_HANDOFF_ACTIONS) {
+            proposal.title
+        } else if (proposal.action == ShellAction.OPEN_AUTOMATION_LAB) {
+            "手 + 脑实验"
+        } else {
+            null
+        }
+        if (directHandoffTitle != null) {
+            pendingDirectHandoffTitle = directHandoffTitle
+            directHandoffLeftForeground = false
+        }
         val result = launcher.dispatch(proposal)
+        if (directHandoffTitle != null && result !is DispatchResult.Dispatched) {
+            pendingDirectHandoffTitle = null
+            directHandoffLeftForeground = false
+        }
         val (status, title, message, mode) = when (result) {
             is DispatchResult.Dispatched -> Quadruple(
                 "handoff_dispatched",
-                "已经交给安卓",
-                result.message,
-                OrbMode.SUCCESS,
+                "已经开始，正在核对结果",
+                proposal.title,
+                OrbMode.THINKING,
             )
             is DispatchResult.TargetUnavailable -> Quadruple(
                 "target_unavailable",
@@ -272,6 +348,7 @@ class MainActivity : Activity(), SpeechController.Listener {
             )
             is DispatchResult.NeedsAccessibility -> {
                 pendingProposalAfterSettings = proposal
+                PendingAccessibilityMemory.remember(proposal)
                 if (openAccessibilitySettings()) {
                     Quadruple(
                         "blocked_by_os",
@@ -280,6 +357,7 @@ class MainActivity : Activity(), SpeechController.Listener {
                         OrbMode.THINKING,
                     )
                 } else {
+                    PendingAccessibilityMemory.clearIf(proposal)
                     pendingProposalAfterSettings = null
                     if (dailyArguments != null) activeDailyRequestId = null
                     Quadruple(
@@ -315,9 +393,30 @@ class MainActivity : Activity(), SpeechController.Listener {
             result !is DispatchResult.NeedsAccessibility
         ) {
             activeDailyRequestId = null
+            dailyCompletionDeadlineElapsed = 0L
+        }
+        val waitsForVerifiedCompletion =
+            dailyArguments != null && result is DispatchResult.Dispatched
+        if (waitsForVerifiedCompletion) {
+            dailyCompletionDeadlineElapsed =
+                SystemClock.elapsedRealtime() + DAILY_COMPLETION_TIMEOUT_MS
+        }
+        val waitsForSystemReturn =
+            (result is DispatchResult.NeedsAccessibility && pendingProposalAfterSettings != null) ||
+                result is DispatchResult.NeedsPackageSourcePermission ||
+                result is DispatchResult.CompanionInstallStarted
+        val waitsForDirectReturn =
+            directHandoffTitle != null && result is DispatchResult.Dispatched
+        if (!waitsForVerifiedCompletion && !waitsForSystemReturn && !waitsForDirectReturn) {
+            commandBusy = false
         }
         val receiptHash = runCatching { receipts.append(proposal, status) }.getOrNull()
         if (receiptHash == null) {
+            commandBusy = false
+            PendingAccessibilityMemory.clearIf(pendingProposalAfterSettings)
+            pendingProposalAfterSettings = null
+            pendingDirectHandoffTitle = null
+            directHandoffLeftForeground = false
             if (
                 proposal.action == ShellAction.OPEN_AUTOMATION_LAB ||
                 proposal.action == ShellAction.CREATE_DAILY_NOTE
@@ -325,16 +424,26 @@ class MainActivity : Activity(), SpeechController.Listener {
                 launcher.cancelActiveLab()
             }
             if (dailyArguments != null) activeDailyRequestId = null
+            if (dailyArguments != null) dailyCompletionDeadlineElapsed = 0L
             receiptsHealthy = false
             showFailure("结果回执没有写好", "动作结果未知；鸡蛋已停下且不会自动重试。")
             return
         }
         receiptLabel.text = getString(R.string.receipt_format, receiptHash.take(8))
+        AssistantDiagnostics.record(
+            this,
+            "command_dispatch",
+            status,
+            "action=${proposal.action.id};result=${result::class.java.simpleName}",
+        )
         showStatus(title, message, mode)
+        if (waitsForDirectReturn) armDirectHandoffWatchdog(requireNotNull(directHandoffTitle))
     }
 
     private fun showFailure(title: String, message: String) {
-        showStatus(title, message, OrbMode.FAILURE)
+        commandBusy = false
+        AssistantDiagnostics.record(this, "assistant_failure", "shown", title)
+        renderState(AssistantUiState.failed(title.removePrefix("没做成："), message))
     }
 
     @Suppress("DEPRECATION")
@@ -368,25 +477,52 @@ class MainActivity : Activity(), SpeechController.Listener {
     }
 
     private fun showStatus(title: String, message: String, mode: OrbMode) {
-        statusTitle.text = title
-        statusSubtitle.text = message
+        renderState(
+            AssistantUiState(
+                phase = when (mode) {
+                    OrbMode.SUCCESS -> AssistantUiState.Phase.COMPLETED
+                    OrbMode.FAILURE -> AssistantUiState.Phase.FAILED
+                    OrbMode.LISTENING -> AssistantUiState.Phase.LISTENING
+                    OrbMode.THINKING -> AssistantUiState.Phase.VERIFYING
+                    OrbMode.IDLE -> AssistantUiState.Phase.IDLE
+                },
+                title = title,
+                detail = message,
+                tone = when (mode) {
+                    OrbMode.SUCCESS -> AssistantUiState.Tone.SUCCESS
+                    OrbMode.FAILURE -> AssistantUiState.Tone.FAILURE
+                    OrbMode.LISTENING -> AssistantUiState.Tone.LISTENING
+                    OrbMode.THINKING -> AssistantUiState.Tone.WORKING
+                    OrbMode.IDLE -> AssistantUiState.Tone.IDLE
+                },
+            ),
+        )
+    }
+
+    private fun renderState(state: AssistantUiState) {
+        statusTitle.text = state.title
+        statusSubtitle.text = state.detail
         statusTitle.visibility = View.VISIBLE
-        statusSubtitle.visibility = View.VISIBLE
-        statusDot.setTextColor(
-            when (mode) {
-                OrbMode.SUCCESS -> Color.rgb(101, 212, 170)
-                OrbMode.FAILURE -> Color.rgb(255, 111, 112)
-                OrbMode.LISTENING -> Color.rgb(112, 177, 255)
-                OrbMode.THINKING -> Color.rgb(196, 156, 255)
-                OrbMode.IDLE -> Color.rgb(174, 174, 184)
+        statusSubtitle.visibility = if (state.detail.isBlank()) View.GONE else View.VISIBLE
+        statusTitle.setTextColor(
+            when (state.tone) {
+                AssistantUiState.Tone.SUCCESS -> Color.rgb(101, 212, 170)
+                AssistantUiState.Tone.FAILURE -> Color.rgb(255, 111, 112)
+                AssistantUiState.Tone.LISTENING -> Color.rgb(112, 177, 255)
+                AssistantUiState.Tone.WORKING -> Color.rgb(196, 156, 255)
+                AssistantUiState.Tone.IDLE -> Color.rgb(242, 242, 247)
             },
         )
-        statusDot.contentDescription = title
     }
 
     private fun toggleSpeech() {
         if (speech.isListening) {
             speech.stop()
+            AssistantDiagnostics.record(this, "speech", "stop_requested")
+            return
+        }
+        if (commandBusy) {
+            AssistantDiagnostics.record(this, "speech", "start_ignored_while_busy")
             return
         }
         if (!speech.isAvailable()) {
@@ -398,6 +534,13 @@ class MainActivity : Activity(), SpeechController.Listener {
         } else {
             showMicrophoneExplanation()
         }
+    }
+
+    override fun onSpeechPreparing(onDevice: Boolean) {
+        microphoneButton.setImageResource(R.drawable.ic_stop)
+        microphoneButton.contentDescription = getString(R.string.stop_microphone)
+        renderState(AssistantUiState.preparingMicrophone())
+        AssistantDiagnostics.record(this, "speech", "preparing", "onDevice=$onDevice")
     }
 
     private fun showMicrophoneExplanation() {
@@ -426,35 +569,46 @@ class MainActivity : Activity(), SpeechController.Listener {
 
     override fun onListeningStarted(onDevice: Boolean) {
         microphoneButton.setImageResource(R.drawable.ic_stop)
-        showStatus(
-            getString(R.string.listening),
-            if (onDevice) {
-                "这次使用手机上的离线识别服务。"
-            } else {
-                "这次由手机的语音服务识别，是否联网取决于手机设置。"
-            },
-            OrbMode.LISTENING,
-        )
+        microphoneButton.contentDescription = getString(R.string.stop_microphone)
+        renderState(AssistantUiState.listening())
+        AssistantDiagnostics.record(this, "speech", "listening", "onDevice=$onDevice")
+    }
+
+    override fun onRecognizing() {
+        renderState(AssistantUiState.recognizing())
     }
 
     override fun onPartialText(text: String) {
         updateInputFromSpeech(text)
+        renderState(AssistantUiState.listening("听见了：$text"))
     }
 
     override fun onFinalText(text: String) {
-        microphoneButton.setImageResource(R.drawable.ic_mic)
+        resetMicrophoneButton()
+        AssistantDiagnostics.record(
+            this,
+            "speech",
+            "final_text",
+            "length=${text.length};digest=${ActionProposal.sha256(text).take(12)}",
+        )
         updateInputFromSpeech(text)
         submitText()
     }
 
     override fun onSpeechFailure() {
-        microphoneButton.setImageResource(R.drawable.ic_mic)
+        resetMicrophoneButton()
+        AssistantDiagnostics.record(this, "speech", "failed")
         showFailure("没有听清", getString(R.string.speech_error))
     }
 
     private fun updateInputFromSpeech(text: String) {
         input.setText(text)
         input.setSelection(input.length())
+    }
+
+    private fun resetMicrophoneButton() {
+        microphoneButton.setImageResource(R.drawable.ic_mic)
+        microphoneButton.contentDescription = getString(R.string.microphone)
     }
 
     private fun openAppSettings() {
@@ -483,19 +637,107 @@ class MainActivity : Activity(), SpeechController.Listener {
         refreshHandState()
         postWhileResumed(450L) { refreshHandState() }
         postWhileResumed(1_400L) { refreshHandState() }
-        consumeDailyCompletionIfReady()
+        postWhileResumed(3_000L) { refreshHandState() }
+        finishDirectHandoffIfReturned()
+        pendingDirectHandoffTitle?.let(::armDirectHandoffWatchdog)
+        pollDailyCompletion()
         resumeEmbeddedHandInstallIfReady()
         resolveCompanionInstallIfReady()
         val pending = pendingProposalAfterSettings ?: return
-        postWhileResumed(450L) {
-            if (pendingProposalAfterSettings !== pending) return@postWhileResumed
+        val currentPending = PendingAccessibilityMemory.takeIfCurrent(pending)
+        if (currentPending == null) {
             pendingProposalAfterSettings = null
+            commandBusy = false
+            if (pending.arguments is ActionArguments.DailyNote) {
+                activeDailyRequestId = null
+                dailyCompletionDeadlineElapsed = 0L
+            }
+            showFailure("这次请求已过期", "没有执行任何动作；请再说一次。")
+            return
+        }
+        resumePendingAccessibilityWhenReady(currentPending, attempt = 0)
+    }
+
+    private fun resumePendingAccessibilityWhenReady(pending: ActionProposal, attempt: Int) {
+        postWhileResumed(if (attempt == 0) 200L else ACCESSIBILITY_CONNECT_POLL_MS) {
+            if (pendingProposalAfterSettings !== pending) return@postWhileResumed
+            refreshHandState()
             if (AccessibilityServiceBridge.connected) {
+                pendingProposalAfterSettings = null
+                PendingAccessibilityMemory.clearIf(pending)
                 dispatchProposal(pending)
+            } else if (
+                AssistantLifecyclePolicy.shouldPollAccessibility(
+                    connected = false,
+                    attempt = attempt,
+                    maxAttempts = ACCESSIBILITY_CONNECT_MAX_ATTEMPTS,
+                )
+            ) {
+                resumePendingAccessibilityWhenReady(pending, attempt + 1)
             } else {
-                if (pending.arguments is ActionArguments.DailyNote) activeDailyRequestId = null
+                pendingProposalAfterSettings = null
+                PendingAccessibilityMemory.clearIf(pending)
+                commandBusy = false
+                if (pending.arguments is ActionArguments.DailyNote) {
+                    activeDailyRequestId = null
+                    dailyCompletionDeadlineElapsed = 0L
+                }
                 showFailure("“手”还没有接好", "没有执行任何动作；接好后再试一次。")
             }
+        }
+    }
+
+    private fun finishDirectHandoffIfReturned() {
+        val action = pendingDirectHandoffTitle ?: return
+        if (!directHandoffLeftForeground) return
+        pendingDirectHandoffTitle = null
+        directHandoffLeftForeground = false
+        commandBusy = false
+        AssistantDiagnostics.record(this, "direct_handoff", "returned_unverified", action)
+        renderState(AssistantUiState.handedOff(action))
+    }
+
+    private fun armDirectHandoffWatchdog(action: String) {
+        postWhileResumed(DIRECT_HANDOFF_FOREGROUND_TIMEOUT_MS) {
+            if (pendingDirectHandoffTitle != action || directHandoffLeftForeground) {
+                return@postWhileResumed
+            }
+            pendingDirectHandoffTitle = null
+            commandBusy = false
+            AssistantDiagnostics.record(this, "direct_handoff", "no_foreground_transition", action)
+            renderState(AssistantUiState.handoffNotObserved(action))
+        }
+    }
+
+    private fun pollDailyCompletion() {
+        val requestId = activeDailyRequestId ?: return
+        val deadline = dailyCompletionDeadlineElapsed
+        if (deadline <= 0L) return
+        val failure = AccessibilityServiceBridge.consumeDailyFailure(requestId)
+        if (failure != null) {
+            activeDailyRequestId = null
+            dailyCompletionDeadlineElapsed = 0L
+            AssistantDiagnostics.record(this, "daily_note", "failed", failure.reason)
+            showFailure(
+                failure.reason,
+                "这次保存没有被证明成功，也不会自动重试。请打开小事清单核对。",
+            )
+            return
+        }
+        if (consumeDailyCompletionIfReady()) return
+        if (SystemClock.elapsedRealtime() >= deadline) {
+            activeDailyRequestId = null
+            dailyCompletionDeadlineElapsed = 0L
+            launcher.cancelActiveLab()
+            AssistantDiagnostics.record(this, "daily_note", "completion_timeout")
+            showFailure(
+                "保存结果没有回来",
+                "鸡蛋没有把这次动作显示成完成，也不会自动重试。请打开小事清单核对。",
+            )
+            return
+        }
+        postWhileResumed(DAILY_COMPLETION_POLL_MS) {
+            if (activeDailyRequestId == requestId) pollDailyCompletion()
         }
     }
 
@@ -523,12 +765,20 @@ class MainActivity : Activity(), SpeechController.Listener {
             if (!awaitingCompanionInstall) return@postWhileResumed
             if (launcher.isVerifiedMobileAnjianCandidateInstalled()) {
                 awaitingCompanionInstall = false
-                showStatus(getString(R.string.hand_installed), "", OrbMode.SUCCESS)
                 refreshHandState()
+                val proposal =
+                    (LocalCommandParser.parse("打开按键精灵") as? ParseResult.Proposal)?.value
+                if (proposal == null) {
+                    commandBusy = false
+                    showFailure(getString(R.string.hand_not_installed), "")
+                } else {
+                    dispatchProposal(proposal)
+                }
             } else if (attempt < 9) {
                 checkCompanionInstall(attempt + 1)
             } else {
                 awaitingCompanionInstall = false
+                commandBusy = false
                 showFailure(getString(R.string.hand_not_installed), "")
                 refreshHandState()
             }
@@ -550,14 +800,19 @@ class MainActivity : Activity(), SpeechController.Listener {
 
     private fun refreshHandState() {
         val connected = AccessibilityServiceBridge.connected
-        statusDot.setTextColor(
-            if (connected) Color.rgb(101, 212, 170) else Color.rgb(112, 112, 122),
-        )
+        statusDot.text = if (connected) "● 手在线" else "○ 手离线"
+        statusDot.setTextColor(if (connected) Color.rgb(101, 212, 170) else Color.rgb(174, 174, 184))
         statusDot.contentDescription = if (connected) {
             getString(R.string.hand_connected)
         } else {
             getString(R.string.hand_disconnected)
         }
+        statusDot.background = rounded(
+            if (connected) Color.rgb(28, 50, 43) else Color.rgb(30, 30, 36),
+            dp(18),
+            if (connected) Color.rgb(101, 212, 170) else Color.rgb(72, 72, 82),
+            dp(1),
+        )
         if (::handButton.isInitialized) {
             handButton.background = rounded(
                 if (connected) Color.rgb(28, 50, 43) else Color.rgb(30, 30, 36),
@@ -600,7 +855,7 @@ class MainActivity : Activity(), SpeechController.Listener {
         ) {
             dialog.dismiss()
             if (AccessibilityServiceBridge.connected) {
-                showStatus(getString(R.string.hand_connected), "", OrbMode.SUCCESS)
+                showStatus(getString(R.string.hand_connected), "", OrbMode.IDLE)
             } else if (openAccessibilitySettings()) {
                 showStatus(getString(R.string.connect_hand), "", OrbMode.THINKING)
             } else {
@@ -655,7 +910,9 @@ class MainActivity : Activity(), SpeechController.Listener {
                 if (active) Color.rgb(101, 212, 170) else Color.rgb(72, 72, 82),
                 dp(1),
             )
-            setOnClickListener { onClick() }
+            isClickable = false
+            isFocusable = false
+            importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }, LinearLayout.LayoutParams(dp(64), dp(64)))
         addView(textView(label, 13f, Color.rgb(215, 215, 224)).apply {
             gravity = Gravity.CENTER
@@ -668,37 +925,76 @@ class MainActivity : Activity(), SpeechController.Listener {
         }
     }
 
-    private fun consumeDailyCompletionIfReady() {
-        val requestId = activeDailyRequestId ?: return
-        val completion = AccessibilityServiceBridge.consumeDailyCompletion(requestId) ?: return
+    private fun consumeDailyCompletionIfReady(): Boolean {
+        val requestId = activeDailyRequestId ?: return false
+        val completion = AccessibilityServiceBridge.consumeDailyCompletion(requestId) ?: return false
         activeDailyRequestId = null
+        dailyCompletionDeadlineElapsed = 0L
+        commandBusy = false
         if (
             completion.noteSha256 != ActionProposal.sha256(completion.noteText) ||
             !completion.receiptHash.matches(Regex("^[0-9a-f]{64}$"))
         ) {
             showFailure("保存结果无法核对", "鸡蛋没有把这次结果显示成已保存，也不会自动重试。")
-            return
+            return true
         }
         receiptLabel.text = getString(R.string.receipt_format, completion.receiptHash.take(8))
-        showStatus(
-            "已经记下",
-            if (completion.navigationAccepted) {
-                completion.noteText
-            } else {
-                "${completion.noteText}\n内容已经保存；这次返回动作由你手动完成。"
-            },
-            OrbMode.SUCCESS,
+        AssistantDiagnostics.record(
+            this,
+            "daily_note",
+            "verified",
+            "request=${completion.requestId.take(8)};note=${completion.noteSha256.take(12)}",
         )
+        renderState(
+            AssistantUiState.completed(
+                result = "已记下“${completion.noteText}”",
+                detail = "已保存到小事清单",
+            ),
+        )
+        return true
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         activeDailyRequestId?.let { outState.putString(STATE_DAILY_REQUEST_ID, it) }
+        outState.putLong(
+            STATE_DAILY_COMPLETION_REMAINING,
+            AssistantLifecyclePolicy.remaining(
+                dailyCompletionDeadlineElapsed,
+                SystemClock.elapsedRealtime(),
+                DAILY_COMPLETION_TIMEOUT_MS,
+            ),
+        )
+        pendingDirectHandoffTitle?.let { outState.putString(STATE_DIRECT_HANDOFF_TITLE, it) }
+        outState.putBoolean(STATE_DIRECT_HANDOFF_LEFT, directHandoffLeftForeground)
         outState.putBoolean(STATE_COMPANION_INSTALL, awaitingCompanionInstall)
         outState.putBoolean(
             STATE_PACKAGE_SOURCE_PENDING,
             pendingProposalAfterPackageSource?.action == ShellAction.OPEN_MOBILEANJIAN,
         )
+        pendingProposalAfterSettings?.let { proposal ->
+            outState.putString(STATE_ACCESSIBILITY_PENDING_ACTION, proposal.action.name)
+            (proposal.arguments as? ActionArguments.DailyNote)?.let { arguments ->
+                outState.putString(STATE_ACCESSIBILITY_PENDING_REQUEST_ID, arguments.requestId)
+            }
+        }
+    }
+
+    private fun restorePendingAccessibilityProposal(state: Bundle?): ActionProposal? {
+        val action = state?.getString(STATE_ACCESSIBILITY_PENDING_ACTION)
+            ?.let { encoded -> runCatching { ShellAction.valueOf(encoded) }.getOrNull() }
+            ?: return null
+        return when (action) {
+            ShellAction.CREATE_DAILY_NOTE -> {
+                val requestId = state.getString(STATE_ACCESSIBILITY_PENDING_REQUEST_ID) ?: return null
+                PendingAccessibilityMemory.findDaily(requestId)
+            }
+            ShellAction.OPEN_AUTOMATION_LAB ->
+                (LocalCommandParser.parse("开始手脑实验") as? ParseResult.Proposal)
+                    ?.value
+                    ?.also(PendingAccessibilityMemory::remember)
+            else -> null
+        }
     }
 
     private fun showHelp() {
@@ -716,18 +1012,24 @@ class MainActivity : Activity(), SpeechController.Listener {
     }
 
     override fun onPause() {
+        if (pendingDirectHandoffTitle != null) directHandoffLeftForeground = true
         resumedGeneration += 1
         super.onPause()
     }
 
     override fun onStop() {
+        val stoppedActiveSpeech = speech.isListening
         speech.destroy()
-        microphoneButton.setImageResource(R.drawable.ic_mic)
+        resetMicrophoneButton()
+        if (stoppedActiveSpeech && !commandBusy) {
+            showStatus("听写已停止", "", OrbMode.IDLE)
+        }
         super.onStop()
     }
 
     override fun onDestroy() {
         speech.destroy()
+        if (!isChangingConfigurations) PendingAccessibilityMemory.clear()
         super.onDestroy()
     }
 
@@ -738,6 +1040,7 @@ class MainActivity : Activity(), SpeechController.Listener {
     }
 
     private fun handleBack() {
+        PendingAccessibilityMemory.clear()
         finishAfterTransition()
     }
 
@@ -745,14 +1048,18 @@ class MainActivity : Activity(), SpeechController.Listener {
         LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
+            isClickable = true
+            isFocusable = true
+            contentDescription = getString(label)
             val button = ImageButton(this@MainActivity).apply {
                 setImageResource(icon)
                 imageTintList = android.content.res.ColorStateList.valueOf(Color.WHITE)
                 scaleType = ImageView.ScaleType.CENTER
                 setPadding(dp(16), dp(16), dp(16), dp(16))
                 background = rounded(Color.rgb(30, 30, 36), dp(30), Color.rgb(72, 72, 82), dp(1))
-                contentDescription = getString(label)
-                setOnClickListener { onClick() }
+                isClickable = false
+                isFocusable = false
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
             }
             if (label == R.string.hand_short) handButton = button
             addView(button, LinearLayout.LayoutParams(dp(60), dp(60)))
@@ -809,7 +1116,22 @@ class MainActivity : Activity(), SpeechController.Listener {
         private const val wrap = ViewGroup.LayoutParams.WRAP_CONTENT
         private val INPUT_BORDER = Color.rgb(74, 74, 84)
         private const val STATE_DAILY_REQUEST_ID = "daily_request_id"
+        private const val STATE_DAILY_COMPLETION_REMAINING = "daily_completion_remaining"
+        private const val STATE_DIRECT_HANDOFF_TITLE = "direct_handoff_title"
+        private const val STATE_DIRECT_HANDOFF_LEFT = "direct_handoff_left"
         private const val STATE_COMPANION_INSTALL = "companion_install"
         private const val STATE_PACKAGE_SOURCE_PENDING = "package_source_pending"
+        private const val STATE_ACCESSIBILITY_PENDING_ACTION = "accessibility_pending_action"
+        private const val STATE_ACCESSIBILITY_PENDING_REQUEST_ID = "accessibility_pending_request_id"
+        private const val DAILY_COMPLETION_TIMEOUT_MS = 30_000L
+        private const val DAILY_COMPLETION_POLL_MS = 250L
+        private const val DIRECT_HANDOFF_FOREGROUND_TIMEOUT_MS = 2_000L
+        private const val ACCESSIBILITY_CONNECT_POLL_MS = 250L
+        private const val ACCESSIBILITY_CONNECT_MAX_ATTEMPTS = 11
+        private val DIRECT_HANDOFF_ACTIONS = setOf(
+            ShellAction.OPEN_ALIPAY,
+            ShellAction.OPEN_MOBILEANJIAN,
+            ShellAction.OPEN_SYSTEM_SETTINGS,
+        )
     }
 }

@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_Hand_Center-0.4-7B61A8?style=for-the-badge" alt="Jidan Shell 0.4 Hand Center" /></a>
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_Assistant-0.5-65D4AA?style=for-the-badge" alt="Jidan Shell 0.5 Assistant" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_Prototipo_observable-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="#-inicio-rápido-para-desarrolladores"><img src="https://img.shields.io/badge/Inicio_para_desarrolladores-195A41?style=for-the-badge" alt="Inicio rápido para desarrolladores" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/Perfil_JCL-0.1-2F8F68?style=for-the-badge" alt="Perfil JCL 0.1" /></a>
@@ -26,10 +26,10 @@
 </p>
 
 > [!IMPORTANT]
-> Jidan es un prototipo experimental. El laboratorio Android incluye tres APK: la Shell, una lista local de tareas y un entorno aislado, con evidencia integral en un emulador Android 17. No son productos firmados para tienda, launchers predeterminados ni un sistema operativo independiente. Utilízalo con aplicaciones controladas, dispositivos de prueba y datos desechables.
+> Jidan es un prototipo experimental. El laboratorio Android incluye tres APK: la Shell, una lista local de tareas y un entorno aislado. La evidencia integral de Android 17 pertenece al build histórico 0.3; las regresiones 0.5 se registran por separado con hashes exactos. No son productos firmados para tienda, launchers predeterminados ni un sistema operativo independiente.
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-hand-center-0.4.png" alt="Jidan Shell 0.4 Hand Center" width="360" /></a>
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-assistant-0.5.png" alt="Jidan Shell 0.5 Assistant" width="360" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 ejecutándose a pantalla completa en un simulador de iPhone 16" width="360" /></a>
 </p>
 
