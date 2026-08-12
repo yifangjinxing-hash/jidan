@@ -1,5 +1,13 @@
 # Jidan Reference Memo
 
+Mobile experience shells:
+
+- [`shell/`](shell/README.md): installable Android shell and Android front-door adapters.
+- [`daily-demo/`](daily-demo/): independently usable, no-network local checklist and the first owned cross-app accessibility write target.
+- [`accessibility-sandbox/`](accessibility-sandbox/): same-signature, no-network synthetic form used to verify one-step Android accessibility execution, postconditions, and sensitive-value non-persistence.
+- [`ios-shell/`](ios-shell/README.md): SwiftUI shell, Apple Speech input, direct low-risk navigation, and remote iPhone Simulator evidence.
+- [`windows-shell/`](windows-shell/README.md): native WPF system deck with PE/APK/IPA inspection, real Windows/ADB routes, and a bounded clean-room ARM64 fixture.
+
 This is a deliberately narrow Android 17 reference provider used to prove real AppFunctions writes, exact readback, two layers of replay protection, and Jidan receipt integrity.
 
 The visible UI follows the system locale, supports right-to-left layout, and ships complete seed resources for 23 locales. User memo content is wrapped with first-strong bidirectional isolation and stored without implicit Unicode normalization. Translation keys and format placeholders are checked by `../prototype/tools/check_locales.py`.

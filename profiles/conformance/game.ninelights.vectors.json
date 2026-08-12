@@ -1,0 +1,45 @@
+{
+  "profile": "JCL/0.1",
+  "rulesVersion": "ninelights/1",
+  "startCapability": "game.ninelights.start",
+  "pressCapability": "game.ninelights.press",
+  "startCases": [
+    {"levelId":"cross","expected":{"rulesVersion":"ninelights/1","levelId":"cross","cells":[0,1,0,1,1,1,0,1,0],"moveCount":0,"status":"playing"}},
+    {"levelId":"corners","expected":{"rulesVersion":"ninelights/1","levelId":"corners","cells":[1,1,0,1,0,1,0,1,1],"moveCount":0,"status":"playing"}},
+    {"levelId":"full","expected":{"rulesVersion":"ninelights/1","levelId":"full","cells":[1,1,1,1,1,1,1,1,1],"moveCount":0,"status":"playing"}}
+  ],
+  "pressCases": [
+    {"levelId":"cross","cell":0,"expected":{"cells":[1,0,0,0,1,1,0,1,0],"moveCount":1,"status":"playing","changedCells":[0,1,3],"event":"pressed"}},
+    {"levelId":"cross","cell":1,"expected":{"cells":[1,0,1,1,0,1,0,1,0],"moveCount":1,"status":"playing","changedCells":[0,1,2,4],"event":"pressed"}},
+    {"levelId":"cross","cell":2,"expected":{"cells":[0,0,1,1,1,0,0,1,0],"moveCount":1,"status":"playing","changedCells":[1,2,5],"event":"pressed"}},
+    {"levelId":"cross","cell":3,"expected":{"cells":[1,1,0,0,0,1,1,1,0],"moveCount":1,"status":"playing","changedCells":[0,3,4,6],"event":"pressed"}},
+    {"levelId":"cross","cell":4,"expected":{"cells":[0,0,0,0,0,0,0,0,0],"moveCount":1,"status":"won","changedCells":[1,3,4,5,7],"event":"won"}},
+    {"levelId":"cross","cell":5,"expected":{"cells":[0,1,1,1,0,0,0,1,1],"moveCount":1,"status":"playing","changedCells":[2,4,5,8],"event":"pressed"}},
+    {"levelId":"cross","cell":6,"expected":{"cells":[0,1,0,0,1,1,1,0,0],"moveCount":1,"status":"playing","changedCells":[3,6,7],"event":"pressed"}},
+    {"levelId":"cross","cell":7,"expected":{"cells":[0,1,0,1,0,1,1,0,1],"moveCount":1,"status":"playing","changedCells":[4,6,7,8],"event":"pressed"}},
+    {"levelId":"cross","cell":8,"expected":{"cells":[0,1,0,1,1,0,0,0,1],"moveCount":1,"status":"playing","changedCells":[5,7,8],"event":"pressed"}},
+    {"levelId":"corners","cell":0,"expected":{"cells":[0,0,0,0,0,1,0,1,1],"moveCount":1,"status":"playing","changedCells":[0,1,3],"event":"pressed"}},
+    {"levelId":"corners","cell":1,"expected":{"cells":[0,0,1,1,1,1,0,1,1],"moveCount":1,"status":"playing","changedCells":[0,1,2,4],"event":"pressed"}},
+    {"levelId":"corners","cell":2,"expected":{"cells":[1,0,1,1,0,0,0,1,1],"moveCount":1,"status":"playing","changedCells":[1,2,5],"event":"pressed"}},
+    {"levelId":"corners","cell":3,"expected":{"cells":[0,1,0,0,1,1,1,1,1],"moveCount":1,"status":"playing","changedCells":[0,3,4,6],"event":"pressed"}},
+    {"levelId":"corners","cell":4,"expected":{"cells":[1,0,0,0,1,0,0,0,1],"moveCount":1,"status":"playing","changedCells":[1,3,4,5,7],"event":"pressed"}},
+    {"levelId":"corners","cell":5,"expected":{"cells":[1,1,1,1,1,0,0,1,0],"moveCount":1,"status":"playing","changedCells":[2,4,5,8],"event":"pressed"}},
+    {"levelId":"corners","cell":6,"expected":{"cells":[1,1,0,0,0,1,1,0,1],"moveCount":1,"status":"playing","changedCells":[3,6,7],"event":"pressed"}},
+    {"levelId":"corners","cell":7,"expected":{"cells":[1,1,0,1,1,1,1,0,0],"moveCount":1,"status":"playing","changedCells":[4,6,7,8],"event":"pressed"}},
+    {"levelId":"corners","cell":8,"expected":{"cells":[1,1,0,1,0,0,0,0,0],"moveCount":1,"status":"playing","changedCells":[5,7,8],"event":"pressed"}},
+    {"levelId":"full","cell":0,"expected":{"cells":[0,0,1,0,1,1,1,1,1],"moveCount":1,"status":"playing","changedCells":[0,1,3],"event":"pressed"}},
+    {"levelId":"full","cell":1,"expected":{"cells":[0,0,0,1,0,1,1,1,1],"moveCount":1,"status":"playing","changedCells":[0,1,2,4],"event":"pressed"}},
+    {"levelId":"full","cell":2,"expected":{"cells":[1,0,0,1,1,0,1,1,1],"moveCount":1,"status":"playing","changedCells":[1,2,5],"event":"pressed"}},
+    {"levelId":"full","cell":3,"expected":{"cells":[0,1,1,0,0,1,0,1,1],"moveCount":1,"status":"playing","changedCells":[0,3,4,6],"event":"pressed"}},
+    {"levelId":"full","cell":4,"expected":{"cells":[1,0,1,0,0,0,1,0,1],"moveCount":1,"status":"playing","changedCells":[1,3,4,5,7],"event":"pressed"}},
+    {"levelId":"full","cell":5,"expected":{"cells":[1,1,0,1,0,0,1,1,0],"moveCount":1,"status":"playing","changedCells":[2,4,5,8],"event":"pressed"}},
+    {"levelId":"full","cell":6,"expected":{"cells":[1,1,1,0,1,1,0,0,1],"moveCount":1,"status":"playing","changedCells":[3,6,7],"event":"pressed"}},
+    {"levelId":"full","cell":7,"expected":{"cells":[1,1,1,1,0,1,0,0,0],"moveCount":1,"status":"playing","changedCells":[4,6,7,8],"event":"pressed"}},
+    {"levelId":"full","cell":8,"expected":{"cells":[1,1,1,1,1,0,1,0,0],"moveCount":1,"status":"playing","changedCells":[5,7,8],"event":"pressed"}}
+  ],
+  "solutionCases": [
+    {"levelId":"cross","cells":[4],"expectedStatus":"won"},
+    {"levelId":"corners","cells":[0,8],"expectedStatus":"won"},
+    {"levelId":"full","cells":[0,2,4,6,8],"expectedStatus":"won"}
+  ]
+}

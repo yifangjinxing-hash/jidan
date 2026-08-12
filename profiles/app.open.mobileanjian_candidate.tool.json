@@ -1,0 +1,70 @@
+{
+  "name": "app.open.mobileanjian_candidate",
+  "description": "Open an installed 按键精灵 launcher only when its package name, versionCode and signing certificate match the audited 4.2.3 sample. This does not prove byte-for-byte APK identity. Jidan does not call private services, sockets, scripts, OCR, accessibility controls or payment bridges.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "enum": [
+          "handoff_dispatched",
+          "target_unavailable",
+          "identity_mismatch",
+          "blocked_by_os"
+        ]
+      },
+      "targetPackage": {
+        "const": "com.cyjh.mobileanjian"
+      },
+      "targetVersionCode": {
+        "const": 2026000224
+      },
+      "trustedExecutor": {
+        "const": false
+      },
+      "automationAttempted": {
+        "const": false
+      },
+      "privateInterfaceInvoked": {
+        "const": false
+      },
+      "nextAction": {
+        "const": "user_operate_vendor_app"
+      }
+    },
+    "required": [
+      "state",
+      "targetPackage",
+      "targetVersionCode",
+      "trustedExecutor",
+      "automationAttempted",
+      "privateInterfaceInvoked",
+      "nextAction"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": true
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "NAVIGATION",
+      "executionMode": "HANDOFF",
+      "requiresConfirmation": false,
+      "requiresForegroundUserActivation": true,
+      "availability": "ANDROID_SHELL",
+      "registered": true,
+      "handProviderId": "android.hand.candidate.cyjh.mobileanjian.v0.1",
+      "privateInterfacesAllowed": false
+    }
+  }
+}

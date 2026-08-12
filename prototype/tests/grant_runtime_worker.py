@@ -41,6 +41,7 @@ def main() -> int:
         expires_at=raw["expires_at"],
         nonce=raw["nonce"],
         signature=raw["signature"],
+        capability_digests=tuple(tuple(item) for item in raw["capability_digests"]),
     )
     capability = Capability(
         id="test.process_write",

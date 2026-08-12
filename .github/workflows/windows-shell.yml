@@ -1,0 +1,82 @@
+name: Windows Shell CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "reference-app/windows-shell/**"
+      - ".github/workflows/windows-shell.yml"
+  pull_request:
+    paths:
+      - "reference-app/windows-shell/**"
+      - ".github/workflows/windows-shell.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-shell-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: reference-app/windows-shell
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Record toolchain
+        shell: pwsh
+        run: |
+          node --version
+          $compiler = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          if (-not (Test-Path $compiler)) { throw "C# compiler not found: $compiler" }
+          (Get-Item $compiler).VersionInfo.FileVersion
+
+      - name: Build native WPF shell
+        shell: cmd
+        run: build.cmd
+
+      - name: Run headless compatibility checks
+        shell: pwsh
+        run: |
+          $resultsPath = Join-Path $PWD 'test-results.txt'
+          $process = Start-Process -FilePath .\JidanOS.exe `
+            -ArgumentList '--test', $resultsPath -Wait -PassThru
+          Get-Content -Raw $resultsPath
+          if ($process.ExitCode -ne 0) {
+            throw "JidanOS checks failed with exit code $($process.ExitCode)"
+          }
+          if ((Get-Content -Raw $resultsPath) -notmatch 'RESULT 16 passed / 0 failed') {
+            throw "Expected 16 passing checks"
+          }
+
+      - name: Package runnable artifact
+        shell: pwsh
+        run: |
+          $artifactDir = Join-Path $env:RUNNER_TEMP 'JidanOS'
+          New-Item -ItemType Directory -Force -Path $artifactDir | Out-Null
+          Copy-Item .\JidanOS.exe, .\JidanOS.exe.config, .\README.md, .\start.cmd -Destination $artifactDir
+          Copy-Item .\samples -Destination $artifactDir -Recurse
+          Compress-Archive -Path "$artifactDir\*" -DestinationPath "$env:RUNNER_TEMP\JidanOS-windows-x64.zip"
+          $archiveHash = (Get-FileHash -Algorithm SHA256 "$env:RUNNER_TEMP\JidanOS-windows-x64.zip").Hash.ToLowerInvariant()
+          "$archiveHash  JidanOS-windows-x64.zip" |
+            Set-Content -Encoding utf8 "$env:RUNNER_TEMP\JidanOS-windows-x64.sha256.txt"
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jidan-windows-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/JidanOS-windows-x64.zip
+            ${{ runner.temp }}/JidanOS-windows-x64.sha256.txt
+            reference-app/windows-shell/test-results.txt
+          if-no-files-found: error
+          retention-days: 14

@@ -2,13 +2,31 @@
 
 Jidan is designed so language is data at the edge, not part of the trusted machine protocol.
 
-## Three separate guarantees
+## Project documentation languages
+
+| Language | Entry point | Review status |
+|---|---|---|
+| English | [README](../../README.md) | Source |
+| 简体中文 | [README.zh-CN](../../README.zh-CN.md) | Seed |
+| 繁體中文 | [README.zh-TW](../../README.zh-TW.md) | Machine-assisted seed |
+| 日本語 | [README.ja](../../README.ja.md) | Machine-assisted seed |
+| Español | [README.es](../../README.es.md) | Machine-assisted seed |
+
+Localized READMEs are maintained as welcoming entry points. The English README and machine-readable capability profiles remain the canonical technical references when translations differ. Fluent review is welcome through the [translation issue template](../../.github/ISSUE_TEMPLATE/translation.yml).
+
+## Four separate guarantees
 
 1. **Unicode transport:** memo text in any writing system can pass through JSON, the task graph, ADB, AppFunctions, storage, readback, and the UI without transliteration or implicit normalization.
 2. **Localized UI:** Android strings use resource qualifiers and BCP 47 locale configuration. Unknown locales fall back to the complete English resource set.
 3. **Semantic understanding:** the bundled `memo: <content>` prefix is language-neutral. The offline Chinese rule parser is one optional adapter. Free-form understanding in another language requires a reviewed parser or constrained multilingual-model adapter; it must still emit the same stable semantic action.
+4. **Frozen input-frontend compatibility:** the [`zh-Latn-pinyin` profile](../../profiles/frontends/zh-Latn-pinyin.frontend.json) was frozen on 2026-08-02. Its code and tests remain for compatibility and reproducibility, but it is not an active language route; new syntax, aliases, fuzzy matching, and capability mappings are not accepted. A frontend profile is not a UI locale or a machine protocol.
 
 These guarantees are deliberately not conflated. Shipping an interface translation does not mean a language has a safe natural-language parser, and accepting Unicode does not mean every phrase is understood.
+
+The Nine Lights spike follows the same separation. Human-facing game labels may
+be localized by each Host, while capability IDs, JSON fields, state values, and
+conformance vectors remain stable. The Python and Web Hosts share those
+semantics, not UI strings or Runtime code.
 
 ## Seed UI language packs
 

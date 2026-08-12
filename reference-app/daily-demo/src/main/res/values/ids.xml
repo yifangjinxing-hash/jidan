@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="daily_root" type="id" />
+    <item name="daily_title" type="id" />
+    <item name="daily_input_label" type="id" />
+    <item name="daily_note_input" type="id" />
+    <item name="daily_note_save" type="id" />
+    <item name="daily_note_status" type="id" />
+    <item name="daily_note_result" type="id" />
+    <item name="daily_task_summary" type="id" />
+    <item name="daily_task_clear_completed" type="id" />
+    <item name="daily_task_scroll" type="id" />
+    <item name="daily_task_list" type="id" />
+    <item name="daily_task_empty" type="id" />
+    <item name="daily_task_row" type="id" />
+    <item name="daily_task_toggle" type="id" />
+    <item name="daily_task_item_key" type="id" />
+</resources>

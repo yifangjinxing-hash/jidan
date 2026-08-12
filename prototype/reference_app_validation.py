@@ -218,8 +218,8 @@ def _trusted_record(
     capability = replace(
         record.capability,
         effect=effect,
-        requires_confirmation=effect >= Effect.WRITE,
-        reversible=effect < Effect.WRITE,
+        requires_confirmation=effect.at_least(Effect.WRITE),
+        reversible=not effect.at_least(Effect.WRITE),
         scopes=frozenset((*record.capability.scopes, signer_scope)),
     )
     return replace(record, capability=capability)
@@ -440,6 +440,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 capabilities,
                 scopes,
                 Effect.WRITE,
+                capability_digests=registry.definition_digests(capabilities),
             )
             preflight = runtime.execute(primary, unapproved)
             _require(preflight.status == "awaiting_confirmation", "write preflight did not stop")
@@ -483,6 +484,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 scopes,
                 Effect.WRITE,
                 approved_steps={"put"},
+                capability_digests=registry.definition_digests(capabilities),
             )
             primary_result = runtime.execute(primary, approved)
             _require(primary_result.status == "completed", f"primary round failed: {primary_result.status}")
@@ -633,6 +635,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                 scopes,
                 Effect.WRITE,
                 approved_steps={"put"},
+                capability_digests=registry.definition_digests(capabilities),
             )
             provider_result = runtime.execute(provider_replay_plan, provider_grant)
             _require(provider_result.status == "completed", "provider replay plan failed")
@@ -773,6 +776,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             scopes,
             Effect.WRITE,
             approved_steps={"put"},
+            capability_digests=registry.definition_digests(capabilities),
         )
         delayed_replay_result = runtime.execute(delayed_replay_plan, delayed_replay_grant)
         _require(delayed_replay_result.status == "completed", "delayed operation replay failed")

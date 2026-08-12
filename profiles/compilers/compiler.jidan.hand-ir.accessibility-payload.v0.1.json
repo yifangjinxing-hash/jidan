@@ -1,0 +1,33 @@
+{
+  "profile": "JCL-Hand-Compiler/0.1",
+  "compilerId": "compiler.jidan.hand-ir.accessibility-payload.v0.1",
+  "displayName": "鸡蛋 Hand IR 转换器",
+  "compilerKind": "HAND_IR_TRANSFORMER",
+  "inputProfile": "JCL-Hand-IR/0.1-dev",
+  "outputProfile": "Jidan-Accessibility-Hand-Payload/0.1-dev",
+  "targetPolicy": {
+    "mode": "ANY_ANDROID_PACKAGE",
+    "package": null,
+    "supportedLanes": [
+      "SANDBOX",
+      "OWNED_APP",
+      "SHADOW"
+    ]
+  },
+  "supportedOperations": [
+    "OPEN_PACKAGE",
+    "FIND_CLICK",
+    "FIND_SET_TEXT",
+    "FIND_SCROLL_FORWARD",
+    "GLOBAL_BACK",
+    "WAIT_MS"
+  ],
+  "contentPolicy": "DEVELOPMENT_PASS_THROUGH",
+  "deviceConsumerAvailable": false,
+  "executionAuthority": "NONE",
+  "notes": [
+    "This compiler lowers provider-neutral Hand IR to an accessibility-shaped payload without granting execution authority.",
+    "The resulting payload has no registered Android device consumer.",
+    "Target identity and execution lane remain the responsibility of a future Host binding."
+  ]
+}

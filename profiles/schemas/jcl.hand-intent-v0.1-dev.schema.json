@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.jidan.dev/jcl.hand-intent-v0.1-dev.schema.json",
+  "title": "JCL Hand Intent 0.1 development profile",
+  "description": "A content-neutral development contract between the Jidan brain and Hand IR compiler. Sensitivity is metadata and does not remove, reject, or rewrite action text.",
+  "type": "object",
+  "properties": {
+    "profile": {
+      "const": "JCL-Hand-Intent/0.1-dev"
+    },
+    "requestId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,159}$"
+    },
+    "locale": {
+      "type": "string",
+      "pattern": "^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$"
+    },
+    "goal": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "targetPackage": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$"
+    },
+    "actions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/action"
+      }
+    },
+    "source": {
+      "type": "object",
+      "properties": {
+        "profile": {
+          "const": "Jidan-Brain-Action/0.1"
+        },
+        "contentPolicy": {
+          "const": "DEVELOPMENT_PASS_THROUGH"
+        }
+      },
+      "required": [
+        "profile",
+        "contentPolicy"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "profile",
+    "requestId",
+    "locale",
+    "goal",
+    "targetPackage",
+    "actions",
+    "source"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "selector": {
+      "type": "object",
+      "properties": {
+        "viewId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "className": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "semanticRole": {
+          "enum": [
+            "BUTTON",
+            "EDIT_TEXT",
+            "TEXT",
+            "LIST",
+            "LIST_ITEM",
+            "CHECKBOX",
+            "SWITCH",
+            "CONTAINER"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "contentDescription": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        }
+      },
+      "minProperties": 1,
+      "additionalProperties": false
+    },
+    "action": {
+      "type": "object",
+      "properties": {
+        "actionId": {
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,159}$"
+        },
+        "actionKind": {
+          "enum": [
+            "LAUNCH_APP",
+            "CLICK",
+            "SET_TEXT",
+            "SCROLL_FORWARD",
+            "BACK",
+            "WAIT"
+          ]
+        },
+        "sensitivity": {
+          "enum": [
+            "NONE",
+            "PAYMENT",
+            "PASSWORD",
+            "OTP",
+            "BIOMETRIC",
+            "SYSTEM_SECURITY"
+          ]
+        },
+        "selector": {
+          "$ref": "#/$defs/selector"
+        },
+        "value": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "required": [
+        "actionId",
+        "actionKind",
+        "sensitivity"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

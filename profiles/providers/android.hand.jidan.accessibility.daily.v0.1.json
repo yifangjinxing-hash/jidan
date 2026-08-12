@@ -1,0 +1,43 @@
+{
+  "profile": "JCL-Hand-Provider/0.1",
+  "providerId": "android.hand.jidan.accessibility.daily.v0.1",
+  "displayName": "鸡蛋内置手（小事清单）",
+  "providerKind": "OWNED",
+  "trustState": "OWNED_RUNTIME_LOCAL_VERIFIED",
+  "transport": "LOCAL_ACCESSIBILITY",
+  "targetPackage": "dev.jidan.daily.demo",
+  "declaredPlanProfile": "JCL-Owned-Action-Plan/0.1",
+  "supportedLanes": [
+    "OWNED_APP"
+  ],
+  "observedCapabilities": [
+    "SEMANTIC_TREE",
+    "NODE_ACTIONS",
+    "TEXT_INPUT",
+    "APP_LAUNCH"
+  ],
+  "executionEnabled": true,
+  "publicContract": {
+    "available": false,
+    "protocol": null,
+    "definitionSha256": null
+  },
+  "hostAdapter": {
+    "available": true,
+    "profileSha256": "18d64c09f13fa1da2c01c9fe5278c0f0511d5a0aeb896ecab69d2c4d1baf5dd8"
+  },
+  "identityBinding": {
+    "mode": "RUNTIME_SIGNER_AND_CONTRACT",
+    "versionCode": 1,
+    "certificateSha256": null,
+    "artifactSha256": null,
+    "contractId": "jidan.daily.demo.v0.1.note-form.1"
+  },
+  "realWorldEffectCeiling": "OWNED_LOCAL_APP",
+  "notes": [
+    "This hand is pinned to the same-signed, no-network Jidan daily app and its exact semantic contract.",
+    "A verified save is a real local effect: the note remains on this device until the user removes it.",
+    "The Android Host rechecks identity, window and semantic roles before every step and never retries an attempted action.",
+    "No public MCP-to-device endpoint is registered yet; this is a Host-owned Android adapter."
+  ]
+}

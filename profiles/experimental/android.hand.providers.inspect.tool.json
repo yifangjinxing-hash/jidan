@@ -1,0 +1,95 @@
+{
+  "name": "android.hand.providers.inspect",
+  "description": "List the Android hand providers known to this Jidan Host, including candidate hands that are visible but not allowed to execute. This tool never invokes a provider's private interface.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "const": "inspected"
+      },
+      "providers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "providerId": {
+              "type": "string"
+            },
+            "displayName": {
+              "type": "string"
+            },
+            "trustState": {
+              "type": "string"
+            },
+            "transport": {
+              "type": "string"
+            },
+            "targetPackage": {
+              "type": "string"
+            },
+            "supportedLanes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "executionEnabled": {
+              "type": "boolean"
+            },
+            "executorBound": {
+              "type": "boolean"
+            },
+            "manifestSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          },
+          "required": [
+            "providerId",
+            "displayName",
+            "trustState",
+            "transport",
+            "targetPackage",
+            "supportedLanes",
+            "executionEnabled",
+            "executorBound",
+            "manifestSha256"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "privateInterfaceInvoked": {
+        "const": false
+      }
+    },
+    "required": [
+      "state",
+      "providers",
+      "privateInterfaceInvoked"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "READ",
+      "executionMode": "HOST_REGISTRY",
+      "requiresConfirmation": false,
+      "availability": "PYTHON_GATEWAY",
+      "registered": true,
+      "privateInterfacesAllowed": false
+    }
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "profile": "JCL-Hand-Provider/0.1",
+  "providerId": "android.hand.adapter.jidan.general-demo.stub.v0.1",
+  "displayName": "鸡蛋通用页面适配占位",
+  "providerKind": "OWNED",
+  "trustState": "OWNED_ADAPTER_STUB",
+  "transport": "LOCAL_ACCESSIBILITY",
+  "targetPackage": "dev.jidan.general.demo",
+  "declaredPlanProfile": "JCL-Owned-Action-Plan/0.1",
+  "supportedLanes": [
+    "OWNED_APP"
+  ],
+  "observedCapabilities": [],
+  "executionEnabled": false,
+  "publicContract": {
+    "available": false,
+    "protocol": null,
+    "definitionSha256": null
+  },
+  "hostAdapter": {
+    "available": false,
+    "profileSha256": null
+  },
+  "identityBinding": {
+    "mode": "RUNTIME_SIGNER_AND_CONTRACT",
+    "versionCode": 1,
+    "certificateSha256": null,
+    "artifactSha256": null,
+    "contractId": "jidan.general.demo.v0.1.actions.6"
+  },
+  "realWorldEffectCeiling": "OWNED_LOCAL_APP",
+  "notes": [
+    "This is a non-executable Android adapter placeholder for tests; no target APK or device consumer is registered.",
+    "It validates the internal Kotlin plan shape and always returns unavailable.",
+    "It is not the Python Hand IR compiler and does not share that compiler identity."
+  ]
+}

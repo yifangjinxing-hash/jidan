@@ -1,0 +1,54 @@
+{
+  "$schema": "../schemas/jcl.input-frontend-v0.1.schema.json",
+  "profile": "JCL-Input-Frontend/0.1",
+  "id": "dev.jidan/zh-Latn-pinyin-v0.1",
+  "kind": "compile-only",
+  "source": {
+    "languageTag": "zh-Latn-pinyin",
+    "romanization": "hanyu-pinyin",
+    "acceptedToneStyles": [
+      "diacritic",
+      "number",
+      "none"
+    ],
+    "canonicalToneStyle": "number",
+    "neutralToneDigit": 5,
+    "umlautLookup": "v",
+    "normalization": "unicode-nfc-casefold-explicit-boundaries-numeric-tone-v1",
+    "syllableSeparator": "-",
+    "wordSeparator": "."
+  },
+  "target": {
+    "contract": "jcl-invocation-proposal",
+    "capabilityAllowlist": [
+      "message.compose"
+    ],
+    "schemaValidationRequired": true
+  },
+  "resolution": {
+    "unknown": "reject",
+    "ambiguous": "reject",
+    "toneless": "accept-if-unique",
+    "fuzzyMatch": false,
+    "payloadMode": "verbatim"
+  },
+  "security": {
+    "authority": "none",
+    "mayGrant": false,
+    "mayExecute": false,
+    "maySelectRecipient": false,
+    "maySend": false
+  },
+  "implementation": {
+    "compiler": "jidan.pinyin-explicit-v0.1",
+    "aliasSetSha256": "11864ff784103d96f63f8104b2eae3bb720f0055aecd4019c690c1cdddb060ef"
+  },
+  "aliases": [
+    {
+      "key": "chuang4-jian4.cao3-gao3",
+      "display": "chuàngjiàn cǎogǎo",
+      "label": "创建草稿",
+      "capability": "message.compose"
+    }
+  ]
+}

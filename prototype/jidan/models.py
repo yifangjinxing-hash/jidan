@@ -16,6 +16,10 @@ class Effect(IntEnum):
     WRITE = 1
     EXTERNAL = 2
     IRREVERSIBLE = 3
+    # Keep the original wire integers stable. NAVIGATION was added later and
+    # therefore uses a non-ordinal value; policy code must compare risk_rank(),
+    # never the raw IntEnum value.
+    NAVIGATION = 4
 
     @classmethod
     def parse(cls, value: str | int | "Effect") -> "Effect":
@@ -27,6 +31,25 @@ class Effect(IntEnum):
 
     def label(self) -> str:
         return self.name.lower()
+
+    def risk_rank(self) -> int:
+        """Return the policy order without changing legacy wire integers."""
+
+        return {
+            Effect.READ: 0,
+            Effect.NAVIGATION: 1,
+            Effect.WRITE: 2,
+            Effect.EXTERNAL: 3,
+            Effect.IRREVERSIBLE: 4,
+        }[self]
+
+    def covers(self, actual: "Effect") -> bool:
+        """Whether this effect is a sufficient Grant ceiling for ``actual``."""
+
+        return self.risk_rank() >= actual.risk_rank()
+
+    def at_least(self, floor: "Effect") -> bool:
+        return self.risk_rank() >= floor.risk_rank()
 
 
 @dataclass(frozen=True)
@@ -122,6 +145,7 @@ class Grant:
     expires_at: int
     nonce: str
     signature: str
+    capability_digests: tuple[tuple[str, str], ...] = field(default_factory=tuple)
 
 
 @dataclass(frozen=True)

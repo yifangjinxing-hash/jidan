@@ -1,0 +1,175 @@
+name: Android Daily Hand Brain CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "reference-app/shell/**"
+      - "reference-app/daily-demo/**"
+      - "reference-app/accessibility-sandbox/**"
+      - "reference-app/settings.gradle.kts"
+      - "reference-app/build.gradle.kts"
+      - "reference-app/gradle/**"
+      - "reference-app/gradlew"
+      - "reference-app/gradlew.bat"
+      - "profiles/experimental/**"
+      - "profiles/daily.note.create.tool.json"
+      - "profiles/providers/**"
+      - "profiles/schemas/jcl.hand-provider-v0.1.schema.json"
+      - "profiles/schemas/jcl.owned-action-plan-v0.1.schema.json"
+      - "profiles/schemas/jcl.ui-action-plan-v0.1.schema.json"
+      - "profiles/conformance/android.ui-assist.vectors.json"
+      - "profiles/adapters/**"
+      - "profiles/compilers/**"
+      - "profiles/conformance/brain-to-hand.vectors.json"
+      - "profiles/schemas/jcl.hand-adapter-v0.1.schema.json"
+      - "profiles/schemas/jcl.hand-compiler-v0.1.schema.json"
+      - "profiles/schemas/jcl.hand-intent-v0.1-dev.schema.json"
+      - "profiles/schemas/jcl.hand-ir-v0.1-dev.schema.json"
+      - "prototype/jidan/hand_compiler.py"
+      - "prototype/tests/test_hand_compiler.py"
+      - "prototype/jidan/hand_provider.py"
+      - "prototype/tests/test_hand_provider.py"
+      - "prototype/tests/test_daily_note_profile.py"
+      - "prototype/tests/test_ui_action_profiles.py"
+      - ".github/artifacts/android-hand-brain-README.md"
+      - ".github/workflows/android-shell.yml"
+  pull_request:
+    paths:
+      - "reference-app/shell/**"
+      - "reference-app/daily-demo/**"
+      - "reference-app/accessibility-sandbox/**"
+      - "reference-app/settings.gradle.kts"
+      - "reference-app/build.gradle.kts"
+      - "reference-app/gradle/**"
+      - "reference-app/gradlew"
+      - "reference-app/gradlew.bat"
+      - "profiles/experimental/**"
+      - "profiles/daily.note.create.tool.json"
+      - "profiles/providers/**"
+      - "profiles/schemas/jcl.hand-provider-v0.1.schema.json"
+      - "profiles/schemas/jcl.owned-action-plan-v0.1.schema.json"
+      - "profiles/schemas/jcl.ui-action-plan-v0.1.schema.json"
+      - "profiles/conformance/android.ui-assist.vectors.json"
+      - "profiles/adapters/**"
+      - "profiles/compilers/**"
+      - "profiles/conformance/brain-to-hand.vectors.json"
+      - "profiles/schemas/jcl.hand-adapter-v0.1.schema.json"
+      - "profiles/schemas/jcl.hand-compiler-v0.1.schema.json"
+      - "profiles/schemas/jcl.hand-intent-v0.1-dev.schema.json"
+      - "profiles/schemas/jcl.hand-ir-v0.1-dev.schema.json"
+      - "prototype/jidan/hand_compiler.py"
+      - "prototype/tests/test_hand_compiler.py"
+      - "prototype/jidan/hand_provider.py"
+      - "prototype/tests/test_hand_provider.py"
+      - "prototype/tests/test_daily_note_profile.py"
+      - "prototype/tests/test_ui_action_profiles.py"
+      - ".github/artifacts/android-hand-brain-README.md"
+      - ".github/workflows/android-shell.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: android-hand-brain-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Select runner JDK 17
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -x "$JAVA_HOME_17_X64/bin/java"
+          echo "JAVA_HOME=$JAVA_HOME_17_X64" >> "$GITHUB_ENV"
+          echo "$JAVA_HOME_17_X64/bin" >> "$GITHUB_PATH"
+
+      - name: Verify toolchain and install Android 37
+        shell: bash
+        run: |
+          set -euo pipefail
+          java -version
+          python3 --version
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses >/dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
+            "platforms;android-37.0" \
+            "build-tools;37.0.0"
+
+      - name: Validate JCL sandbox, shadow, and daily contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          PYTHONPATH=prototype python3 -m unittest \
+            prototype.tests.test_hand_provider \
+            prototype.tests.test_hand_compiler \
+            prototype.tests.test_daily_note_profile \
+            prototype.tests.test_ui_action_profiles
+
+      - name: Build, test, and lint all three APKs
+        working-directory: reference-app
+        shell: bash
+        run: |
+          set -euo pipefail
+          chmod +x ./gradlew
+          ./gradlew --no-daemon \
+            :shell:testDebugUnitTest \
+            :shell:assembleDebug \
+            :shell:lintDebug \
+            :daily-demo:testDebugUnitTest \
+            :daily-demo:assembleDebug \
+            :daily-demo:lintDebug \
+            :accessibility-sandbox:assembleDebug \
+            :accessibility-sandbox:lintDebug
+
+      - name: Package installable Android trio
+        shell: bash
+        run: |
+          set -euo pipefail
+          artifact_dir="$RUNNER_TEMP/jidan-android-daily-hand-brain"
+          mkdir -p "$artifact_dir"
+          cp reference-app/shell/build/outputs/apk/debug/shell-debug.apk \
+            "$artifact_dir/JidanShell-0.5-debug.apk"
+          cp reference-app/daily-demo/build/outputs/apk/debug/daily-demo-debug.apk \
+            "$artifact_dir/JidanDailyDemo-0.1-debug.apk"
+          cp reference-app/accessibility-sandbox/build/outputs/apk/debug/accessibility-sandbox-debug.apk \
+            "$artifact_dir/JidanAccessibilitySandbox-0.1-debug.apk"
+          cp .github/artifacts/android-hand-brain-README.md "$artifact_dir/README.md"
+          (
+            cd "$artifact_dir"
+            sha256sum \
+              JidanDailyDemo-0.1-debug.apk \
+              JidanAccessibilitySandbox-0.1-debug.apk \
+              JidanShell-0.5-debug.apk \
+              > SHA256SUMS.txt
+          )
+
+      - name: Upload Android daily hand brain package
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jidan-android-daily-hand-brain-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/jidan-android-daily-hand-brain
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload Android reports
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: jidan-android-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            reference-app/shell/build/reports/tests
+            reference-app/shell/build/reports/lint-results-debug.html
+            reference-app/daily-demo/build/reports/tests
+            reference-app/daily-demo/build/reports/lint-results-debug.html
+            reference-app/accessibility-sandbox/build/reports/lint-results-debug.html
+          if-no-files-found: warn
+          retention-days: 14

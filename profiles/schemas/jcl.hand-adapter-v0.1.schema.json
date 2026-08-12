@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.jidan.dev/jcl.hand-adapter-v0.1.schema.json",
+  "title": "JCL Hand Adapter 0.1",
+  "type": "object",
+  "properties": {
+    "profile": {
+      "const": "JCL-Hand-Adapter/0.1"
+    },
+    "adapterId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,159}$"
+    },
+    "bindingKind": {
+      "enum": [
+        "COMPILER_ONLY",
+        "HAND_PROVIDER"
+      ]
+    },
+    "bindingId": {
+      "type": "string",
+      "pattern": "^[A-Za-z][A-Za-z0-9_.-]{0,159}$"
+    },
+    "bindingRegistrationSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "state": {
+      "enum": [
+        "COMPILER_READY",
+        "RESERVED_UNBOUND"
+      ]
+    },
+    "compiler": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "inputProfile": {
+      "const": "JCL-Hand-IR/0.1-dev"
+    },
+    "outputProfile": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "supportedOpcodes": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "OPEN_PACKAGE",
+          "FIND_CLICK",
+          "FIND_SET_TEXT",
+          "FIND_SCROLL_FORWARD",
+          "GLOBAL_BACK",
+          "WAIT_MS"
+        ]
+      }
+    },
+    "contentPolicy": {
+      "const": "DEVELOPMENT_PASS_THROUGH"
+    },
+    "deviceConsumerAvailable": {
+      "type": "boolean"
+    },
+    "privateInterfaceAvailable": {
+      "type": "boolean"
+    },
+    "notes": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 300
+      }
+    }
+  },
+  "required": [
+    "profile",
+    "adapterId",
+    "bindingKind",
+    "bindingId",
+    "bindingRegistrationSha256",
+    "state",
+    "compiler",
+    "inputProfile",
+    "outputProfile",
+    "supportedOpcodes",
+    "contentPolicy",
+    "deviceConsumerAvailable",
+    "privateInterfaceAvailable",
+    "notes"
+  ],
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": { "state": { "const": "COMPILER_READY" } },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "bindingKind": { "const": "COMPILER_ONLY" },
+          "compiler": { "type": "string", "minLength": 1 },
+          "outputProfile": { "type": "string", "minLength": 1 },
+          "deviceConsumerAvailable": { "const": false },
+          "privateInterfaceAvailable": { "const": false }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "state": { "const": "RESERVED_UNBOUND" } },
+        "required": ["state"]
+      },
+      "then": {
+        "properties": {
+          "bindingKind": { "const": "HAND_PROVIDER" },
+          "compiler": { "const": null },
+          "outputProfile": { "const": null },
+          "supportedOpcodes": { "const": [] },
+          "deviceConsumerAvailable": { "const": false },
+          "privateInterfaceAvailable": { "const": false }
+        }
+      }
+    }
+  ]
+}

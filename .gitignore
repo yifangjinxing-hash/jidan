@@ -5,6 +5,7 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .venv/
+.venv-*/
 venv/
 
 # Android / Gradle
@@ -15,12 +16,20 @@ local.properties
 *.iml
 .idea/
 
+# Apple / Xcode (the project is generated from project.yml)
+DerivedData/
+xcuserdata/
+*.xcuserstate
+*.xcresult
+reference-app/ios-shell/JidanIOS.xcodeproj/
+
 # Runtime and validation artifacts
 evidence/
 *.apk
 *.aab
 *.zip
 *.jsonl
+*.jsonl.lock
 *.sqlite
 *.sqlite3
 *.sqlite-wal
@@ -36,6 +45,13 @@ evidence/
 *.keystore
 *.p12
 *.pfx
+
+# Native Windows Shell outputs
+reference-app/windows-shell/JidanOS.exe
+reference-app/windows-shell/JidanOS.pdb
+reference-app/windows-shell/test-results*.txt
+reference-app/windows-shell/samples/
+*.idsig
 
 # Local tools and editors
 .vscode/

@@ -1,0 +1,231 @@
+{
+  "name": "android.ui.shadow_plan",
+  "description": "Specification-only contract for observing a user-selected real Android package and preparing a semantic-node action plan without executing any UI action. The current Android service is not registered for real-package observation.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "goalCode": {
+        "const": "REAL_APP_SHADOW_PLAN"
+      },
+      "targetFingerprint": {
+        "type": "object",
+        "properties": {
+          "packageName": {
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 255,
+            "pattern": "^[A-Za-z][A-Za-z0-9_]*(?:\\.[A-Za-z][A-Za-z0-9_]*)+$",
+            "not": {
+              "const": "dev.jidan.accessibility.sandbox"
+            }
+          },
+          "versionCode": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "certificateSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "androidUserId": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "fingerprintSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "packageName",
+          "versionCode",
+          "certificateSha256",
+          "androidUserId",
+          "fingerprintSha256"
+        ],
+        "additionalProperties": false
+      },
+      "sourceObservationSha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "executionBudget": {
+        "type": "object",
+        "properties": {
+          "maxObservations": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 12
+          },
+          "maxActions": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "maxReplans": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "timeoutMs": {
+            "type": "integer",
+            "minimum": 1000,
+            "maximum": 120000
+          }
+        },
+        "required": [
+          "maxObservations",
+          "maxActions",
+          "maxReplans",
+          "timeoutMs"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "goalCode",
+      "targetFingerprint",
+      "sourceObservationSha256",
+      "executionBudget"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "const": "handoff_required"
+      },
+      "plan": {
+        "allOf": [
+          {
+            "$ref": "../schemas/jcl.ui-action-plan-v0.1.schema.json"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "lane": {
+                "const": "SHADOW"
+              },
+              "handProviderId": {
+                "const": "android.hand.unbound.shadow.v0.1"
+              },
+              "handProviderRegistrationSha256": {
+                "const": "0000000000000000000000000000000000000000000000000000000000000000"
+              },
+              "targetFingerprint": {
+                "type": "object",
+                "properties": {
+                  "packageName": {
+                    "not": {
+                      "const": "dev.jidan.accessibility.sandbox"
+                    }
+                  }
+                }
+              },
+              "effectStatus": {
+                "const": "NOT_ATTEMPTED"
+              },
+              "realWorldStatus": {
+                "const": "HANDOFF_REQUIRED"
+              }
+            }
+          }
+        ]
+      },
+      "planSha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "execution": {
+        "type": "object",
+        "properties": {
+          "lane": {
+            "const": "SHADOW"
+          },
+          "executorAttempted": {
+            "const": false
+          },
+          "osAccepted": {
+            "const": false
+          },
+          "postconditionVerified": {
+            "const": false
+          },
+          "sensitiveValuePersisted": {
+            "const": false
+          },
+          "outcome": {
+            "const": "handed_off"
+          }
+        },
+        "required": [
+          "lane",
+          "executorAttempted",
+          "osAccepted",
+          "postconditionVerified",
+          "sensitiveValuePersisted",
+          "outcome"
+        ],
+        "additionalProperties": false
+      },
+      "evidence": {
+        "type": "object",
+        "properties": {
+          "observationSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "planSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "observationSha256",
+          "planSha256"
+        ],
+        "additionalProperties": false
+      },
+      "nextAction": {
+        "const": "user_take_over"
+      }
+    },
+    "required": [
+      "state",
+      "plan",
+      "planSha256",
+      "execution",
+      "evidence",
+      "nextAction"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "READ",
+      "executionMode": "SHADOW",
+      "requiresConfirmation": false,
+      "requiresForegroundUserActivation": true,
+      "activationMode": "EXPLICIT_FOREGROUND",
+      "availability": "SPEC_ONLY",
+      "registered": false,
+      "reversible": true,
+      "stateModel": "STATELESS",
+      "executorAttempted": false,
+      "sensitiveClasses": [
+        "PAYMENT",
+        "PASSWORD",
+        "OTP"
+      ]
+    }
+  }
+}

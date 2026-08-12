@@ -1,0 +1,450 @@
+{
+  "profile": "JCL/0.1-experimental",
+  "planProfile": "JCL-UI-Action-Plan/0.1",
+  "sandboxCapability": "android.ui.sandbox_execute",
+  "shadowCapability": "android.ui.shadow_plan",
+  "requiredSensitiveClasses": [
+    "PAYMENT",
+    "PASSWORD",
+    "OTP"
+  ],
+  "sandboxCase": {
+    "input": {
+      "plan": {
+        "profile": "JCL-UI-Action-Plan/0.1",
+        "planId": "sandbox.checkout.001",
+        "handProviderId": "android.hand.jidan.accessibility.v0.1",
+        "handProviderRegistrationSha256": "3a435217c54c7c7e97f24d2de3d97fc43fc2ccf321d3aa85d049f47a28622920",
+        "goalCode": "SYNTHETIC_SENSITIVE_FORM",
+        "lane": "SANDBOX",
+        "perceptionMode": "ACCESSIBILITY_SEMANTIC_TREE",
+        "targetFingerprint": {
+          "packageName": "dev.jidan.accessibility.sandbox",
+          "versionCode": 1,
+          "certificateSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "androidUserId": 0,
+          "fingerprintSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "sourceObservationSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "expectedPrecondition": {
+          "packageName": "dev.jidan.accessibility.sandbox",
+          "windowId": 7,
+          "observationSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "requiredNodeFingerprints": [
+            "1111111111111111111111111111111111111111111111111111111111111111",
+            "2222222222222222222222222222222222222222222222222222222222222222",
+            "3333333333333333333333333333333333333333333333333333333333333333",
+            "4444444444444444444444444444444444444444444444444444444444444444"
+          ],
+          "mustBeForeground": true
+        },
+        "actions": [
+          {
+            "actionId": "set_fake_amount",
+            "actionKind": "SET_TEXT",
+            "sensitivity": "PAYMENT",
+            "selector": {
+              "viewId": "dev.jidan.accessibility.sandbox:id/fake_amount",
+              "className": "android.widget.EditText",
+              "semanticRole": "EDIT_TEXT",
+              "structuralPath": [
+                0,
+                1
+              ],
+              "nodeFingerprintSha256": "1111111111111111111111111111111111111111111111111111111111111111"
+            },
+            "ephemeralValueRef": "ephemeral:11111111-1111-4111-8111-111111111111",
+            "postconditionKey": "fake_amount_present"
+          },
+          {
+            "actionId": "set_fake_password",
+            "actionKind": "SET_TEXT",
+            "sensitivity": "PASSWORD",
+            "selector": {
+              "viewId": "dev.jidan.accessibility.sandbox:id/fake_password",
+              "className": "android.widget.EditText",
+              "semanticRole": "EDIT_TEXT",
+              "structuralPath": [
+                0,
+                2
+              ],
+              "nodeFingerprintSha256": "2222222222222222222222222222222222222222222222222222222222222222"
+            },
+            "ephemeralValueRef": "ephemeral:22222222-2222-4222-8222-222222222222",
+            "postconditionKey": "fake_password_present"
+          },
+          {
+            "actionId": "set_fake_otp",
+            "actionKind": "SET_TEXT",
+            "sensitivity": "OTP",
+            "selector": {
+              "viewId": "dev.jidan.accessibility.sandbox:id/fake_otp",
+              "className": "android.widget.EditText",
+              "semanticRole": "EDIT_TEXT",
+              "structuralPath": [
+                0,
+                3
+              ],
+              "nodeFingerprintSha256": "3333333333333333333333333333333333333333333333333333333333333333"
+            },
+            "ephemeralValueRef": "ephemeral:33333333-3333-4333-8333-333333333333",
+            "postconditionKey": "fake_otp_present"
+          },
+          {
+            "actionId": "submit_synthetic_checkout",
+            "actionKind": "CLICK",
+            "sensitivity": "PAYMENT",
+            "selector": {
+              "viewId": "dev.jidan.accessibility.sandbox:id/fake_submit",
+              "className": "android.widget.Button",
+              "semanticRole": "BUTTON",
+              "structuralPath": [
+                0,
+                4
+              ],
+              "nodeFingerprintSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+            },
+            "postconditionKey": "synthetic_receipt_visible"
+          }
+        ],
+        "expectedPostcondition": {
+          "packageName": "dev.jidan.accessibility.sandbox",
+          "windowId": 7,
+          "observationMustChange": true,
+          "requiredNodeFingerprints": [
+            "5555555555555555555555555555555555555555555555555555555555555555"
+          ],
+          "forbiddenNodeFingerprints": [],
+          "deadlineMs": 5000
+        },
+        "executionBudget": {
+          "maxObservations": 8,
+          "maxActions": 4,
+          "maxReplans": 1,
+          "timeoutMs": 30000
+        },
+        "recoveryCheckpoint": {
+          "checkpointId": "sandbox_before_checkout",
+          "beforeActionIndex": 0,
+          "observationSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+          "resumePolicy": "RESET_SANDBOX_ONLY",
+          "afterAttemptPolicy": "NEVER_AUTOMATICALLY_RETRY"
+        },
+        "sensitiveClasses": [
+          "PAYMENT",
+          "PASSWORD",
+          "OTP"
+        ],
+        "selectorAuthority": "SEMANTIC_NODE_ONLY",
+        "coordinateInputAccepted": false,
+        "effectStatus": "NOT_ATTEMPTED",
+        "realWorldStatus": "SYNTHETIC_ONLY"
+      }
+    },
+    "output": {
+      "state": "transition_verified",
+      "planSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "effectStatus": "TRANSITION_VERIFIED",
+      "realWorldStatus": "SYNTHETIC_ONLY",
+      "execution": {
+        "lane": "SANDBOX",
+        "targetPackage": "dev.jidan.accessibility.sandbox",
+        "executorAttempted": true,
+        "osAccepted": true,
+        "postconditionVerified": true,
+        "sensitiveValuePersisted": false,
+        "externalEffect": false,
+        "outcome": "transition_verified"
+      },
+      "evidence": {
+        "beforeObservationSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "afterObservationSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+        "eventSequenceSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+      },
+      "recovery": {
+        "checkpointId": "sandbox_before_checkout",
+        "disposition": "none",
+        "automaticRetry": false
+      }
+    }
+  },
+  "shadowCase": {
+    "input": {
+      "goalCode": "REAL_APP_SHADOW_PLAN",
+      "targetFingerprint": {
+        "packageName": "com.eg.android.AlipayGphone",
+        "versionCode": 20260812,
+        "certificateSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+        "androidUserId": 0,
+        "fingerprintSha256": "123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0"
+      },
+      "sourceObservationSha256": "23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01",
+      "executionBudget": {
+        "maxObservations": 6,
+        "maxActions": 3,
+        "maxReplans": 1,
+        "timeoutMs": 20000
+      }
+    },
+    "output": {
+      "state": "handoff_required",
+      "plan": {
+        "profile": "JCL-UI-Action-Plan/0.1",
+        "planId": "shadow.payment.001",
+        "handProviderId": "android.hand.unbound.shadow.v0.1",
+        "handProviderRegistrationSha256": "0000000000000000000000000000000000000000000000000000000000000000",
+        "goalCode": "REAL_APP_SHADOW_PLAN",
+        "lane": "SHADOW",
+        "perceptionMode": "ACCESSIBILITY_SEMANTIC_TREE",
+        "targetFingerprint": {
+          "packageName": "com.eg.android.AlipayGphone",
+          "versionCode": 20260812,
+          "certificateSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+          "androidUserId": 0,
+          "fingerprintSha256": "123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0"
+        },
+        "sourceObservationSha256": "23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01",
+        "expectedPrecondition": {
+          "packageName": "com.eg.android.AlipayGphone",
+          "windowId": 21,
+          "observationSha256": "23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01",
+          "requiredNodeFingerprints": [
+            "3456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012",
+            "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123",
+            "56789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234"
+          ],
+          "mustBeForeground": true
+        },
+        "actions": [
+          {
+            "actionId": "candidate_payment_button",
+            "actionKind": "CLICK",
+            "sensitivity": "PAYMENT",
+            "selector": {
+              "className": "android.widget.Button",
+              "semanticRole": "BUTTON",
+              "structuralPath": [
+                0,
+                5
+              ],
+              "nodeFingerprintSha256": "3456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef012"
+            },
+            "postconditionKey": "payment_review_surface_candidate"
+          },
+          {
+            "actionId": "candidate_password_field",
+            "actionKind": "SET_TEXT",
+            "sensitivity": "PASSWORD",
+            "selector": {
+              "className": "android.widget.EditText",
+              "semanticRole": "EDIT_TEXT",
+              "structuralPath": [
+                0,
+                6
+              ],
+              "nodeFingerprintSha256": "456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123"
+            },
+            "ephemeralValueRef": "ephemeral:44444444-4444-4444-8444-444444444444",
+            "postconditionKey": "password_entry_candidate"
+          },
+          {
+            "actionId": "candidate_otp_field",
+            "actionKind": "SET_TEXT",
+            "sensitivity": "OTP",
+            "selector": {
+              "className": "android.widget.EditText",
+              "semanticRole": "EDIT_TEXT",
+              "structuralPath": [
+                0,
+                7
+              ],
+              "nodeFingerprintSha256": "56789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01234"
+            },
+            "ephemeralValueRef": "ephemeral:55555555-5555-4555-8555-555555555555",
+            "postconditionKey": "otp_entry_candidate"
+          }
+        ],
+        "expectedPostcondition": {
+          "packageName": "com.eg.android.AlipayGphone",
+          "windowId": null,
+          "observationMustChange": true,
+          "requiredNodeFingerprints": [],
+          "forbiddenNodeFingerprints": [],
+          "deadlineMs": 5000
+        },
+        "executionBudget": {
+          "maxObservations": 6,
+          "maxActions": 3,
+          "maxReplans": 1,
+          "timeoutMs": 20000
+        },
+        "recoveryCheckpoint": {
+          "checkpointId": "shadow_before_any_effect",
+          "beforeActionIndex": 0,
+          "observationSha256": "23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01",
+          "resumePolicy": "HANDOFF_ONLY",
+          "afterAttemptPolicy": "NEVER_AUTOMATICALLY_RETRY"
+        },
+        "sensitiveClasses": [
+          "PAYMENT",
+          "PASSWORD",
+          "OTP"
+        ],
+        "selectorAuthority": "SEMANTIC_NODE_ONLY",
+        "coordinateInputAccepted": false,
+        "effectStatus": "NOT_ATTEMPTED",
+        "realWorldStatus": "HANDOFF_REQUIRED"
+      },
+      "planSha256": "789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456",
+      "execution": {
+        "lane": "SHADOW",
+        "executorAttempted": false,
+        "osAccepted": false,
+        "postconditionVerified": false,
+        "sensitiveValuePersisted": false,
+        "outcome": "handed_off"
+      },
+      "evidence": {
+        "observationSha256": "23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01",
+        "planSha256": "789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456"
+      },
+      "nextAction": "user_take_over"
+    }
+  },
+  "negativeMutations": [
+    {
+      "name": "sandbox_target_is_fixed",
+      "profile": "sandbox",
+      "surface": "input",
+      "operation": "replace",
+      "path": [
+        "plan",
+        "targetFingerprint",
+        "packageName"
+      ],
+      "value": "com.eg.android.AlipayGphone"
+    },
+    {
+      "name": "raw_coordinate_is_not_a_selector_field",
+      "profile": "sandbox",
+      "surface": "input",
+      "operation": "add",
+      "path": [
+        "plan",
+        "actions",
+        0,
+        "selector",
+        "screenX"
+      ],
+      "value": 200
+    },
+    {
+      "name": "plaintext_value_is_not_an_action_field",
+      "profile": "sandbox",
+      "surface": "input",
+      "operation": "add",
+      "path": [
+        "plan",
+        "actions",
+        1,
+        "value"
+      ],
+      "value": "plaintext-not-allowed"
+    },
+    {
+      "name": "password_requires_ephemeral_reference",
+      "profile": "sandbox",
+      "surface": "input",
+      "operation": "remove",
+      "path": [
+        "plan",
+        "actions",
+        1,
+        "ephemeralValueRef"
+      ]
+    },
+    {
+      "name": "coordinate_abi_cannot_be_enabled",
+      "profile": "sandbox",
+      "surface": "input",
+      "operation": "replace",
+      "path": [
+        "plan",
+        "coordinateInputAccepted"
+      ],
+      "value": true
+    },
+    {
+      "name": "shadow_never_attempts_executor",
+      "profile": "shadow",
+      "surface": "output",
+      "operation": "replace",
+      "path": [
+        "execution",
+        "executorAttempted"
+      ],
+      "value": true
+    },
+    {
+      "name": "shadow_effect_stays_not_attempted",
+      "profile": "shadow",
+      "surface": "output",
+      "operation": "replace",
+      "path": [
+        "plan",
+        "effectStatus"
+      ],
+      "value": "ATTEMPTED"
+    },
+    {
+      "name": "shadow_does_not_target_the_sandbox_lane",
+      "profile": "shadow",
+      "surface": "input",
+      "operation": "replace",
+      "path": [
+        "targetFingerprint",
+        "packageName"
+      ],
+      "value": "dev.jidan.accessibility.sandbox"
+    },
+    {
+      "name": "shadow_output_plan_does_not_target_the_sandbox_lane",
+      "profile": "shadow",
+      "surface": "output",
+      "operation": "replace",
+      "path": [
+        "plan",
+        "targetFingerprint",
+        "packageName"
+      ],
+      "value": "dev.jidan.accessibility.sandbox"
+    },
+    {
+      "name": "otp_plaintext_field_is_rejected",
+      "profile": "shadow",
+      "surface": "output",
+      "operation": "add",
+      "path": [
+        "plan",
+        "actions",
+        2,
+        "otp"
+      ],
+      "value": "000000"
+    },
+    {
+      "name": "sensitive_selector_text_digest_is_rejected",
+      "profile": "shadow",
+      "surface": "output",
+      "operation": "add",
+      "path": [
+        "plan",
+        "actions",
+        1,
+        "selector",
+        "textDigest"
+      ],
+      "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}

@@ -165,6 +165,7 @@ def main() -> int:
         grant_capabilities,
         grant_scope,
         Effect.EXTERNAL,
+        capability_digests=registry.definition_digests(grant_capabilities),
     )
     preflight = runtime.execute(plan, preview_grant)
     if preflight.status != "awaiting_confirmation":
@@ -199,6 +200,7 @@ def main() -> int:
         grant_scope,
         Effect.EXTERNAL,
         approved_steps={"write_memo"},
+        capability_digests=registry.definition_digests(grant_capabilities),
     )
     result = runtime.execute(plan, grant)
     state: dict[str, Any] | None = None

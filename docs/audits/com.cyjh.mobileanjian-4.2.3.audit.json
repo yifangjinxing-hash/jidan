@@ -1,0 +1,204 @@
+{
+  "schemaVersion": "jidan.apk-static-audit.v0.1",
+  "artifact": {
+    "fileName": "com.cyjh.mobileanjian.apk",
+    "sizeBytes": 83933160,
+    "sha256": "2D554D35D3C20DE38C2ADB6B51BDEA2DDCF19E4DCDC6F3C3DA52244037BB803D",
+    "observedAt": "2026-08-12",
+    "method": "offline_static_only",
+    "installedOrExecuted": false
+  },
+  "androidIdentity": {
+    "packageName": "com.cyjh.mobileanjian",
+    "label": "按键精灵",
+    "versionName": "4.2.3",
+    "versionCode": 2026000224,
+    "minSdk": 21,
+    "targetSdk": 26,
+    "compileSdk": 29,
+    "debuggable": false,
+    "launcherActivity": "com.cyjh.mobileanjian.vip.activity.GuiActivity",
+    "nativeAbis": [
+      "arm64-v8a",
+      "armeabi-v7a",
+      "x86"
+    ]
+  },
+  "signing": {
+    "schemes": {
+      "v1": true,
+      "v2": true,
+      "v3": false,
+      "v4": false
+    },
+    "certificateSha256": "800614aaf2494f4dc1c4d43fff92ee42771d01fc09435d0b8d4b8e54dbd91413",
+    "subjectSummary": "CN=安卓开发部门, OU=研测中心, O=福州创意嘉和软件公司",
+    "selfSigned": true,
+    "validFrom": "2013-11-13",
+    "validTo": "2113-10-20"
+  },
+  "manifestInventory": {
+    "declaredPermissionCount": 56,
+    "activityCount": 170,
+    "serviceCount": 30,
+    "receiverCount": 9,
+    "providerCount": 13,
+    "notablePermissions": [
+      "android.permission.INTERNET",
+      "android.permission.SYSTEM_ALERT_WINDOW",
+      "android.permission.QUERY_ALL_PACKAGES",
+      "android.permission.RECORD_AUDIO",
+      "android.permission.CAMERA",
+      "android.permission.ACCESS_FINE_LOCATION",
+      "android.permission.SEND_SMS",
+      "android.permission.CALL_PHONE",
+      "android.permission.READ_CONTACTS",
+      "android.permission.WRITE_CONTACTS",
+      "android.permission.READ_PHONE_STATE",
+      "android.permission.REQUEST_INSTALL_PACKAGES",
+      "android.permission.PACKAGE_USAGE_STATS",
+      "android.permission.WRITE_SETTINGS",
+      "android.permission.WRITE_SECURE_SETTINGS"
+    ],
+    "permissionCaveat": "Declaration does not prove grantability; signature or privileged permissions are normally unavailable to an ordinary sideloaded app."
+  },
+  "accessibility": {
+    "service": "com.cyjh.mobileanjian.vip.view.floatview.service.FtRenderService",
+    "permission": "android.permission.BIND_ACCESSIBILITY_SERVICE",
+    "eventTypes": "0xffffffff",
+    "flagsHex": "0x53",
+    "canRetrieveWindowContent": true,
+    "canPerformGesturesApi24Config": true,
+    "observedCapabilityClasses": [
+      "semantic-node traversal",
+      "node click",
+      "coordinate tap/long-press/swipe",
+      "global actions",
+      "focused-field text insertion",
+      "multi-window/root retrieval"
+    ],
+    "passwordFieldGuardFoundInReviewedTextInputPath": false,
+    "limitation": "Static capability evidence does not prove password extraction, secure-keyboard bypass, FLAG_SECURE bypass, or reliable operation on every app."
+  },
+  "automation": {
+    "scriptEngine": [
+      "compile",
+      "debug",
+      "run",
+      "pause",
+      "resume",
+      "stop"
+    ],
+    "uiOperations": [
+      "tap",
+      "swipe",
+      "touch",
+      "key events",
+      "run app",
+      "kill app",
+      "send text",
+      "query UI elements",
+      "query WebView elements"
+    ],
+    "perception": [
+      "MediaProjection screenshot path",
+      "UI dump",
+      "WebView dump",
+      "Tesseract OCR scaffolding",
+      "QR decoding"
+    ],
+    "nativeOrInjectionArtifacts": [
+      "hookzygote.apk",
+      "libzygote.so",
+      "libyafa.so",
+      "inject7",
+      "inject9",
+      "libsubstrate",
+      "libqmcheat"
+    ],
+    "inferenceLimit": "Artifact names indicate additional native or injection paths but do not by themselves prove a working bypass."
+  },
+  "externalInterfaces": {
+    "publicStableSdkFound": false,
+    "publicAidlFound": false,
+    "firstPartyPublicDeepLinkFound": false,
+    "launcherHandoffAvailable": true,
+    "privateSurfaces": [
+      {
+        "name": "ConnectionService",
+        "kind": "exported service and private socket protocol",
+        "ports": [
+          "TCP 10088",
+          "UDP 9098",
+          "UDP 9099"
+        ],
+        "suitableAsJidanContract": false
+      },
+      {
+        "name": "RemoteDebuggingService",
+        "kind": "exported unprotected private service",
+        "suitableAsJidanContract": false
+      },
+      {
+        "name": "IpcService",
+        "kind": "non-exported service with no stable cross-process contract",
+        "suitableAsJidanContract": false
+      },
+      {
+        "name": "internal payment WebView bridge",
+        "kind": "non-exported internal JavaScript bridge",
+        "suitableAsJidanContract": false
+      }
+    ]
+  },
+  "sensitiveFlows": {
+    "payment": {
+      "genericUiPreparationTechnicallyExpressible": true,
+      "publicPaymentApiFound": false,
+      "realPaymentVerified": false
+    },
+    "password": {
+      "focusedFieldInputTechnicallyExpressible": true,
+      "readingOrSecureKeyboardBypassVerified": false
+    },
+    "otp": {
+      "genericFieldInputTechnicallyExpressible": true,
+      "dedicatedPublicOtpInterfaceFound": false
+    }
+  },
+  "supplyChain": {
+    "cleartextTrafficAllowed": true,
+    "legacyExternalStorage": true,
+    "adAnalyticsSdkSurface": "large",
+    "nestedExecutableExamples": [
+      "assets/AdDex.3.0.1.dex",
+      "assets/jy.jar",
+      "assets/apk/common.apk",
+      "DaemonClient.zip",
+      "multiple inject/test APK payloads"
+    ],
+    "malwareConclusion": "not_assessed",
+    "note": "A broad attack and audit surface is not, by itself, proof of malicious behavior."
+  },
+  "integrationDecision": {
+    "status": "do_not_bind_private_interfaces",
+    "allowedNow": [
+      "ordinary launcher handoff",
+      "clean-room capability-shape research",
+      "synthetic no-network accessibility experiments"
+    ],
+    "blockedNow": [
+      "reverse-engineered private socket integration",
+      "unprotected private service or broadcast control",
+      "copying embedded SDK or script protocol",
+      "claiming password, OTP, or payment bypass"
+    ],
+    "vendorRequirementsForDeeperIntegration": [
+      "written permission",
+      "documented versioned SDK or AAR",
+      "signature-protected intent or provider",
+      "authenticated protocol with identity and version negotiation"
+    ],
+    "jidanDirection": "Build a small replaceable audited hand, keep the planner and JCL contract independent, and preserve sensitive capabilities in a synthetic sandbox before any real-app binding."
+  }
+}

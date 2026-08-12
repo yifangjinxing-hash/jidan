@@ -1,0 +1,58 @@
+{
+  "name": "app.open.alipay_frontdoor",
+  "description": "Open the reviewed Alipay launcher front door. Never carry a recipient, amount, QR payload, URI, order, credential, or payment instruction.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {},
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "status": {
+        "enum": [
+          "handoff_dispatched",
+          "target_unavailable",
+          "blocked_by_os"
+        ]
+      },
+      "paymentAttemptedByJidan": {
+        "const": false
+      },
+      "paid": {
+        "const": false
+      },
+      "committed": {
+        "const": false
+      },
+      "verified": {
+        "const": false
+      }
+    },
+    "required": [
+      "status",
+      "paymentAttemptedByJidan",
+      "paid",
+      "committed",
+      "verified"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": true
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "NAVIGATION",
+      "executionMode": "DIRECT",
+      "requiresConfirmation": false,
+      "reversible": true,
+      "stateModel": "STATELESS"
+    }
+  }
+}

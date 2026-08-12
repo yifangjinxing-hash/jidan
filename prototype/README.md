@@ -2,6 +2,13 @@
 
 This dependency-free Python prototype tests one architectural claim: an AI planner must not be the security boundary. A model may propose a task graph, but a deterministic kernel must validate capabilities and their schemas, attenuate authority, stop for consent, execute adapters, and produce hash-chained receipts.
 
+Every newly issued Grant also pins the canonical digest of each effective
+capability definition. A same-name change to its Schema, effect, confirmation
+rule, or adapter identity is rejected before invocation, and the digest is
+copied into every Receipt. Registered handlers cannot be replaced in place.
+Signed Grants created before this field existed are intentionally incompatible
+and must be reissued from the current trusted Registry.
+
 ## Core demo
 
 The original demo searches local mail, extracts recipe ingredients, and requests a shopping-list write. It stops before any step executes until that write is approved, then emits one hash-chained receipt per step.
@@ -13,6 +20,152 @@ python demo.py
 python demo.py --approve
 python -m unittest discover -s tests -v
 ```
+
+## Cross-platform `message.compose` profile
+
+`jidan/message_compose.py` adds the first Jidan Capability Layer (JCL) profile
+without creating a second runtime or transport. The machine-readable
+[`message.compose` MCP Tool profile](../profiles/message.compose.tool.json) maps
+one stable input and output contract to host-selected Android, iOS, Web, or
+community bindings.
+
+The caller proposes only the capability ID. The trusted host validates the
+plan, applies policy, obtains approval, chooses a binding, executes it, and
+writes the receipt:
+
+```python
+from jidan.models import Step, TaskPlan
+
+plan = TaskPlan(
+    id="compose-demo",
+    goal="prepare a message draft",
+    steps=(Step(
+        id="compose",
+        capability="message.compose",
+        arguments={"content": "hello"},
+    ),),
+)
+# See message_compose_demo.py for Grant, confirmation, Runtime, and Receipt.
+```
+
+Run all three built-in plans. The default stops at the confirmation gate:
+
+```powershell
+python message_compose_demo.py
+```
+
+To exercise the remaining local data-plan stages, explicitly request a simulated
+approval:
+
+```powershell
+python message_compose_demo.py --simulate-approval
+```
+
+The output labels this `demo_only_not_user_confirmation`. It is a deterministic
+test of the Grant and Runtime path, not evidence that a person approved anything.
+
+Built-in iOS, Web, and generic Android adapters are data-only plans and report
+`handoff_planned`; they do not claim a system UI was opened. The verified WeChat
+wrapper can report `handoff_opened` only after the underlying adapter proves the
+exact recipient picker is foreground. Both states keep delivery
+`attempted=false`, `sent=false`, and `verified=false` because Jidan never selects
+a recipient or issues Send.
+
+The optional `recipient` input is display-only and is never passed to an adapter.
+Adapters cannot author core outcome fields such as `delivery`, `sent`,
+`riskLevel`, or `executionMode`, even when those keys are nested. A generic or
+community `MessageComposeBinding` can report only `handoff_planned`;
+`handoff_opened` is reserved for a dedicated verifier-backed wrapper. Publishing
+a binding needs no central Jidan whitelist, but installing and executing
+third-party code remains a local trust and isolation decision.
+
+## Nine Lights conformance spike
+
+Nine Lights is a deterministic 3 × 3 lights puzzle used to test one narrower
+claim: independent Hosts can implement the same capability IDs, schemas, state
+transitions, and conformance vectors without sharing a Runtime.
+
+The Python CLI routes every `game.ninelights.start` and
+`game.ninelights.press` action through a real TaskPlan, minimal READ Grant,
+`JidanRuntime`, and hash-chained Receipt:
+
+```powershell
+python ninelights_demo.py
+python ninelights_demo.py --level cross --moves 5
+python ninelights_demo.py --level corners --moves 1,9
+python ninelights_demo.py --level full --moves 1,3,5,7,9 --json
+```
+
+For a normal Windows game window, launch the dependency-free Tkinter surface:
+
+```powershell
+python ninelights_gui.py
+```
+
+It provides a Chinese 3 × 3 board, three levels, mouse and number-key controls,
+restart, move count, and a completion dialog. It stays offline, and every start
+and press still passes through the same trusted Host and receipt chain. The
+headless check exercises the fixed solution for all three levels without
+creating a window:
+
+```powershell
+python ninelights_gui.py --self-test
+```
+
+To build the single-file Windows executable, use a Python environment that
+includes Tcl/Tk and PyInstaller 6.21.0:
+
+```powershell
+python -m pip install PyInstaller==6.21.0
+powershell -NoProfile -File tools/build_ninelights_exe.ps1 -Python python
+```
+
+The ignored build output is
+`build/pyinstaller/dist/JidanNineLights.exe`. The executable is unsigned in
+local development. Do not bypass Windows SmartScreen: run only an EXE you built
+from a trusted checkout, and compare its SHA-256 with the value printed by the
+build script. If local policy blocks scripts, inspect the script and use your
+organization's approved execution process.
+
+The checked-in PNG/ICO artwork at `../docs/assets/ninelights-icon.*` was created
+for this game. The PNG appears in the documentation; the ICO is embedded into
+the Windows build.
+
+## Protocol discovery error boundary
+
+`jidan/discovery.py` keeps discovery failures explicit and transport-neutral:
+`auth_required`, `discovery_unsupported`, `call_error`, `protocol_error`, and
+`transport_error`. In particular, a decodable JSON-RPC error carried by HTTP
+400/404 is scoped to that call and does not poison the next request; 401/403 is
+never silently downgraded to “old protocol unsupported.” The classifier performs
+no I/O and leaves connection lifecycle to the owning adapter.
+
+The browser version at `web/ninelights.html` is a separate dependency-free
+JavaScript Host. It does not invoke Python or claim to run `JidanRuntime`.
+Instead, both implementations are checked against the same machine-readable
+vectors:
+
+```powershell
+node tools/check_ninelights_web.js
+```
+
+This is evidence for shared observable semantics, not a universal game
+language, shared Runtime, or Android/iOS support. See the Chinese
+[scope and evidence note](../docs/07-universal-game-spike-zh.md).
+
+## Frozen Pinyin frontend compatibility experiment
+
+The compile-only [`JCL-Input-Frontend/0.1`](../profiles/frontends/zh-Latn-pinyin.frontend.json)
+experiment was frozen on **2026-08-02**. Its implementation, profile, demo, and
+tests remain available for compatibility and reproducibility, but it is no
+longer an active product route or quick-start path. New syntax, aliases, fuzzy
+matching, and capability mappings are not accepted.
+
+The frozen boundary remains unchanged: it can emit only an untrusted
+`InvocationProposal`; it cannot bypass schema validation, issue a Grant,
+invoke the Registry, select a platform or recipient, or execute an action.
+Payload text remains verbatim. See the frozen
+[design note](../docs/05-jcl-pinyin-frontend-zh.md).
 
 ## Android 17 AppFunctions Phase 1 adapter
 
@@ -29,7 +182,7 @@ The Android 17 platform image has two observed compatibility details covered by 
 
 Every subprocess receives an argv list with `shell=False`. Dynamic device-shell values are individually POSIX-quoted because `adb shell` joins its tail into a command interpreted on the device. JSON is generated with the standard library, rejects non-finite values and mixed-type arrays, and rejects null/empty-array fields that Android's GenericDocument converter cannot represent. It never silently changes already approved parameters or interpolates user data into a command string.
 
-The prototype caps encoded parameters at 16 KiB and the final quoted device command at 24 KiB, so the documented path stays below the practical Windows process-command boundary. It compiles supported Android primitive, array, and object parameter metadata into the dependency-free JCC schema subset, enforces it during preflight, and refuses to register input contracts it cannot compile safely. When response metadata is compilable it also validates the Android 17 `androidAppfunctionsReturnValue` shell envelope. A post-invocation output mismatch is recorded as `committed_unverified` and the task becomes `unknown`, never an ordinary retryable failure.
+The prototype caps encoded parameters at 16 KiB and the final quoted device command at 24 KiB, so the documented path stays below the practical Windows process-command boundary. It compiles supported Android primitive, array, and object parameter metadata into JCL's dependency-free JSON Schema subset, enforces it during preflight, and refuses to register input contracts it cannot compile safely. When response metadata is compilable it also validates the Android 17 `androidAppfunctionsReturnValue` shell envelope. A post-invocation output mismatch is recorded as `committed_unverified` and the task becomes `unknown`, never an ordinary retryable failure.
 
 Run the complete no-device smoke—fake ADB discovery, dynamic capability registration, JGraph confirmation stop, approved execution, and receipt verification—with one command:
 
@@ -58,7 +211,7 @@ python appfunctions_live.py --adb-path C:\path\to\adb.exe --serial SERIAL --pack
 
 `--initialize-grant-ledger` is a one-time explicit provisioning action. After reviewing the preflight, rerun with the same `--grant-ledger`, omit `--initialize-grant-ledger`, and add `--approve`. A missing established ledger fails closed and is never silently recreated. Receipt and ledger paths must be distinct from the SQLite main file and its `-wal`, `-shm`, and `-journal` sidecars.
 
-The harness is fail-fast and never automatically retries an ambiguous external action.
+The harness is fail-fast and never automatically retries an ambiguous discovered action.
 
 Programmatic JGraph binding is similarly small:
 
@@ -71,9 +224,114 @@ registry = CapabilityRegistry()
 records = adapter.register_discovered(registry, package_name="com.example.notes")
 ```
 
-Dynamic registration requires an explicit package filter, and every supplied discovery record is checked against that package. Discovered AppFunctions default to `external`, non-reversible, confirmation-required capabilities. Android metadata does not prove effect, reversibility, or compensation, so a trusted policy must explicitly refine those defaults.
+Dynamic registration requires an explicit package filter, and every supplied discovery record is checked against that package. Discovered AppFunctions default to `irreversible`, non-reversible, confirmation-required capabilities. Android metadata does not prove effect, reversibility, compensation, or that a financial-looking function is harmless, so an unknown function receives the highest ceiling until a separately reviewed fixed adapter narrows the contract.
 
 This is a developer/extreme-user shell route, not a claim that an ordinary APK owns cross-app privileges. It does not integrate Shizuku or any community fork, does not use a pending-intent execution path, and does not provide a GUI/Accessibility fallback. The command contract follows the official [AppFunctions ADB testing reference](https://developer.android.com/agents/skills/device-ai/appfunctions/references/adb-interaction-testing).
+
+## Semantic-surface routing
+
+`jidan/semantic_surfaces.py` inventories app-authored Android surfaces before any
+GUI controller is considered. The current priority is:
+
+1. typed AppFunctions;
+2. an active notification with `RemoteInput`;
+3. a person-bound conversation shortcut;
+4. a public text-share handoff that leaves recipient choice and send confirmation
+   inside the target app;
+5. fail closed with `blocked_no_semantic_surface`.
+
+OCR, screenshots, and coordinates are deliberately absent from this routing
+decision. They may later propose a visual candidate, but pixels cannot establish
+the identity or authority required for an external send.
+
+Run the read-only inventory through the normal Jidan grant, ledger, and receipt
+pipeline:
+
+```powershell
+python semantic_surface_live.py --adb-path C:\path\to\adb.exe --serial emulator-5554 --package com.example.app --receipt-log .\surface-receipts.jsonl --grant-ledger .\surface-grants.sqlite3 --initialize-grant-ledger --summary .\surface-summary.json
+```
+
+The probe executes only package discovery, AppFunctions listing, shortcut
+listing, notification inspection, and public `ACTION_SEND` handler discovery.
+It never opens the target app, taps the screen, enters text, or sends a message.
+
+## WeChat text-share handoff
+
+`jidan/android_share.py` is a deliberately narrow bridge to WeChat's exported
+Android text-share surface. It validates the installed handler, passes text via
+`ACTION_SEND`, and opens WeChat's own recipient picker. It does not inspect
+pixels, name a contact, select a row, press Send, or claim that a message was
+sent. Contact identity stays inside WeChat.
+
+Run the handoff through the Jidan capability, task-plan, grant, durable ledger,
+and receipt pipeline:
+
+```powershell
+python wechat_share_live.py --adb-path C:\path\to\adb.exe --serial emulator-5554 --text-utf8-base64 5L2g5aW9 --receipt-log .\wechat-share-receipts.jsonl --grant-ledger .\wechat-share-grants.sqlite3 --initialize-grant-ledger --summary .\wechat-share-summary.json
+```
+
+The example payload is UTF-8 `你好`. Add `--approve` only after reviewing the
+handoff. A successful approved run leaves WeChat at its exact recipient picker
+with `jidanIssuedSend=false`; the user still chooses the contact and confirms
+the final send.
+
+## Alipay fixed front-door handoff (controlled lab only)
+
+`jidan/android_handoff.py` verifies one Host-pinned Android installation and
+launcher surface. `jidan/alipay_handoff.py` binds that evidence to the empty-input
+`android.alipay.open_user_handoff` capability. Its effect is the low-risk
+`navigation` class, it does not require a second confirmation after an explicit
+foreground submit, and its schema cannot carry an account, recipient, amount,
+currency, QR payload, URL, order token, password, or payment instruction. Pressing
+Back reverses the UI navigation; no user data is written by this capability. The
+matching Shell-facing contract is
+[`app.open.alipay_frontdoor.tool.json`](../profiles/app.open.alipay_frontdoor.tool.json).
+
+Before launch, the adapter checks the exact `versionCode`, current Android user
+and device SDK, pulls the installed base APK, and runs the reviewed `apksigner`
+JAR through a Java executable without a batch shell. SDK-ranged signer output
+(including APK Signature Scheme v3.1 rotation) must resolve to exactly one signer
+whose certificate SHA-256 matches the Host pin. It then resolves a package-scoped
+launcher and starts an explicit allowlisted component. It reports
+`handoff_opened` only after the resumed Activity and focused Window agree on an
+allowlisted component for two consecutive samples, then rechecks the installed
+APK identity to close the launch-time replacement window. Raw ADB output is not
+returned.
+
+Every value in the pin below must come from an independent trusted review;
+copying values from the installation being tested is not identity verification.
+The command itself is the explicit request to open the app and therefore
+dispatches directly. Add `--dry-run` to validate the policy without opening it.
+
+```powershell
+python alipay_handoff_live.py `
+  --adb-path C:\path\to\adb.exe `
+  --java-path C:\path\to\java.exe `
+  --apksigner-jar C:\path\to\lib\apksigner.jar `
+  --serial SERIAL `
+  --version-code <REVIEWED_VERSION_CODE> `
+  --certificate-sha256 <REVIEWED_CERTIFICATE_SHA256> `
+  --launcher-component <REVIEWED_PACKAGE/ACTIVITY> `
+  --foreground-component <REVIEWED_PACKAGE/ACTIVITY> `
+  --receipt-log .\alipay-handoff-receipts.jsonl `
+  --grant-ledger .\alipay-handoff-grants.sqlite3 `
+  --initialize-grant-ledger
+```
+
+There is no `--approve-open-ui` flag and no second “open this app?” gate. A dry
+run reports `preflight=ready` and `effect=navigation` without invoking ADB, Java,
+or `apksigner`; remove `--dry-run` to issue the direct navigation command. Every
+successful output still fixes
+`amountSetByJidan=false`, `recipientSelectedByJidan=false`,
+`paymentAttemptedByJidan=false`, `paid=false`, `committed=false`, and
+`verified=false`. The person performs every recipient, amount, identity, and
+payment decision inside Alipay. Ambiguous post-dispatch failures become
+`outcome_unknown` and are never retried automatically.
+
+This is an ADB developer harness, not an ordinary-user Android product, an
+official Alipay integration, or automatic payment. It uses no private Alipay
+scheme, internal payment Activity, Accessibility, OCR, coordinate tap, or
+payment-result inference. See the [micro-action and protocol boundary](../docs/09-alipay-micro-actions-and-protocol-lessons-zh.md).
 
 ## Language-neutral memo input
 
@@ -100,4 +358,4 @@ Successful Runtime steps are written to the normal receipt chain. Negative prefl
 
 ## Prototype trust boundary
 
-Use only controlled reference apps and disposable, idempotent test data on a real device. Demo runtimes still default to `InMemoryGrantLedger`; real-device entry points explicitly require `SqliteGrantLedger`. The durable ledger provides cross-process, local-disk at-most-once authorization while the same database continuously exists. A crash after ledger COMMIT but before provider dispatch permanently consumes the grant and may produce zero task executions; this is fail-closed, not exactly-once recovery. SQLite `quick_check` does not detect legitimate row deletion or rollback to an older valid database. Receipt/event hashes likewise are not authenticated against an attacker who can rewrite the entire chain, and `ReceiptLog` is not a cross-process atomic appender. The system version needs protected file ownership plus an Android Keystore/StrongBox HMAC or signature anchor and a durable task state machine. Discovered package metadata is untrusted and remains `external`, non-reversible, and confirmation-required; the true-device harness adds a package-signing-certificate allowlist before enabling writes.
+Use only controlled reference apps and disposable, idempotent test data on a real device. Demo runtimes still default to `InMemoryGrantLedger`; real-device entry points explicitly require `SqliteGrantLedger`. The durable ledger provides cross-process, local-disk at-most-once authorization while the same database continuously exists. A crash after ledger COMMIT but before provider dispatch permanently consumes the grant and may produce zero task executions; this is fail-closed, not exactly-once recovery. SQLite `quick_check` does not detect legitimate row deletion or rollback to an older valid database. `ReceiptLog` now serializes cooperating local processes with an OS file lock, rereads and verifies the disk tail under that lock, and flushes each append before returning; its multiprocess regression proves one unbranched chain. Receipt/event hashes are still not authenticated against an attacker who can rewrite the entire chain, and the lock is not a distributed-filesystem or hostile-local-user guarantee. The system version needs protected file ownership plus an Android Keystore/StrongBox HMAC or signature anchor and a durable task state machine. Discovered package metadata is untrusted and remains `irreversible`, non-reversible, and confirmation-required until a reviewed fixed adapter narrows the contract; the true-device harness adds a package-signing-certificate allowlist before enabling writes.

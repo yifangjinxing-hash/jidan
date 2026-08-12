@@ -1,0 +1,230 @@
+{
+  "name": "android.ui.sandbox_execute",
+  "description": "Execute a semantic-node UI plan only inside the same-signed, offline Jidan accessibility sandbox. PAYMENT, PASSWORD, and OTP remain representable experiment classes, but no real payment, credential, or external account is touched.",
+  "inputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "plan": {
+        "allOf": [
+          {
+            "$ref": "../schemas/jcl.ui-action-plan-v0.1.schema.json"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "lane": {
+                "const": "SANDBOX"
+              },
+              "handProviderId": {
+                "const": "android.hand.jidan.accessibility.v0.1"
+              },
+              "handProviderRegistrationSha256": {
+                "const": "3a435217c54c7c7e97f24d2de3d97fc43fc2ccf321d3aa85d049f47a28622920"
+              },
+              "targetFingerprint": {
+                "type": "object",
+                "properties": {
+                  "packageName": {
+                    "const": "dev.jidan.accessibility.sandbox"
+                  }
+                }
+              },
+              "expectedPrecondition": {
+                "type": "object",
+                "properties": {
+                  "packageName": {
+                    "const": "dev.jidan.accessibility.sandbox"
+                  }
+                }
+              },
+              "expectedPostcondition": {
+                "type": "object",
+                "properties": {
+                  "packageName": {
+                    "const": "dev.jidan.accessibility.sandbox"
+                  }
+                }
+              },
+              "effectStatus": {
+                "const": "NOT_ATTEMPTED"
+              },
+              "realWorldStatus": {
+                "const": "SYNTHETIC_ONLY"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "required": [
+      "plan"
+    ],
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+      "state": {
+        "enum": [
+          "transition_verified",
+          "failed_before_effect",
+          "outcome_unknown"
+        ]
+      },
+      "planSha256": {
+        "type": "string",
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "effectStatus": {
+        "enum": [
+          "TRANSITION_VERIFIED",
+          "FAILED_BEFORE_EFFECT",
+          "OUTCOME_UNKNOWN"
+        ]
+      },
+      "realWorldStatus": {
+        "const": "SYNTHETIC_ONLY"
+      },
+      "execution": {
+        "type": "object",
+        "properties": {
+          "lane": {
+            "const": "SANDBOX"
+          },
+          "targetPackage": {
+            "const": "dev.jidan.accessibility.sandbox"
+          },
+          "executorAttempted": {
+            "type": "boolean"
+          },
+          "osAccepted": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "postconditionVerified": {
+            "type": "boolean"
+          },
+          "sensitiveValuePersisted": {
+            "const": false
+          },
+          "externalEffect": {
+            "const": false
+          },
+          "outcome": {
+            "enum": [
+              "transition_verified",
+              "failed_before_effect",
+              "outcome_unknown"
+            ]
+          }
+        },
+        "required": [
+          "lane",
+          "targetPackage",
+          "executorAttempted",
+          "osAccepted",
+          "postconditionVerified",
+          "sensitiveValuePersisted",
+          "externalEffect",
+          "outcome"
+        ],
+        "additionalProperties": false
+      },
+      "evidence": {
+        "type": "object",
+        "properties": {
+          "beforeObservationSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "afterObservationSha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "eventSequenceSha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        },
+        "required": [
+          "beforeObservationSha256",
+          "afterObservationSha256",
+          "eventSequenceSha256"
+        ],
+        "additionalProperties": false
+      },
+      "recovery": {
+        "type": "object",
+        "properties": {
+          "checkpointId": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "disposition": {
+            "enum": [
+              "none",
+              "reset_sandbox",
+              "stop_no_retry"
+            ]
+          },
+          "automaticRetry": {
+            "const": false
+          }
+        },
+        "required": [
+          "checkpointId",
+          "disposition",
+          "automaticRetry"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "required": [
+      "state",
+      "planSha256",
+      "effectStatus",
+      "realWorldStatus",
+      "execution",
+      "evidence",
+      "recovery"
+    ],
+    "additionalProperties": false
+  },
+  "annotations": {
+    "readOnlyHint": false,
+    "destructiveHint": false,
+    "idempotentHint": false,
+    "openWorldHint": false
+  },
+  "_meta": {
+    "dev.jidan/capability-v0.1": {
+      "riskLevel": "WRITE",
+      "executionMode": "SANDBOX",
+      "requiresConfirmation": false,
+      "requiresForegroundUserActivation": true,
+      "activationMode": "EXPLICIT_FOREGROUND",
+      "availability": "ADAPTER_CONTRACT",
+      "registered": false,
+      "reversible": true,
+      "stateModel": "SESSION_SCOPED",
+      "targetPackage": "dev.jidan.accessibility.sandbox",
+      "realWorldEffects": false,
+      "sensitiveClasses": [
+        "PAYMENT",
+        "PASSWORD",
+        "OTP"
+      ]
+    }
+  }
+}

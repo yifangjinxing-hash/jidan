@@ -1,0 +1,119 @@
+{
+  "schemaVersion": "jidan.android-accessibility-livefire.v0.2",
+  "observedAt": "2026-08-12",
+  "device": {
+    "serial": "emulator-5560",
+    "avd": "Jidan_Isolated_API_37",
+    "model": "sdk_gphone64_x86_64",
+    "androidRelease": "17",
+    "androidApi": 37,
+    "buildFingerprint": "google/sdk_gphone64_x86_64/emu64xa:17/CE2A.260420.019/15611780:userdebug/dev-keys",
+    "display": "1080x2424"
+  },
+  "artifacts": {
+    "shell": {
+      "path": "reference-app/shell/build/outputs/apk/debug/shell-debug.apk",
+      "sizeBytes": 1014690,
+      "sha256": "1f30ea95f513c4fc388e4222120f4acf992abd5191b0c76b29290a23d891fb38"
+    },
+    "sandbox": {
+      "path": "reference-app/accessibility-sandbox/build/outputs/apk/debug/accessibility-sandbox-debug.apk",
+      "sizeBytes": 895275,
+      "sha256": "cb21d4a3eef321372aa001707e468188f6e3ad14350f3032f4ec5e517a8b9087"
+    },
+    "homeScreenshot": {
+      "path": "docs/assets/jidan-shell-0.2.png",
+      "sizeBytes": 67898,
+      "sha256": "697c3da4cbba657e55d960667c757ce7a3f72b1165bfe74d115d303a265eb8d3"
+    },
+    "completionScreenshot": {
+      "path": "docs/assets/jidan-hand-brain-lab-0.2.png",
+      "sizeBytes": 130945,
+      "sha256": "c58afb8d292433675937edacabd1f9cfe808c9f7593124efecc5e565df976eeb"
+    }
+  },
+  "firstUsePreconditions": {
+    "shellInstalledFresh": true,
+    "sandboxInstalledFresh": true,
+    "accessibilityServiceInitiallyDisabled": true,
+    "initialEnabledServicesValue": null,
+    "accessibilityServiceEnabledThroughVisibleSystemUi": true,
+    "enabledService": "dev.jidan.shell/dev.jidan.shell.accessibility.JidanAccessibilityService",
+    "returnedFromSettingsAndContinuedAutomatically": true,
+    "duplicateJidanConfirmationShown": false,
+    "sandboxInternetPermission": false,
+    "sameSignerVersionAndContractTrustCheckPassed": true
+  },
+  "run": {
+    "trigger": "one foreground tap on 手脑实验, followed only by Android's required accessibility grant",
+    "targetPackage": "dev.jidan.accessibility.sandbox",
+    "lane": "SANDBOX",
+    "sessionId": "d7b1830c-10ba-4ac1-b3ff-643b17154c6d",
+    "windowId": 218,
+    "planSha256": "785a7e5f34a0083607019d7cfbe59dc6a5b23892cff84f8fb150cb350836d16e",
+    "steps": [
+      "set_recipient",
+      "set_amount",
+      "set_password",
+      "set_otp",
+      "submit_synthetic"
+    ],
+    "preparedReceiptCount": 5,
+    "resultReceiptCount": 5,
+    "totalReceiptCount": 10,
+    "osAcceptedCount": 5,
+    "postconditionVerifiedCount": 5,
+    "outcomes": [
+      "transition_verified",
+      "transition_verified",
+      "transition_verified",
+      "transition_verified",
+      "transition_verified"
+    ],
+    "syntheticCommitCount": 1,
+    "realPaymentCount": 0,
+    "finalUiMarker": "synthetic_committed",
+    "finalUiText": "实验完成：外部交易 0 笔"
+  },
+  "receiptIntegrity": {
+    "hashChainRecomputedOffDevice": true,
+    "chainValid": true,
+    "preparedResultPairsAdjacent": true,
+    "tailHash": "13c6bdc975a1f6185c9374106f781ea5e580379ea1a9db62a54ffe27a198456b"
+  },
+  "shellHandoffReceipts": {
+    "chainValid": true,
+    "receiptCount": 4,
+    "statuses": [
+      "dispatch_prepared",
+      "blocked_by_os",
+      "dispatch_prepared",
+      "handoff_dispatched"
+    ],
+    "tailHash": "af15779861efd7f3444390b16e6f731ab99805b4ee2b30bece8cbad8885c9e1b"
+  },
+  "sensitiveValueChecks": {
+    "passwordPlaintextFoundInReceipts": false,
+    "otpPlaintextFoundInReceipts": false,
+    "recipientPlaintextFoundInReceipts": false,
+    "amountPlaintextFoundInReceipts": false,
+    "ephemeralReferenceFoundInReceipts": false,
+    "receiptFieldSensitiveValuePersisted": false,
+    "passwordAndOtpFieldsClearedAfterCommit": true
+  },
+  "emulatorRegression": {
+    "android17PreDecorInsetsCrashDetected": true,
+    "failedRunAccessibilityReceiptCount": 0,
+    "falseSuccessRecorded": false,
+    "fix": "configure system bars only after the decor view exists",
+    "postFixFatalCrashCount": 0
+  },
+  "claims": {
+    "realAccessibilityActionsExecuted": true,
+    "eachTransitionObservedAndVerified": true,
+    "externalTransactionAttempted": false,
+    "realPaymentVerified": false,
+    "realThirdPartyPackageAutomated": false,
+    "externalMcpClientDroveAndroid": false
+  }
+}
