@@ -11,7 +11,7 @@
 ```powershell
 adb install -r -t .\JidanDailyDemo-0.1-debug.apk
 adb install -r -t .\JidanAccessibilitySandbox-0.1-debug.apk
-adb install -r -t .\JidanShell-0.3-debug.apk
+adb install -r -t .\JidanShell-0.4-debug.apk
 ```
 
 macOS 或 Linux 终端使用：
@@ -19,7 +19,7 @@ macOS 或 Linux 终端使用：
 ```bash
 adb install -r -t ./JidanDailyDemo-0.1-debug.apk
 adb install -r -t ./JidanAccessibilitySandbox-0.1-debug.apk
-adb install -r -t ./JidanShell-0.3-debug.apk
+adb install -r -t ./JidanShell-0.4-debug.apk
 ```
 
 三只 APK 来自同一个 CI 实验包，具有互相匹配的签名身份与实验契约。不要把其他来源或其他版本的 APK 混入这组文件；身份不匹配时 Jidan 会停止执行。
@@ -32,7 +32,7 @@ adb install -r -t ./JidanShell-0.3-debug.apk
 4. 鸡蛋会打开**小事清单**、填写、保存并重新核验，然后尝试返回 Shell。
 5. Shell 显示“已经记下”后，可从桌面单独打开**小事清单**，完成、撤销或清空已完成事项。
 
-首页另外两个快捷键是**打开支付宝**和**按键精灵**。前者只打开入口，不会付款；后者只打开固定候选版本，不会调用私有自动化接口。“打开系统设置”和“开始手脑实验”仍可在输入框键入或说出。
+首页是**支付 / 手 / 记事**三个图形入口。「手」面板统一展示 Jidan 自研手与兼容手。公共 CI 不携带第三方 APK；只有本地授权构建会把原签名 companion 作为受哈希约束的内置资产打包。
 
 ## 再试玩合成实验
 

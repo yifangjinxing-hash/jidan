@@ -20,6 +20,8 @@ sealed interface DispatchResult {
     data class TargetUnavailable(val message: String) : DispatchResult
     data class Blocked(val message: String) : DispatchResult
     data class NeedsAccessibility(val message: String) : DispatchResult
+    data class NeedsPackageSourcePermission(val message: String) : DispatchResult
+    data class CompanionInstallStarted(val message: String) : DispatchResult
 }
 
 class FrontDoorLauncher(private val activity: Activity) {
@@ -146,9 +148,18 @@ class FrontDoorLauncher(private val activity: Activity) {
                 },
             )
         } catch (_: PackageManager.NameNotFoundException) {
-            return DispatchResult.TargetUnavailable(
-                "这台手机没有安装已审计的按键精灵候选版本。鸡蛋没有调用任何自动化能力。",
-            )
+            return when (EmbeddedHandInstaller.request(activity)) {
+                EmbeddedHandInstallResult.Started ->
+                    DispatchResult.CompanionInstallStarted("系统正在安装内置兼容手。")
+                EmbeddedHandInstallResult.SourcePermissionRequested ->
+                    DispatchResult.NeedsPackageSourcePermission("请允许 Jidan 安装内置兼容手。")
+                EmbeddedHandInstallResult.AssetUnavailable ->
+                    DispatchResult.TargetUnavailable("兼容手没有随本次构建提供。")
+                EmbeddedHandInstallResult.AssetInvalid ->
+                    DispatchResult.Blocked("兼容手校验失败。")
+                EmbeddedHandInstallResult.Blocked ->
+                    DispatchResult.Blocked("系统没有接受安装请求。")
+            }
         }
         val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             packageInfo.longVersionCode
@@ -167,7 +178,8 @@ class FrontDoorLauncher(private val activity: Activity) {
         }
         if (
             versionCode != MOBILEANJIAN_VERSION_CODE ||
-            MOBILEANJIAN_CERT_SHA256 !in signerDigests
+            signerDigests.size != 1 ||
+            signerDigests.single() != MOBILEANJIAN_CERT_SHA256
         ) {
             return DispatchResult.Blocked(
                 "按键精灵的版本或签名与已审计样本不一致。鸡蛋没有打开，也没有尝试自动化。",
@@ -179,6 +191,35 @@ class FrontDoorLauncher(private val activity: Activity) {
             )
             else -> result
         }
+    }
+
+    @Suppress("DEPRECATION")
+    fun isVerifiedMobileAnjianCandidateInstalled(): Boolean {
+        val packageInfo = runCatching {
+            activity.packageManager.getPackageInfo(
+                MOBILEANJIAN_PACKAGE,
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    PackageManager.GET_SIGNING_CERTIFICATES
+                } else {
+                    PackageManager.GET_SIGNATURES
+                },
+            )
+        }.getOrNull() ?: return false
+        val versionCode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.longVersionCode
+        } else {
+            packageInfo.versionCode.toLong()
+        }
+        val signers = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            packageInfo.signingInfo?.apkContentsSigners.orEmpty()
+        } else {
+            packageInfo.signatures.orEmpty()
+        }
+        if (versionCode != MOBILEANJIAN_VERSION_CODE || signers.size != 1) return false
+        val signerDigest = MessageDigest.getInstance("SHA-256")
+            .digest(signers.single().toByteArray())
+            .joinToString("") { byte -> "%02x".format(byte.toInt() and 0xff) }
+        return signerDigest == MOBILEANJIAN_CERT_SHA256
     }
 
     private fun openPackage(packageName: String, label: String): DispatchResult {

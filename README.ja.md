@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/11-daily-note-cross-app-hand-zh.md"><img src="https://img.shields.io/badge/Android_デイリー操作-0.3-7B61A8?style=for-the-badge" alt="Jidan Shell 0.3 のクロスアプリ操作" /></a>
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_Hand_Center-0.4-7B61A8?style=for-the-badge" alt="Jidan Shell 0.4 Hand Center" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_観測可能プロトタイプ-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="#-開発者向けクイックスタート"><img src="https://img.shields.io/badge/開発者向けスタート-195A41?style=for-the-badge" alt="開発者向けクイックスタート" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
@@ -29,7 +29,7 @@
 > Jidan は実験段階のプロトタイプです。Android 実験版には Shell、ローカルのタスクリスト、隔離フィクスチャの3つの APK があり、Android 17 エミュレーターで一連の操作を検証しています。ただし、ストア署名済み製品、既定ランチャー、独立 OS ではありません。管理下のアプリ、テスト端末、破棄可能なデータだけを使用してください。
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-daily-0.3.png" alt="Jidan Shell 0.3 の最小 Android 操作画面" width="360" /></a>
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-hand-center-0.4.png" alt="Jidan Shell 0.4 Hand Center" width="360" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="iPhone 16 Simulator で全画面動作する Jidan iOS Shell 0.1" width="360" /></a>
 </p>
 

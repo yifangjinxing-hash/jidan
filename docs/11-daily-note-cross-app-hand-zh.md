@@ -33,7 +33,7 @@
 ```powershell
 adb install -r -t .\JidanDailyDemo-0.1-debug.apk
 adb install -r -t .\JidanAccessibilitySandbox-0.1-debug.apk
-adb install -r -t .\JidanShell-0.3-debug.apk
+adb install -r -t .\JidanShell-0.4-debug.apk
 ```
 
 如果是在源码目录本地构建，则对应命令是：
@@ -68,7 +68,9 @@ adb install -r -t .\reference-app\shell\build\outputs\apk\debug\shell-debug.apk
 
 实跑发现并修复了一个 Android 17 兼容问题：系统会把空输入框的提示词暴露为无障碍 `text`。执行器现在同时检查 `isShowingHintText`，不会再把提示词误认成用户内容，也没有因此放宽到坐标盲点。
 
-## 首页三个快捷键
+## 当前 0.4 首页
+
+0.4 把首页收成**支付 / 手 / 记事**三个图形入口；按键精灵兼容手位于「手」面板中。下表保留 0.3 动作语义，作为本次真实小事证据的历史说明。
 
 | 按钮 | 实际做什么 | 不会做什么 |
 |---|---|---|

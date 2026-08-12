@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/11-daily-note-cross-app-hand-zh.md"><img src="https://img.shields.io/badge/Android_小事清单-0.3-7B61A8?style=for-the-badge" alt="Jidan Shell 0.3 跨 App 记小事" /></a>
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_手中心-0.4-7B61A8?style=for-the-badge" alt="Jidan Shell 0.4 手中心" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_可观察原型-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="reference-app/windows-shell/README.md"><img src="https://img.shields.io/badge/Windows_系统卡组-0.1-3978C6?style=for-the-badge" alt="JidanOS Windows Shell 0.1" /></a>
   <a href="#-开发者快速开始"><img src="https://img.shields.io/badge/开发者上手-195A41?style=for-the-badge" alt="开发者快速开始" /></a>
@@ -32,7 +32,7 @@
 > Jidan 仍是实验原型，不是完整 Android/iOS 发行版、提权工具或可托管重要事务的生产助手。Android 实验包现在有三只调试 APK：Shell、可以单独使用的本地“小事清单”，以及隔离的合成实验页。仓库另有真实 SwiftUI iOS Shell 与原生 WPF Windows 兼容卡组。以上体验壳都不是应用商店签名产品、默认桌面或独立 ROM/OS。请只连接受控 App、测试设备和可丢弃数据。
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-daily-0.3.png" alt="Jidan Shell 0.3 极简安卓命令主页" width="360" /></a>
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-hand-center-0.4.png" alt="Jidan Shell 0.4 图形化手中心" width="360" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 在 iPhone 16 模拟器中全屏运行" width="360" /></a>
 </p>
 
@@ -115,7 +115,7 @@ Jidan 现在有了一条真实 Android 无障碍实验链：
 
 **小事清单**也能脱离 Shell 单独使用：新增事项、标为完成、撤销完成、清空已完成。清单只存在本机，App 没有 `INTERNET` 权限。事项原文应该保存在清单里；Shell 与无障碍回执只保留摘要，不再落一份原文。这是真正写入自有、可撤销本地 App 的动作，但不是“已经能随便操控第三方 App”的证据。
 
-Android 首页现在恰好有三个快捷键：**打开支付宝、打开已审计的按键精灵候选、记小事**。系统设置和五步合成“手脑实验”仍可用文字或语音命令触发，但不占首页按钮。用户点下这条明确命令就是本次启动授权，Jidan 不再加一张同义确认卡。普通人可直接看[《三分钟实战：让鸡蛋跨 App 记下一件小事》](docs/11-daily-note-cross-app-hand-zh.md)。
+Android 0.4 首页只有**支付 / 手 / 记事**三个图形入口。已审计兼容手被收进「手」面板，不再作为外部产品占据首页。系统设置和五步合成实验仍可用文字或语音触发。普通人可直接看[《三分钟实战：让鸡蛋跨 App 记下一件小事》](docs/11-daily-note-cross-app-hand-zh.md)。
 
 ## 🔌 一份契约，多端实现
 
@@ -213,7 +213,7 @@ flowchart LR
 | 跨端 `message.compose` Profile | 🧪 | Android / iOS / Web 计划；Android 已验证 Binding |
 | Conformance Lab：Nine Lights | 🧪 Lab | Python Runtime/Receipt + 独立 JS Host；不是用户产品 |
 | Pinyin Frontend 0.1 | ⏸️ | 冻结兼容实验；不新增语法或别名 |
-| [Jidan Shell 0.3 Android 体验包](reference-app/shell/README.md) | 🧪 | 可安装调试 APK；已有 Android 17 模拟器截图与哈希链回执；不是商店签名产品、默认桌面或 ROM |
+| [Jidan Shell 0.4 Android 体验包](reference-app/shell/README.md) | 🧪 | 图形化手中心；本地授权构建可内置并校验兼容手；不是商店签名产品、默认桌面或 ROM |
 | [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI + Apple Speech + `NAVIGATION / DIRECT`；由苹果远程模拟器构建、测试并截图；不是独立 Apple OS |
 | [JidanOS Windows Shell 0.1](reference-app/windows-shell/README.md) | 🧪 | 原生 WPF 系统卡组；真实 EXE/ADB 路由与边界明确的 clean-room ARM64 样本；不是完整跨平台 OS 或 Apple 运行时 |
 | 生产级移动 Agent OS | 🗺️ | 尚未宣称完成 |
@@ -271,7 +271,7 @@ adb install -r -t accessibility-sandbox/build/outputs/apk/debug/accessibility-sa
 adb install -r -t shell/build/outputs/apk/debug/shell-debug.apk
 ```
 
-打开 **Jidan Shell** 后，首页三个快捷键是**打开支付宝、按键精灵、记小事**。“记小事”会执行“记下明天买鸡蛋”：如果 Android 第一次要求无障碍授权，请打开**鸡蛋辅助操作**并返回；原动作会自动继续，不必再点第二次。保存经页面核验后，系统返回 Shell，Shell 显示“已经记下”。“打开系统设置”和“开始手脑实验”仍可在输入框键入或说出。语音转文字由手机当前的语音服务提供。详见[三分钟实战](docs/11-daily-note-cross-app-hand-zh.md)与 [Shell 说明](reference-app/shell/README.md)。
+打开 **Jidan Shell** 后，首页只有**支付 / 手 / 记事**三个图形入口。「手」面板统一展示 Jidan 自研手与内置兼容手，绿色表示本机检查通过。“记事”仍会执行“记下明天买鸡蛋”；语音与文字共用同一输入框。详见[三分钟实战](docs/11-daily-note-cross-app-hand-zh.md)与 [Shell 说明](reference-app/shell/README.md)。
 
 观察并验证苹果版本：
 

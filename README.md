@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/11-daily-note-cross-app-hand-zh.md"><img src="https://img.shields.io/badge/Android_Daily_Hand-0.3-7B61A8?style=for-the-badge" alt="Jidan Shell 0.3 owned daily action" /></a>
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_Hand_Center-0.4-7B61A8?style=for-the-badge" alt="Jidan Shell 0.4 hand center" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_Observable_Prototype-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="reference-app/windows-shell/README.md"><img src="https://img.shields.io/badge/Windows_System_Deck-0.1-3978C6?style=for-the-badge" alt="JidanOS Windows Shell 0.1" /></a>
   <a href="#-developer-quick-start"><img src="https://img.shields.io/badge/Developer_Start-195A41?style=for-the-badge" alt="Developer quick start" /></a>
@@ -32,7 +32,7 @@
 > Jidan is an experimental prototype, not a replacement Android/iOS distribution, a privilege-escalation tool, or a production assistant. The Android lab now has three debug APKs: the Shell, an independently usable local daily-list app, and an isolated synthetic fixture. The repository also has a real SwiftUI iOS Shell and a native WPF Windows compatibility deck. None of these shells is store-signed, a default launcher, or an independent ROM/OS. Use controlled apps, test devices, and disposable data.
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-daily-0.3.png" alt="Jidan Shell 0.3 minimal Android daily-action screen" width="360" /></a>
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-hand-center-0.4.png" alt="Jidan Shell 0.4 visual hand center" width="360" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 running full-screen in an iPhone 16 Simulator" width="360" /></a>
 </p>
 
@@ -112,7 +112,7 @@ tap “记小事” or enter “记下明天买鸡蛋”
 
 The **小事清单** app also works by itself: add an item, mark it complete, undo it, or clear completed items. Its list is stored only on the device and the app has no `INTERNET` permission. The note text belongs in that list; Shell and accessibility receipts retain its digest rather than another plaintext copy. This is a real write to an owned, reversible local surface—not proof that Jidan can control arbitrary third-party apps.
 
-The Android home screen now has exactly three shortcuts: **Open Alipay**, **open the audited automation candidate**, and **remember a small task**. System Settings and the five-step synthetic hand-brain lab remain available as typed or spoken commands, not home shortcuts. The foreground command is the user's activation, so Jidan does not add a duplicate confirmation card. See the [plain-language Chinese walkthrough](docs/11-daily-note-cross-app-hand-zh.md).
+Android 0.4 uses three visual actions: **Pay / Hand / Note**. The audited compatibility hand now lives inside the Hand Center instead of occupying the home screen as an external product. System Settings and the five-step synthetic lab remain typed or spoken commands. See the [plain-language Chinese walkthrough](docs/11-daily-note-cross-app-hand-zh.md).
 
 ## 🔌 One contract, many bindings
 
@@ -212,7 +212,7 @@ flowchart LR
 | Cross-platform `message.compose` profile | 🧪 | Android / iOS / Web plans; Android verified binding |
 | Conformance Lab: Nine Lights | 🧪 Lab | Python Runtime/Receipts + independent JS Host; not a user product |
 | Pinyin Frontend 0.1 | ⏸️ | Frozen compatibility experiment; no new syntax or aliases |
-| [Jidan Shell 0.3 Android experience](reference-app/shell/README.md) | 🧪 | Installable debug APK with accepted Android 17 emulator screenshots and hash-chained receipts; not store-signed, a default launcher, or a ROM |
+| [Jidan Shell 0.4 Android experience](reference-app/shell/README.md) | 🧪 | Visual Hand Center, verified embedded-companion installer for authorized local builds, and hash-chained owned actions; not store-signed, a default launcher, or a ROM |
 | [Jidan iOS Shell 0.1](reference-app/ios-shell/README.md) | 🧪 | SwiftUI + Apple Speech + `NAVIGATION / DIRECT`; built, tested, and captured on a remote Apple simulator; not an independent Apple OS |
 | [JidanOS Windows Shell 0.1](reference-app/windows-shell/README.md) | 🧪 | Native WPF system deck; real EXE/ADB routes plus a bounded clean-room ARM64 fixture; not a full cross-platform OS or Apple runtime |
 | Production-grade mobile agent OS | 🗺️ | Not claimed yet |
@@ -273,7 +273,7 @@ adb install -r -t accessibility-sandbox/build/outputs/apk/debug/accessibility-sa
 adb install -r -t shell/build/outputs/apk/debug/shell-debug.apk
 ```
 
-In **Jidan Shell**, the three home shortcuts are **Open Alipay**, **open the automation candidate**, and **remember a small task**. The daily shortcut runs “记下明天买鸡蛋”: if Android asks for accessibility once, enable **鸡蛋辅助操作** and return; the same pending action continues without a second tap. After a verified local save, Android returns to Shell and Shell shows “已经记下”. System Settings and “开始手脑实验” remain typed or spoken commands. Speech-to-text uses the phone's current recognition service. See the [three-minute walkthrough](docs/11-daily-note-cross-app-hand-zh.md) and [Shell guide](reference-app/shell/README.md).
+In **Jidan Shell 0.4**, the home screen is visual: **Pay / Hand / Note**. The Hand Center shows the owned Jidan hand and the verified compatibility companion. “Note” still runs “记下明天买鸡蛋”; speech and typing share one input. See the [three-minute walkthrough](docs/11-daily-note-cross-app-hand-zh.md) and [Shell guide](reference-app/shell/README.md).
 
 Build and observe the Apple version on a Mac:
 

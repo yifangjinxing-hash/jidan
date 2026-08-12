@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Jidan Shell</string>
+    <string name="app_name">Jidan</string>
     <string name="settings">设置</string>
     <string name="input_hint">要做什么？</string>
     <string name="microphone">语音输入</string>
@@ -8,6 +8,19 @@
     <string name="try_alipay">打开支付宝</string>
     <string name="try_mobileanjian">按键精灵</string>
     <string name="try_daily_note">记小事</string>
+    <string name="pay_short">支付</string>
+    <string name="hand_short">手</string>
+    <string name="note_short">记事</string>
+    <string name="hand_center">手</string>
+    <string name="jidan_hand">Jidan</string>
+    <string name="gesture_hand">按键</string>
+    <string name="hand_connected">已连接</string>
+    <string name="hand_disconnected">未连接</string>
+    <string name="connect_hand">连接中</string>
+    <string name="install_hand">安装手</string>
+    <string name="installing_hand">正在安装</string>
+    <string name="hand_installed">已安装</string>
+    <string name="hand_not_installed">没有安装</string>
     <string name="accessibility_service_label">鸡蛋辅助操作</string>
     <string name="accessibility_service_description">只在鸡蛋自带的无网络实验页和日常小事 App 中逐步观察、操作并核验结果。</string>
     <string name="audio_permission_title">让鸡蛋听懂你</string>

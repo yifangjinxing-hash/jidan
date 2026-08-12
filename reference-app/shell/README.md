@@ -1,21 +1,27 @@
-# Jidan Shell 0.3：Android 小事清单 +「手脑」实验版
+# Jidan Shell 0.4：统一「手」中心
 
 Jidan Shell 是可安装的独立 Android APK，但还不是独立 ROM 或完整 Jidan OS。
 
-这版把真正的无障碍动作链从合成实验推进到一件可用的小事：Jidan 能从 Shell 打开自有清单 App，填写一句待办、同步保存、重新读取页面核验结果，再返回 Shell。五步合成实验仍保留用于敏感动作故障测试。
+首页改为中央视觉、原生输入框与三个图形动作。Jidan 自研无障碍手与已审计兼容手都收进同一个「手」面板；绿色表示本机身份与连接检查通过。
 
 <p align="center">
-  <img src="../../docs/assets/jidan-shell-daily-complete-0.3.png" alt="Jidan Shell 0.3 在 Android 17 模拟器完成跨 App 记小事" width="360" />
+  <img src="../../docs/assets/jidan-hand-center-0.4.png" alt="Jidan Shell 0.4 真机统一手中心" width="360" />
   <img src="../../docs/assets/jidan-daily-list-0.1.png" alt="小事清单重新打开后事项仍存在" width="360" />
 </p>
 
 ## 现在能玩什么
 
-首页有三个快捷动作：
+首页只有三个图形动作：
 
-- **打开支付宝**：只打开固定包名的应用入口，不传收款人、金额、密码或验证码，也不声称已经付款。
-- **打开按键精灵**：只打开经过固定包名、签名身份和版本检查的 APK 前门，把它当作“候选的手”供人观察；不调用它的私有服务、Socket 或脚本接口，也不把它直接认定为 Jidan 执行器。
-- **记小事**：执行“记下明天买鸡蛋”，打开同签名、固定版本、固定契约且无网络的自有清单 App，由内置无障碍手填写、保存、重新核验并返回 Shell。
+- **支付**：只打开固定包名的支付宝入口。
+- **手**：展开 Jidan 自研手与内置兼容手。
+- **记事**：在自有清单中填写、保存、重新核验并返回。
+
+### 内置兼容手
+
+授权调试构建可把原始 `com.cyjh.mobileanjian` 4.2.3 APK 放入 `shell/src/debug/assets/embedded/mobileanjian-4.2.3.apk`。Jidan 只接受固定 83,933,160 字节与 SHA-256 `2d554d…803d`；系统安装后再核对版本号和原签名证书。原 APK 不解包、不改字节、不重签。首次缺失时由系统安装器接管，不能静默绕过 Android 安装确认。
+
+该第三方二进制不提交到公共仓库；公共 CI 构建保留面板和校验代码，但不携带 companion。当前真机授权构建已完成 `Jidan → 系统安装器 → companion` 的移除保留数据、内置重装与身份复核闭环。
 
 “打开系统设置”和“开始手脑实验”仍可在命令框里键入或说出，但不是首页快捷按钮。
 

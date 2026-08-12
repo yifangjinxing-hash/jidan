@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="docs/11-daily-note-cross-app-hand-zh.md"><img src="https://img.shields.io/badge/Android_小事清單-0.3-7B61A8?style=for-the-badge" alt="Jidan Shell 0.3 跨 App 記小事" /></a>
+  <a href="reference-app/shell/README.md"><img src="https://img.shields.io/badge/Android_手中心-0.4-7B61A8?style=for-the-badge" alt="Jidan Shell 0.4 手中心" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="https://img.shields.io/badge/iOS_可觀察原型-0.1-8B7AC8?style=for-the-badge" alt="Jidan iOS Shell 0.1" /></a>
   <a href="#-開發者快速開始"><img src="https://img.shields.io/badge/開發者快速開始-195A41?style=for-the-badge" alt="開發者快速開始" /></a>
   <a href="profiles/message.compose.tool.json"><img src="https://img.shields.io/badge/JCL_Profile-0.1-2F8F68?style=for-the-badge" alt="JCL Profile 0.1" /></a>
@@ -29,7 +29,7 @@
 > Jidan 目前仍是實驗原型，不是完整的 Android/iOS 發行版、提權工具，也不是可託付重要事務的正式產品。Android 實驗包現有 Shell、本機小事清單與隔離實驗頁三只 APK，並有 Android 17 模擬器整鏈證據；它們仍不是商店簽章產品、預設桌面或獨立 OS。請只使用受控 App、測試裝置與可捨棄資料。
 
 <p align="center">
-  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-shell-daily-0.3.png" alt="Jidan Shell 0.3 極簡 Android 小事入口" width="360" /></a>
+  <a href="reference-app/shell/README.md"><img src="docs/assets/jidan-hand-center-0.4.png" alt="Jidan Shell 0.4 圖形化手中心" width="360" /></a>
   <a href="reference-app/ios-shell/README.md"><img src="docs/assets/jidan-ios-shell-0.1.png" alt="Jidan iOS Shell 0.1 在 iPhone 16 Simulator 中全螢幕執行" width="360" /></a>
 </p>
 
